@@ -212,11 +212,7 @@ struct group15
 
   inline void mark_overflow(std::size_t hash)
   {
-#if BOOST_WORKAROUND(BOOST_GCC, >= 50000 && BOOST_GCC < 60000)
-    overflow() = static_cast<unsigned char>( overflow() | static_cast<unsigned char>(1<<(hash%8)) );
-#else
     overflow()|=static_cast<unsigned char>(1<<(hash%8));
-#endif
   }
 
   static inline bool maybe_caused_overflow(unsigned char* pc)
@@ -1115,13 +1111,6 @@ _STL_RESTORE_DEPRECATED_WARNING
 #pragma warning(disable:4714) /* marked as __forceinline not inlined */
 #endif
 
-#if BOOST_WORKAROUND(BOOST_MSVC,<=1900)
-/* VS2015 marks as unreachable generic catch clauses around non-throwing
- * code.
- */
-#pragma warning(push)
-#pragma warning(disable:4702)
-#endif
 
 /* We expose the hard-coded max load factor so that tests can use it without
  * needing to pull it from an instantiated class template such as the table
@@ -1758,12 +1747,7 @@ private:
       x,
       std::integral_constant<
         bool,
-#if BOOST_WORKAROUND(BOOST_LIBSTDCXX_VERSION,<50000)
-        /* std::is_trivially_copy_constructible not provided */
-        boost::has_trivial_copy<element_type>::value
-#else
         std::is_trivially_copy_constructible<element_type>::value
-#endif
         &&(
           is_std_allocator<Allocator>::value||
           !alloc_has_construct<Allocator,value_type*,const value_type&>::value)
@@ -2190,9 +2174,6 @@ private:
   std::size_t ml;
 };
 
-#if BOOST_WORKAROUND(BOOST_MSVC,<=1900)
-#pragma warning(pop) /* C4702 */
-#endif
 
 #if defined(BOOST_MSVC)
 #pragma warning(pop) /* C4714 */

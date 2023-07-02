@@ -642,12 +642,10 @@ namespace boost {
       void rehash(size_type);
       void reserve(size_type);
 
-#if !BOOST_WORKAROUND(BOOST_BORLANDC, < 0x0582)
       friend bool operator==
         <K, T, H, P, A>(unordered_map const&, unordered_map const&);
       friend bool operator!=
         <K, T, H, P, A>(unordered_map const&, unordered_map const&);
-#endif
     }; // class template unordered_map
 
 #if BOOST_UNORDERED_TEMPLATE_DEDUCTION_GUIDES
@@ -1214,12 +1212,10 @@ namespace boost {
       void rehash(size_type);
       void reserve(size_type);
 
-#if !BOOST_WORKAROUND(BOOST_BORLANDC, < 0x0582)
       friend bool operator==
         <K, T, H, P, A>(unordered_multimap const&, unordered_multimap const&);
       friend bool operator!=
         <K, T, H, P, A>(unordered_multimap const&, unordered_multimap const&);
-#endif
     }; // class template unordered_multimap
 
 #if BOOST_UNORDERED_TEMPLATE_DEDUCTION_GUIDES
@@ -1809,12 +1805,6 @@ namespace boost {
     inline bool operator==(unordered_map<K, T, H, P, A> const& m1,
       unordered_map<K, T, H, P, A> const& m2)
     {
-#if BOOST_WORKAROUND(BOOST_CODEGEARC, BOOST_TESTED_AT(0x0613))
-      struct dummy
-      {
-        unordered_map<K, T, H, P, A> x;
-      };
-#endif
       return m1.table_.equals_unique(m2.table_);
     }
 
@@ -1822,12 +1812,6 @@ namespace boost {
     inline bool operator!=(unordered_map<K, T, H, P, A> const& m1,
       unordered_map<K, T, H, P, A> const& m2)
     {
-#if BOOST_WORKAROUND(BOOST_CODEGEARC, BOOST_TESTED_AT(0x0613))
-      struct dummy
-      {
-        unordered_map<K, T, H, P, A> x;
-      };
-#endif
       return !m1.table_.equals_unique(m2.table_);
     }
 
@@ -1836,12 +1820,6 @@ namespace boost {
       unordered_map<K, T, H, P, A>& m1, unordered_map<K, T, H, P, A>& m2)
       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT_EXPR(m1.swap(m2)))
     {
-#if BOOST_WORKAROUND(BOOST_CODEGEARC, BOOST_TESTED_AT(0x0613))
-      struct dummy
-      {
-        unordered_map<K, T, H, P, A> x;
-      };
-#endif
       m1.swap(m2);
     }
 
@@ -2266,12 +2244,6 @@ namespace boost {
     inline bool operator==(unordered_multimap<K, T, H, P, A> const& m1,
       unordered_multimap<K, T, H, P, A> const& m2)
     {
-#if BOOST_WORKAROUND(BOOST_CODEGEARC, BOOST_TESTED_AT(0x0613))
-      struct dummy
-      {
-        unordered_multimap<K, T, H, P, A> x;
-      };
-#endif
       return m1.table_.equals_equiv(m2.table_);
     }
 
@@ -2279,12 +2251,6 @@ namespace boost {
     inline bool operator!=(unordered_multimap<K, T, H, P, A> const& m1,
       unordered_multimap<K, T, H, P, A> const& m2)
     {
-#if BOOST_WORKAROUND(BOOST_CODEGEARC, BOOST_TESTED_AT(0x0613))
-      struct dummy
-      {
-        unordered_multimap<K, T, H, P, A> x;
-      };
-#endif
       return !m1.table_.equals_equiv(m2.table_);
     }
 
@@ -2293,12 +2259,6 @@ namespace boost {
       unordered_multimap<K, T, H, P, A>& m2)
       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT_EXPR(m1.swap(m2)))
     {
-#if BOOST_WORKAROUND(BOOST_CODEGEARC, BOOST_TESTED_AT(0x0613))
-      struct dummy
-      {
-        unordered_multimap<K, T, H, P, A> x;
-      };
-#endif
       m1.swap(m2);
     }
 
