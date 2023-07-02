@@ -9,13 +9,7 @@
 #include <boost/container_hash/hash_fwd.hpp>
 #include <boost/container_hash/is_tuple_like.hpp>
 #include <boost/container_hash/is_range.hpp>
-#include <boost/config.hpp>
 
-#if defined(BOOST_NO_CXX11_HDR_TUPLE)
-
-// no support for tuple-likes
-
-#else
 
 #include <tuple>
 
@@ -70,6 +64,5 @@ std::size_t>::type
 
 } // namespace boost
 
-#endif // #if defined(BOOST_NO_CXX11_HDR_TUPLE)
 
 #endif // #ifndef BOOST_HASH_DETAIL_HASH_TUPLE_LIKE_HPP

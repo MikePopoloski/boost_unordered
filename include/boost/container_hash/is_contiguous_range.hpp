@@ -5,11 +5,8 @@
 #ifndef BOOST_HASH_IS_CONTIGUOUS_RANGE_HPP_INCLUDED
 #define BOOST_HASH_IS_CONTIGUOUS_RANGE_HPP_INCLUDED
 
-#include <boost/container_hash/detail/requires_cxx11.hpp>
 #include <boost/container_hash/is_range.hpp>
-#include <boost/config.hpp>
 
-#if !defined(BOOST_NO_SFINAE_EXPR)
 
 #include <iterator>
 
@@ -41,43 +38,5 @@ template<class T> struct is_contiguous_range: std::integral_constant< bool, is_r
 } // namespace container_hash
 } // namespace boost
 
-#else // !defined(BOOST_NO_CXX11_DECLTYPE) && !defined(BOOST_NO_SFINAE_EXPR)
-
-#include <cstddef>
-#include <vector>
-#include <string>
-#include <array>
-
-namespace boost
-{
-namespace container_hash
-{
-
-template<class T> struct is_contiguous_range: false_type
-{
-};
-
-template<class E, class T, class A> struct is_contiguous_range< std::basic_string<E, T, A> >: true_type
-{
-};
-
-template<class E, class T, class A> struct is_contiguous_range< std::basic_string<E, T, A> const >: true_type
-{
-};
-
-
-template<class T, std::size_t N> struct is_contiguous_range< std::array<T, N> >: true_type
-{
-};
-
-template<class T, std::size_t N> struct is_contiguous_range< std::array<T, N> const >: true_type
-{
-};
-
-
-} // namespace container_hash
-} // namespace boost
-
-#endif // !defined(BOOST_NO_CXX11_DECLTYPE) && !defined(BOOST_NO_SFINAE_EXPR)
 
 #endif // #ifndef BOOST_HASH_IS_CONTIGUOUS_RANGE_HPP_INCLUDED

@@ -5,7 +5,6 @@
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
 
-#include <boost/config.hpp>
 #include <utility>
 
 namespace boost
@@ -17,13 +16,11 @@ template<class T, class E = std::true_type> struct is_tuple_like_: std::false_ty
 {
 };
 
-#if !defined(BOOST_NO_CXX11_HDR_TUPLE)
 
 template<class T> struct is_tuple_like_<T, std::integral_constant<bool, std::tuple_size<T>::value == std::tuple_size<T>::value> >: std::true_type
 {
 };
 
-#endif
 
 } // namespace hash_detail
 
