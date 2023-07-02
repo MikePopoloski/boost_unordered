@@ -1,3 +1,0 @@
-/home/mjp/boost_unordered/build/CMakeFiles/test.dir
-/home/mjp/boost_unordered/build/CMakeFiles/edit_cache.dir
-/home/mjp/boost_unordered/build/CMakeFiles/rebuild_cache.dir
