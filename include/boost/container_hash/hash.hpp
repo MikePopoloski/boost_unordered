@@ -15,7 +15,6 @@
 #include <boost/container_hash/is_range.hpp>
 #include <boost/container_hash/is_contiguous_range.hpp>
 #include <boost/container_hash/is_unordered_range.hpp>
-#include <boost/container_hash/is_described_class.hpp>
 #include <boost/container_hash/detail/hash_tuple_like.hpp>
 #include <boost/container_hash/detail/hash_mix.hpp>
 #include <boost/container_hash/detail/hash_range.hpp>
@@ -29,13 +28,7 @@
 #include <boost/type_traits/conjunction.hpp>
 #include <boost/type_traits/is_union.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/describe/bases.hpp>
-#include <boost/describe/members.hpp>
 #include <boost/cstdint.hpp>
-
-#if defined(BOOST_DESCRIBE_CXX14)
-# include <boost/mp11/algorithm.hpp>
-#endif
 
 #include <string>
 #include <iterator>
@@ -397,49 +390,6 @@ namespace boost
     {
         return boost::hash_unordered_range( v.begin(), v.end() );
     }
-
-#endif
-
-    // described classes
-
-#if defined(BOOST_DESCRIBE_CXX14)
-
-#if defined(_MSC_VER) && _MSC_VER == 1900
-# pragma warning(push)
-# pragma warning(disable: 4100) // unreferenced formal parameter
-#endif
-
-    template <typename T>
-    typename boost::enable_if_<container_hash::is_described_class<T>::value, std::size_t>::type
-        hash_value( T const& v )
-    {
-        static_assert( !boost::is_union<T>::value, "described unions are not supported" );
-
-        std::size_t r = 0;
-
-        using Bd = describe::describe_bases<T, describe::mod_any_access>;
-
-        mp11::mp_for_each<Bd>([&](auto D){
-
-            using B = typename decltype(D)::type;
-            boost::hash_combine( r, (B const&)v );
-
-        });
-
-        using Md = describe::describe_members<T, describe::mod_any_access>;
-
-        mp11::mp_for_each<Md>([&](auto D){
-
-            boost::hash_combine( r, v.*D.pointer );
-
-        });
-
-        return r;
-    }
-
-#if defined(_MSC_VER) && _MSC_VER == 1900
-# pragma warning(pop)
-#endif
 
 #endif
 
