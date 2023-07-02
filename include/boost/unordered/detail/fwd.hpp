@@ -10,12 +10,6 @@
 #include <boost/config.hpp>
 #pragma once
 
-#include <boost/predef.h>
-
-// Already defined.
-
-// Assume that an unknown library does not support piecewise construction.
-
 #include <utility>
 
 namespace boost {
