@@ -7,9 +7,7 @@
 #define BOOST_UNORDERED_DETAIL_TYPE_TRAITS_HPP
 
 #include <boost/config.hpp>
-#if defined(BOOST_HAS_PRAGMA_ONCE)
 #pragma once
-#endif
 
 #include <boost/type_traits/integral_constant.hpp>
 #include <boost/type_traits/is_convertible.hpp>

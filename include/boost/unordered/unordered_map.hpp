@@ -11,9 +11,7 @@
 #define BOOST_UNORDERED_UNORDERED_MAP_HPP_INCLUDED
 
 #include <boost/config.hpp>
-#if defined(BOOST_HAS_PRAGMA_ONCE)
 #pragma once
-#endif
 
 #include <boost/unordered/detail/requires_cxx11.hpp>
 #include <boost/core/explicit_operator_bool.hpp>

@@ -6,9 +6,7 @@
 #define BOOST_UNORDERED_UNORDERED_FLAT_SET_HPP_INCLUDED
 
 #include <boost/config.hpp>
-#if defined(BOOST_HAS_PRAGMA_ONCE)
 #pragma once
-#endif
 
 #include <boost/unordered/detail/foa.hpp>
 #include <boost/unordered/detail/type_traits.hpp>

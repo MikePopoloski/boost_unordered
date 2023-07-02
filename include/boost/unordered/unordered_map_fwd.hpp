@@ -8,9 +8,7 @@
 #define BOOST_UNORDERED_MAP_FWD_HPP_INCLUDED
 
 #include <boost/config.hpp>
-#if defined(BOOST_HAS_PRAGMA_ONCE)
 #pragma once
-#endif
 
 #include <boost/functional/hash_fwd.hpp>
 #include <boost/unordered/detail/fwd.hpp>

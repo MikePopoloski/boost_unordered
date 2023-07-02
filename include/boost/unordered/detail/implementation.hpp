@@ -10,9 +10,7 @@
 #define BOOST_UNORDERED_DETAIL_IMPLEMENTATION_HPP
 
 #include <boost/config.hpp>
-#if defined(BOOST_HAS_PRAGMA_ONCE)
 #pragma once
-#endif
 
 #include <boost/assert.hpp>
 #include <boost/core/allocator_traits.hpp>
