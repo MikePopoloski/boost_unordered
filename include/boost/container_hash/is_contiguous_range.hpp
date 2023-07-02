@@ -7,14 +7,10 @@
 
 #include <boost/container_hash/detail/requires_cxx11.hpp>
 #include <boost/container_hash/is_range.hpp>
-#include <boost/type_traits/integral_constant.hpp>
 #include <boost/config.hpp>
 
 #if !defined(BOOST_NO_SFINAE_EXPR)
 
-#include <boost/type_traits/is_integral.hpp>
-#include <boost/type_traits/declval.hpp>
-#include <boost/type_traits/is_same.hpp>
 #include <iterator>
 
 namespace boost
@@ -23,11 +19,11 @@ namespace hash_detail
 {
 
 template<class It, class T, class S>
-    integral_constant< bool, is_same<typename std::iterator_traits<It>::value_type, T>::value && is_integral<S>::value >
+    std::integral_constant< bool, std::is_same<typename std::iterator_traits<It>::value_type, T>::value && std::is_integral<S>::value >
         is_contiguous_range_check( It first, It last, T const*, T const*, S );
 
-template<class T> decltype( is_contiguous_range_check( declval<T const&>().begin(), declval<T const&>().end(), declval<T const&>().data(), declval<T const&>().data() + declval<T const&>().size(), declval<T const&>().size() ) ) is_contiguous_range_( int );
-template<class T> false_type is_contiguous_range_( ... );
+template<class T> decltype( is_contiguous_range_check( std::declval<T const&>().begin(), std::declval<T const&>().end(), std::declval<T const&>().data(), std::declval<T const&>().data() + std::declval<T const&>().size(), std::declval<T const&>().size() ) ) is_contiguous_range_( int );
+template<class T> std::false_type is_contiguous_range_( ... );
 
 template<class T> struct is_contiguous_range: decltype( hash_detail::is_contiguous_range_<T>( 0 ) )
 {
@@ -38,7 +34,7 @@ template<class T> struct is_contiguous_range: decltype( hash_detail::is_contiguo
 namespace container_hash
 {
 
-template<class T> struct is_contiguous_range: integral_constant< bool, is_range<T>::value && hash_detail::is_contiguous_range<T>::value >
+template<class T> struct is_contiguous_range: std::integral_constant< bool, is_range<T>::value && hash_detail::is_contiguous_range<T>::value >
 {
 };
 

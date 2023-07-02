@@ -18,16 +18,6 @@
 #include <boost/container_hash/detail/hash_tuple_like.hpp>
 #include <boost/container_hash/detail/hash_mix.hpp>
 #include <boost/container_hash/detail/hash_range.hpp>
-#include <boost/type_traits/is_enum.hpp>
-#include <boost/type_traits/is_integral.hpp>
-#include <boost/type_traits/is_floating_point.hpp>
-#include <boost/type_traits/is_signed.hpp>
-#include <boost/type_traits/is_unsigned.hpp>
-#include <boost/type_traits/make_unsigned.hpp>
-#include <boost/type_traits/enable_if.hpp>
-#include <boost/type_traits/conjunction.hpp>
-#include <boost/type_traits/is_union.hpp>
-#include <boost/type_traits/is_same.hpp>
 #include <boost/cstdint.hpp>
 
 #include <string>
@@ -63,7 +53,7 @@ namespace boost
     {
         template<class T,
             bool bigger_than_size_t = (sizeof(T) > sizeof(std::size_t)),
-            bool is_unsigned = boost::is_unsigned<T>::value,
+            bool is_unsigned = std::is_unsigned<T>::value,
             std::size_t size_t_bits = sizeof(std::size_t) * CHAR_BIT,
             std::size_t type_bits = sizeof(T) * CHAR_BIT>
         struct hash_integral_impl;
@@ -80,7 +70,7 @@ namespace boost
         {
             static std::size_t fn( T v )
             {
-                typedef typename boost::make_unsigned<T>::type U;
+                typedef typename std::make_unsigned<T>::type U;
 
                 if( v >= 0 )
                 {
@@ -137,7 +127,7 @@ namespace boost
     } // namespace hash_detail
 
     template <typename T>
-    typename boost::enable_if_<boost::is_integral<T>::value, std::size_t>::type
+    typename std::enable_if<std::is_integral<T>::value, std::size_t>::type
         hash_value( T v )
     {
         return hash_detail::hash_integral_impl<T>::fn( v );
@@ -146,7 +136,7 @@ namespace boost
     // enumeration types
 
     template <typename T>
-    typename boost::enable_if_<boost::is_enum<T>::value, std::size_t>::type
+    typename std::enable_if<std::is_enum<T>::value, std::size_t>::type
         hash_value( T v )
     {
         // This should in principle return the equivalent of
@@ -180,7 +170,7 @@ namespace boost
         {
             static std::size_t fn( T v )
             {
-                boost::uint32_t w;
+                std::uint32_t w;
                 std::memcpy( &w, &v, sizeof( v ) );
 
                 return w;
@@ -192,7 +182,7 @@ namespace boost
         {
             static std::size_t fn( T v )
             {
-                boost::uint64_t w;
+                std::uint64_t w;
                 std::memcpy( &w, &v, sizeof( v ) );
 
                 return hash_value( w );
@@ -204,7 +194,7 @@ namespace boost
         {
             static std::size_t fn( T v )
             {
-                boost::uint64_t w[ 2 ] = {};
+                std::uint64_t w[ 2 ] = {};
                 std::memcpy( &w, &v, 80 / CHAR_BIT );
 
                 std::size_t seed = 0;
@@ -221,7 +211,7 @@ namespace boost
         {
             static std::size_t fn( T v )
             {
-                boost::uint64_t w[ 2 ] = {};
+                std::uint64_t w[ 2 ] = {};
                 std::memcpy( &w, &v, 80 / CHAR_BIT );
 
                 std::size_t seed = 0;
@@ -238,7 +228,7 @@ namespace boost
         {
             static std::size_t fn( T v )
             {
-                boost::uint64_t w[ 2 ];
+                std::uint64_t w[ 2 ];
                 std::memcpy( &w, &v, sizeof( v ) );
 
                 std::size_t seed = 0;
@@ -261,7 +251,7 @@ namespace boost
     } // namespace hash_detail
 
     template <typename T>
-    typename boost::enable_if_<boost::is_floating_point<T>::value, std::size_t>::type
+    typename std::enable_if<std::is_floating_point<T>::value, std::size_t>::type
         hash_value( T v )
     {
         return boost::hash_detail::hash_float_impl<T>::fn( v + 0 );
@@ -272,7 +262,7 @@ namespace boost
     // `x + (x >> 3)` adjustment by Alberto Barbati and Dave Harris.
     template <class T> std::size_t hash_value( T* const& v )
     {
-        boost::uintptr_t x = reinterpret_cast<boost::uintptr_t>( v );
+        std::uintptr_t x = reinterpret_cast<std::uintptr_t>( v );
         return boost::hash_value( x + (x >> 3) );
     }
 
@@ -317,7 +307,7 @@ namespace boost
     // ranges (list, set, deque...)
 
     template <typename T>
-    typename boost::enable_if_<container_hash::is_range<T>::value && !container_hash::is_contiguous_range<T>::value && !container_hash::is_unordered_range<T>::value, std::size_t>::type
+    typename std::enable_if<container_hash::is_range<T>::value && !container_hash::is_contiguous_range<T>::value && !container_hash::is_unordered_range<T>::value, std::size_t>::type
         hash_value( T const& v )
     {
         return boost::hash_range( v.begin(), v.end() );
@@ -326,7 +316,7 @@ namespace boost
     // contiguous ranges (string, vector, array)
 
     template <typename T>
-    typename boost::enable_if_<container_hash::is_contiguous_range<T>::value, std::size_t>::type
+    typename std::enable_if<container_hash::is_contiguous_range<T>::value, std::size_t>::type
         hash_value( T const& v )
     {
         return boost::hash_range( v.data(), v.data() + v.size() );
@@ -335,7 +325,7 @@ namespace boost
     // unordered ranges (unordered_set, unordered_map)
 
     template <typename T>
-    typename boost::enable_if_<container_hash::is_unordered_range<T>::value, std::size_t>::type
+    typename std::enable_if<container_hash::is_unordered_range<T>::value, std::size_t>::type
         hash_value( T const& v )
     {
         return boost::hash_unordered_range( v.begin(), v.end() );
@@ -346,7 +336,7 @@ namespace boost
     // resolve ambiguity with unconstrained stdext::hash_value in <xhash> :-/
 
     template<template<class...> class L, class... T>
-    typename boost::enable_if_<container_hash::is_range<L<T...>>::value && !container_hash::is_contiguous_range<L<T...>>::value && !container_hash::is_unordered_range<L<T...>>::value, std::size_t>::type
+    typename std::enable_if<container_hash::is_range<L<T...>>::value && !container_hash::is_contiguous_range<L<T...>>::value && !container_hash::is_unordered_range<L<T...>>::value, std::size_t>::type
         hash_value( L<T...> const& v )
     {
         return boost::hash_range( v.begin(), v.end() );
@@ -355,14 +345,14 @@ namespace boost
     // contiguous ranges (string, vector, array)
 
     template<template<class...> class L, class... T>
-    typename boost::enable_if_<container_hash::is_contiguous_range<L<T...>>::value, std::size_t>::type
+    typename std::enable_if<container_hash::is_contiguous_range<L<T...>>::value, std::size_t>::type
         hash_value( L<T...> const& v )
     {
         return boost::hash_range( v.data(), v.data() + v.size() );
     }
 
     template<template<class, std::size_t> class L, class T, std::size_t N>
-    typename boost::enable_if_<container_hash::is_contiguous_range<L<T, N>>::value, std::size_t>::type
+    typename std::enable_if<container_hash::is_contiguous_range<L<T, N>>::value, std::size_t>::type
         hash_value( L<T, N> const& v )
     {
         return boost::hash_range( v.data(), v.data() + v.size() );
@@ -371,7 +361,7 @@ namespace boost
     // unordered ranges (unordered_set, unordered_map)
 
     template<template<class...> class L, class... T>
-    typename boost::enable_if_<container_hash::is_unordered_range<L<T...>>::value, std::size_t>::type
+    typename std::enable_if<container_hash::is_unordered_range<L<T...>>::value, std::size_t>::type
         hash_value( L<T...> const& v )
     {
         return boost::hash_unordered_range( v.begin(), v.end() );
@@ -432,7 +422,7 @@ namespace boost
 
 
     template <typename T>
-    typename boost::enable_if_<boost::is_same<T, std::nullptr_t>::value, std::size_t>::type
+    typename std::enable_if<std::is_same<T, std::nullptr_t>::value, std::size_t>::type
         hash_value( T const& /*v*/ )
     {
         return boost::hash_value( static_cast<void*>( nullptr ) );
@@ -576,18 +566,17 @@ namespace boost
     namespace unordered
     {
         template<class T> struct hash_is_avalanching;
-        template<class Ch> struct hash_is_avalanching< boost::hash< std::basic_string<Ch> > >: boost::is_integral<Ch> {};
+        template<class Ch> struct hash_is_avalanching< boost::hash< std::basic_string<Ch> > >: std::is_integral<Ch> {};
 
-        // boost::is_integral<char8_t> is false, but should be true (https://github.com/boostorg/type_traits/issues/175)
 #if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
-        template<> struct hash_is_avalanching< boost::hash< std::basic_string<char8_t> > >: boost::true_type {};
+        template<> struct hash_is_avalanching< boost::hash< std::basic_string<char8_t> > >: std::true_type {};
 #endif
 
 
-        template<class Ch> struct hash_is_avalanching< boost::hash< std::basic_string_view<Ch> > >: boost::is_integral<Ch> {};
+        template<class Ch> struct hash_is_avalanching< boost::hash< std::basic_string_view<Ch> > >: std::is_integral<Ch> {};
 
 #if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
-        template<> struct hash_is_avalanching< boost::hash< std::basic_string_view<char8_t> > >: boost::true_type {};
+        template<> struct hash_is_avalanching< boost::hash< std::basic_string_view<char8_t> > >: std::true_type {};
 #endif
 
     } // namespace unordered

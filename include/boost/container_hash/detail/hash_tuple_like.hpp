@@ -9,7 +9,6 @@
 #include <boost/container_hash/hash_fwd.hpp>
 #include <boost/container_hash/is_tuple_like.hpp>
 #include <boost/container_hash/is_range.hpp>
-#include <boost/type_traits/enable_if.hpp>
 #include <boost/config.hpp>
 
 #if defined(BOOST_NO_CXX11_HDR_TUPLE)
@@ -27,14 +26,14 @@ namespace hash_detail
 
 template <std::size_t I, typename T>
 inline
-typename boost::enable_if_<(I == std::tuple_size<T>::value), void>::type
+typename std::enable_if<(I == std::tuple_size<T>::value), void>::type
     hash_combine_tuple_like( std::size_t&, T const& )
 {
 }
 
 template <std::size_t I, typename T>
 inline
-typename boost::enable_if_<(I < std::tuple_size<T>::value), void>::type
+typename std::enable_if<(I < std::tuple_size<T>::value), void>::type
     hash_combine_tuple_like( std::size_t& seed, T const& v )
 {
     using std::get;
@@ -59,7 +58,7 @@ inline std::size_t hash_tuple_like( T const& v )
 
 template <class T>
 inline
-typename boost::enable_if_<
+typename std::enable_if<
     container_hash::is_tuple_like<T>::value && !container_hash::is_range<T>::value,
 std::size_t>::type
     hash_value( T const& v )

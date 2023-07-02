@@ -6,11 +6,6 @@
 #define BOOST_HASH_IS_RANGE_HPP_INCLUDED
 
 #include <boost/container_hash/detail/requires_cxx11.hpp>
-#include <boost/type_traits/integral_constant.hpp>
-#include <boost/type_traits/is_integral.hpp>
-#include <boost/type_traits/declval.hpp>
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/remove_cv.hpp>
 #include <boost/config.hpp>
 #include <iterator>
 
@@ -22,11 +17,11 @@ namespace hash_detail
 {
 
 template<class T, class It>
-    integral_constant< bool, !is_same<typename remove_cv<T>::type, typename std::iterator_traits<It>::value_type>::value >
+    std::integral_constant< bool, !std::is_same<typename std::remove_cv<T>::type, typename std::iterator_traits<It>::value_type>::value >
         is_range_check( It first, It last );
 
-template<class T> decltype( is_range_check<T>( declval<T const&>().begin(), declval<T const&>().end() ) ) is_range_( int );
-template<class T> false_type is_range_( ... );
+template<class T> decltype( is_range_check<T>( std::declval<T const&>().begin(), std::declval<T const&>().end() ) ) is_range_( int );
+template<class T> std::false_type is_range_( ... );
 
 } // namespace hash_detail
 
