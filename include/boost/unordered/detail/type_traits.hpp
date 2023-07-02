@@ -14,23 +14,16 @@
 #include <boost/type_traits/make_void.hpp>
 #include <boost/type_traits/type_identity.hpp>
 
-#if !defined(BOOST_NO_CXX17_DEDUCTION_GUIDES)
 #include <boost/type_traits/enable_if.hpp>
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/type_traits/remove_const.hpp>
-#endif
 
 // BOOST_UNORDERED_TEMPLATE_DEDUCTION_GUIDES
 
 #if !defined(BOOST_UNORDERED_TEMPLATE_DEDUCTION_GUIDES)
-#if !defined(BOOST_NO_CXX17_DEDUCTION_GUIDES)
 #define BOOST_UNORDERED_TEMPLATE_DEDUCTION_GUIDES 1
 #endif
-#endif
 
-#if !defined(BOOST_UNORDERED_TEMPLATE_DEDUCTION_GUIDES)
-#define BOOST_UNORDERED_TEMPLATE_DEDUCTION_GUIDES 0
-#endif
 
 namespace boost {
   namespace unordered {
@@ -70,7 +63,6 @@ namespace boost {
           !boost::is_convertible<Key, const_iterator>::value;
       };
 
-#if BOOST_UNORDERED_TEMPLATE_DEDUCTION_GUIDES
       // https://eel.is/c++draft/container.requirements#container.alloc.reqmts-34
       // https://eel.is/c++draft/container.requirements#unord.req.general-243
 
@@ -99,7 +91,6 @@ namespace boost {
         !boost::is_integral<H>::value && !is_allocator_v<H>;
 
       template <class P> constexpr bool const is_pred_v = !is_allocator_v<P>;
-#endif
     } // namespace detail
   }   // namespace unordered
 } // namespace boost
