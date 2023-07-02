@@ -58,7 +58,6 @@ inline std::size_t hash_tuple_like( T const& v )
 
 #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
-#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1800)
 
 template <class T>
 inline
@@ -70,15 +69,6 @@ std::size_t>::type
     return boost::hash_detail::hash_tuple_like( v );
 }
 
-#else
-
-template <typename... T>
-inline std::size_t hash_value( std::tuple<T...> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-#endif
 
 #else
 

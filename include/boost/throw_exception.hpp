@@ -29,9 +29,6 @@
 #include <type_traits>
 #endif
 
-#if !defined( BOOST_EXCEPTION_DISABLE ) && defined( BOOST_BORLANDC ) && BOOST_WORKAROUND( BOOST_BORLANDC, BOOST_TESTED_AT(0x593) )
-# define BOOST_EXCEPTION_DISABLE
-#endif
 
 namespace boost
 {

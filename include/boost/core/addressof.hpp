@@ -125,47 +125,10 @@ template<class T>
 BOOST_FORCEINLINE T*
 addressof(T& o) BOOST_NOEXCEPT
 {
-#if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x610)) || \
-    BOOST_WORKAROUND(__SUNPRO_CC, <= 0x5120)
-    return boost::detail::addrof<T>::get(o, 0);
-#else
     return boost::detail::addrof<T>::get(boost::detail::addrof_ref<T>(o), 0);
-#endif
 }
 
-#if BOOST_WORKAROUND(__SUNPRO_CC, BOOST_TESTED_AT(0x590))
-namespace detail {
 
-template<class T>
-struct addrof_result {
-    typedef T* type;
-};
-
-} /* detail */
-
-template<class T, std::size_t N>
-BOOST_FORCEINLINE typename boost::detail::addrof_result<T[N]>::type
-addressof(T (&o)[N]) BOOST_NOEXCEPT
-{
-    return &o;
-}
-#endif
-
-#if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564))
-template<class T, std::size_t N>
-BOOST_FORCEINLINE
-T (*addressof(T (&o)[N]) BOOST_NOEXCEPT)[N]
-{
-   return reinterpret_cast<T(*)[N]>(&o);
-}
-
-template<class T, std::size_t N>
-BOOST_FORCEINLINE
-const T (*addressof(const T (&o)[N]) BOOST_NOEXCEPT)[N]
-{
-   return reinterpret_cast<const T(*)[N]>(&o);
-}
-#endif
 #else
 namespace detail {
 
@@ -188,12 +151,6 @@ struct addrof_member_operator<T, typename
     static constexpr bool value = true;
 };
 
-#if BOOST_WORKAROUND(BOOST_INTEL, < 1600)
-struct addrof_addressable { };
-
-addrof_addressable*
-operator&(addrof_addressable&) BOOST_NOEXCEPT;
-#endif
 
 template<class T, class E = void>
 struct addrof_non_member_operator {

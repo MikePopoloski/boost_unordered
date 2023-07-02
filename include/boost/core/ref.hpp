@@ -39,11 +39,6 @@
 namespace boost
 {
 
-#if defined( BOOST_MSVC ) && BOOST_WORKAROUND( BOOST_MSVC, == 1600 )
-
-    struct ref_workaround_tag {};
-
-#endif
 
 namespace detail
 {
@@ -94,11 +89,6 @@ public:
     */
     BOOST_FORCEINLINE explicit reference_wrapper(T& t) BOOST_NOEXCEPT : t_(boost::addressof(t)) {}
 
-#if defined( BOOST_MSVC ) && BOOST_WORKAROUND( BOOST_MSVC, == 1600 )
-
-    BOOST_FORCEINLINE explicit reference_wrapper( T & t, ref_workaround_tag ) BOOST_NOEXCEPT : t_( boost::addressof( t ) ) {}
-
-#endif
 
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     /**
@@ -159,11 +149,7 @@ private:
 /**
  @cond
 */
-#if defined( BOOST_BORLANDC ) && BOOST_WORKAROUND( BOOST_BORLANDC, BOOST_TESTED_AT(0x581) )
-#  define BOOST_REF_CONST
-#else
 #  define BOOST_REF_CONST const
-#endif
 /**
  @endcond
 */
@@ -174,15 +160,9 @@ private:
 */
 template<class T> BOOST_FORCEINLINE reference_wrapper<T> BOOST_REF_CONST ref( T & t ) BOOST_NOEXCEPT
 {
-#if defined( BOOST_MSVC ) && BOOST_WORKAROUND( BOOST_MSVC, == 1600 )
-
-    return reference_wrapper<T>( t, ref_workaround_tag() );
-
-#else
 
     return reference_wrapper<T>( t );
 
-#endif
 }
 
 // cref

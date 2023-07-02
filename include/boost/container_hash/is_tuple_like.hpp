@@ -19,7 +19,7 @@ template<class T, class E = true_type> struct is_tuple_like_: false_type
 {
 };
 
-#if !defined(BOOST_NO_CXX11_HDR_TUPLE) && !BOOST_WORKAROUND(BOOST_MSVC, <= 1800)
+#if !defined(BOOST_NO_CXX11_HDR_TUPLE)
 
 template<class T> struct is_tuple_like_<T, integral_constant<bool, std::tuple_size<T>::value == std::tuple_size<T>::value> >: true_type
 {

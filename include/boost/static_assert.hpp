@@ -141,12 +141,6 @@ template<std::size_t x> struct static_assert_test{};
      sizeof(::boost::STATIC_ASSERTION_FAILURE< \
        BOOST_JOIN(boost_static_assert_test_, __LINE__) >)>\
          BOOST_JOIN(boost_static_assert_typedef_, __LINE__)
-#elif BOOST_WORKAROUND(__MWERKS__, <= 0x3003)
-// special version for CodeWarrior <= 8.x
-#define BOOST_STATIC_ASSERT( B ) \
-   BOOST_STATIC_CONSTANT(int, \
-     BOOST_JOIN(boost_static_assert_test_, __LINE__) = \
-       sizeof(::boost::STATIC_ASSERTION_FAILURE< BOOST_STATIC_ASSERT_BOOL_CAST( B ) >) )
 #else
 // generic version
 #  ifndef BOOST_NO_CXX11_VARIADIC_MACROS

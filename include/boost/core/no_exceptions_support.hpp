@@ -29,10 +29,7 @@
 #    define BOOST_RETHROW throw;
 #    define BOOST_CATCH_END }
 #else
-#    if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564))
-#        define BOOST_TRY { if ("")
-#        define BOOST_CATCH(x) else if (!"")
-#    elif !defined(BOOST_MSVC) || BOOST_MSVC >= 1900
+#    if !defined(BOOST_MSVC) || BOOST_MSVC >= 1900
 #        define BOOST_TRY { if (true)
 #        define BOOST_CATCH(x) else if (false)
 #    else
