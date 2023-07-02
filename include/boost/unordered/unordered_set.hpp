@@ -96,15 +96,12 @@ namespace boost {
 
       unordered_set(unordered_set const&);
 
-#if defined(BOOST_UNORDERED_USE_MOVE) ||                                       \
-  !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       unordered_set(BOOST_RV_REF(unordered_set) other)
         BOOST_NOEXCEPT_IF(table::nothrow_move_constructible)
           : table_(other.table_, boost::unordered::detail::move_tag())
       {
         // The move is done in table_
       }
-#endif
 
       explicit unordered_set(allocator_type const&);
 
@@ -171,7 +168,6 @@ namespace boost {
         return *this;
       }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       unordered_set& operator=(unordered_set&& x)
         BOOST_NOEXCEPT_IF(value_allocator_traits::is_always_equal::value&&
             boost::is_nothrow_move_assignable<H>::value&&
@@ -180,7 +176,6 @@ namespace boost {
         table_.move_assign(x.table_, boost::unordered::detail::true_type());
         return *this;
       }
-#endif
 #endif
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -225,7 +220,6 @@ namespace boost {
 
 // emplace
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
       template <class... Args>
       std::pair<iterator, bool> emplace(BOOST_FWD_REF(Args)... args)
@@ -235,58 +229,7 @@ namespace boost {
           boost::forward<Args>(args)...);
       }
 
-#else
 
-#if !BOOST_UNORDERED_SUN_WORKAROUNDS1
-
-      // 0 argument emplace requires special treatment in case
-      // the container is instantiated with a value type that
-      // doesn't have a default constructor.
-
-      std::pair<iterator, bool> emplace(
-        boost::unordered::detail::empty_emplace =
-          boost::unordered::detail::empty_emplace(),
-        value_type v = value_type())
-      {
-        return this->emplace(boost::move(v));
-      }
-
-#endif
-
-      template <typename A0>
-      std::pair<iterator, bool> emplace(BOOST_FWD_REF(A0) a0)
-      {
-        return table_.emplace_unique(
-          table::extractor::extract(boost::forward<A0>(a0)),
-          boost::unordered::detail::create_emplace_args(
-            boost::forward<A0>(a0)));
-      }
-
-      template <typename A0, typename A1>
-      std::pair<iterator, bool> emplace(
-        BOOST_FWD_REF(A0) a0, BOOST_FWD_REF(A1) a1)
-      {
-        return table_.emplace_unique(
-          table::extractor::extract(
-            boost::forward<A0>(a0), boost::forward<A1>(a1)),
-          boost::unordered::detail::create_emplace_args(
-            boost::forward<A0>(a0), boost::forward<A1>(a1)));
-      }
-
-      template <typename A0, typename A1, typename A2>
-      std::pair<iterator, bool> emplace(
-        BOOST_FWD_REF(A0) a0, BOOST_FWD_REF(A1) a1, BOOST_FWD_REF(A2) a2)
-      {
-        return table_.emplace_unique(
-          table::extractor::extract(
-            boost::forward<A0>(a0), boost::forward<A1>(a1)),
-          boost::unordered::detail::create_emplace_args(boost::forward<A0>(a0),
-            boost::forward<A1>(a1), boost::forward<A2>(a2)));
-      }
-
-#endif
-
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
       template <class... Args>
       iterator emplace_hint(const_iterator hint, BOOST_FWD_REF(Args)... args)
@@ -296,90 +239,7 @@ namespace boost {
           boost::forward<Args>(args)...);
       }
 
-#else
 
-#if !BOOST_UNORDERED_SUN_WORKAROUNDS1
-
-      iterator emplace_hint(const_iterator hint,
-        boost::unordered::detail::empty_emplace =
-          boost::unordered::detail::empty_emplace(),
-        value_type v = value_type())
-      {
-        return this->emplace_hint(hint, boost::move(v));
-      }
-
-#endif
-
-      template <typename A0>
-      iterator emplace_hint(const_iterator hint, BOOST_FWD_REF(A0) a0)
-      {
-        return table_.emplace_hint_unique(hint,
-          table::extractor::extract(boost::forward<A0>(a0)),
-          boost::unordered::detail::create_emplace_args(
-            boost::forward<A0>(a0)));
-      }
-
-      template <typename A0, typename A1>
-      iterator emplace_hint(
-        const_iterator hint, BOOST_FWD_REF(A0) a0, BOOST_FWD_REF(A1) a1)
-      {
-        return table_.emplace_hint_unique(hint,
-          table::extractor::extract(
-            boost::forward<A0>(a0), boost::forward<A1>(a1)),
-          boost::unordered::detail::create_emplace_args(
-            boost::forward<A0>(a0), boost::forward<A1>(a1)));
-      }
-
-      template <typename A0, typename A1, typename A2>
-      iterator emplace_hint(const_iterator hint, BOOST_FWD_REF(A0) a0,
-        BOOST_FWD_REF(A1) a1, BOOST_FWD_REF(A2) a2)
-      {
-        return table_.emplace_hint_unique(hint,
-          table::extractor::extract(
-            boost::forward<A0>(a0), boost::forward<A1>(a1)),
-          boost::unordered::detail::create_emplace_args(boost::forward<A0>(a0),
-            boost::forward<A1>(a1), boost::forward<A2>(a2)));
-      }
-
-#endif
-
-#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-
-#define BOOST_UNORDERED_EMPLACE(z, n, _)                                       \
-  template <BOOST_PP_ENUM_PARAMS_Z(z, n, typename A)>                          \
-  std::pair<iterator, bool> emplace(                                           \
-    BOOST_PP_ENUM_##z(n, BOOST_UNORDERED_FWD_PARAM, a))                        \
-  {                                                                            \
-    return table_.emplace_unique(                                              \
-      table::extractor::extract(                                               \
-        boost::forward<A0>(a0), boost::forward<A1>(a1)),                       \
-      boost::unordered::detail::create_emplace_args(                           \
-        BOOST_PP_ENUM_##z(n, BOOST_UNORDERED_CALL_FORWARD, a)));               \
-  }                                                                            \
-                                                                               \
-  template <BOOST_PP_ENUM_PARAMS_Z(z, n, typename A)>                          \
-  iterator emplace_hint(                                                       \
-    const_iterator hint, BOOST_PP_ENUM_##z(n, BOOST_UNORDERED_FWD_PARAM, a))   \
-  {                                                                            \
-    return table_.emplace_hint_unique(hint,                                    \
-      table::extractor::extract(                                               \
-        boost::forward<A0>(a0), boost::forward<A1>(a1)),                       \
-      boost::unordered::detail::create_emplace_args(                           \
-        BOOST_PP_ENUM_##z(n, BOOST_UNORDERED_CALL_FORWARD, a)));               \
-  }
-
-      BOOST_UNORDERED_EMPLACE(1, 4, _)
-      BOOST_UNORDERED_EMPLACE(1, 5, _)
-      BOOST_UNORDERED_EMPLACE(1, 6, _)
-      BOOST_UNORDERED_EMPLACE(1, 7, _)
-      BOOST_UNORDERED_EMPLACE(1, 8, _)
-      BOOST_UNORDERED_EMPLACE(1, 9, _)
-      BOOST_PP_REPEAT_FROM_TO(10, BOOST_PP_INC(BOOST_UNORDERED_EMPLACE_LIMIT),
-        BOOST_UNORDERED_EMPLACE, _)
-
-#undef BOOST_UNORDERED_EMPLACE
-
-#endif
 
       std::pair<iterator, bool> insert(value_type const& x)
       {
@@ -459,8 +319,7 @@ namespace boost {
         return table_.move_insert_node_type_with_hint_unique(hint, np);
       }
 
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES) ||                               \
-  (BOOST_COMP_GNUC && BOOST_COMP_GNUC < BOOST_VERSION_NUMBER(4, 6, 0))
+#if  BOOST_COMP_GNUC && BOOST_COMP_GNUC < BOOST_VERSION_NUMBER(4, 6, 0)
     private:
       // Note: Use r-value node_type to insert.
       insert_return_type insert(node_type&);
@@ -496,18 +355,14 @@ namespace boost {
       template <typename H2, typename P2>
       void merge(boost::unordered_set<T, H2, P2, A>& source);
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       template <typename H2, typename P2>
       void merge(boost::unordered_set<T, H2, P2, A>&& source);
-#endif
 
       template <typename H2, typename P2>
       void merge(boost::unordered_multiset<T, H2, P2, A>& source);
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       template <typename H2, typename P2>
       void merge(boost::unordered_multiset<T, H2, P2, A>&& source);
-#endif
 
       // observers
 
@@ -772,15 +627,12 @@ namespace boost {
 
       unordered_multiset(unordered_multiset const&);
 
-#if defined(BOOST_UNORDERED_USE_MOVE) ||                                       \
-  !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       unordered_multiset(BOOST_RV_REF(unordered_multiset) other)
         BOOST_NOEXCEPT_IF(table::nothrow_move_constructible)
           : table_(other.table_, boost::unordered::detail::move_tag())
       {
         // The move is done in table_
       }
-#endif
 
       explicit unordered_multiset(allocator_type const&);
 
@@ -850,7 +702,6 @@ namespace boost {
         return *this;
       }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       unordered_multiset& operator=(unordered_multiset&& x)
         BOOST_NOEXCEPT_IF(value_allocator_traits::is_always_equal::value&&
             boost::is_nothrow_move_assignable<H>::value&&
@@ -859,7 +710,6 @@ namespace boost {
         table_.move_assign(x.table_, boost::unordered::detail::false_type());
         return *this;
       }
-#endif
 #endif
 
 #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
@@ -904,7 +754,6 @@ namespace boost {
 
 // emplace
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
       template <class... Args> iterator emplace(BOOST_FWD_REF(Args)... args)
       {
@@ -913,56 +762,7 @@ namespace boost {
             table_.node_alloc(), boost::forward<Args>(args)...)));
       }
 
-#else
 
-#if !BOOST_UNORDERED_SUN_WORKAROUNDS1
-
-      // 0 argument emplace requires special treatment in case
-      // the container is instantiated with a value type that
-      // doesn't have a default constructor.
-
-      iterator emplace(boost::unordered::detail::empty_emplace =
-                         boost::unordered::detail::empty_emplace(),
-        value_type v = value_type())
-      {
-        return this->emplace(boost::move(v));
-      }
-
-#endif
-
-      template <typename A0> iterator emplace(BOOST_FWD_REF(A0) a0)
-      {
-        return iterator(table_.emplace_equiv(
-          boost::unordered::detail::func::construct_node_from_args(
-            table_.node_alloc(), boost::unordered::detail::create_emplace_args(
-                                   boost::forward<A0>(a0)))));
-      }
-
-      template <typename A0, typename A1>
-      iterator emplace(BOOST_FWD_REF(A0) a0, BOOST_FWD_REF(A1) a1)
-      {
-        return iterator(table_.emplace_equiv(
-          boost::unordered::detail::func::construct_node_from_args(
-            table_.node_alloc(),
-            boost::unordered::detail::create_emplace_args(
-              boost::forward<A0>(a0), boost::forward<A1>(a1)))));
-      }
-
-      template <typename A0, typename A1, typename A2>
-      iterator emplace(
-        BOOST_FWD_REF(A0) a0, BOOST_FWD_REF(A1) a1, BOOST_FWD_REF(A2) a2)
-      {
-        return iterator(table_.emplace_equiv(
-          boost::unordered::detail::func::construct_node_from_args(
-            table_.node_alloc(),
-            boost::unordered::detail::create_emplace_args(
-              boost::forward<A0>(a0), boost::forward<A1>(a1),
-              boost::forward<A2>(a2)))));
-      }
-
-#endif
-
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
       template <class... Args>
       iterator emplace_hint(const_iterator hint, BOOST_FWD_REF(Args)... args)
@@ -972,90 +772,7 @@ namespace boost {
                   table_.node_alloc(), boost::forward<Args>(args)...)));
       }
 
-#else
 
-#if !BOOST_UNORDERED_SUN_WORKAROUNDS1
-
-      iterator emplace_hint(const_iterator hint,
-        boost::unordered::detail::empty_emplace =
-          boost::unordered::detail::empty_emplace(),
-        value_type v = value_type())
-      {
-        return this->emplace_hint(hint, boost::move(v));
-      }
-
-#endif
-
-      template <typename A0>
-      iterator emplace_hint(const_iterator hint, BOOST_FWD_REF(A0) a0)
-      {
-        return iterator(table_.emplace_hint_equiv(hint,
-          boost::unordered::detail::func::construct_node_from_args(
-            table_.node_alloc(), boost::unordered::detail::create_emplace_args(
-                                   boost::forward<A0>(a0)))));
-      }
-
-      template <typename A0, typename A1>
-      iterator emplace_hint(
-        const_iterator hint, BOOST_FWD_REF(A0) a0, BOOST_FWD_REF(A1) a1)
-      {
-        return iterator(table_.emplace_hint_equiv(
-          hint, boost::unordered::detail::func::construct_node_from_args(
-                  table_.node_alloc(),
-                  boost::unordered::detail::create_emplace_args(
-                    boost::forward<A0>(a0), boost::forward<A1>(a1)))));
-      }
-
-      template <typename A0, typename A1, typename A2>
-      iterator emplace_hint(const_iterator hint, BOOST_FWD_REF(A0) a0,
-        BOOST_FWD_REF(A1) a1, BOOST_FWD_REF(A2) a2)
-      {
-        return iterator(table_.emplace_hint_equiv(
-          hint, boost::unordered::detail::func::construct_node_from_args(
-                  table_.node_alloc(),
-                  boost::unordered::detail::create_emplace_args(
-                    boost::forward<A0>(a0), boost::forward<A1>(a1),
-                    boost::forward<A2>(a2)))));
-      }
-
-#endif
-
-#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-
-#define BOOST_UNORDERED_EMPLACE(z, n, _)                                       \
-  template <BOOST_PP_ENUM_PARAMS_Z(z, n, typename A)>                          \
-  iterator emplace(BOOST_PP_ENUM_##z(n, BOOST_UNORDERED_FWD_PARAM, a))         \
-  {                                                                            \
-    return iterator(table_.emplace_equiv(                                      \
-      boost::unordered::detail::func::construct_node_from_args(                \
-        table_.node_alloc(),                                                   \
-        boost::unordered::detail::create_emplace_args(                         \
-          BOOST_PP_ENUM_##z(n, BOOST_UNORDERED_CALL_FORWARD, a)))));           \
-  }                                                                            \
-                                                                               \
-  template <BOOST_PP_ENUM_PARAMS_Z(z, n, typename A)>                          \
-  iterator emplace_hint(                                                       \
-    const_iterator hint, BOOST_PP_ENUM_##z(n, BOOST_UNORDERED_FWD_PARAM, a))   \
-  {                                                                            \
-    return iterator(table_.emplace_hint_equiv(                                 \
-      hint, boost::unordered::detail::func::construct_node_from_args(          \
-              table_.node_alloc(),                                             \
-              boost::unordered::detail::create_emplace_args(                   \
-                BOOST_PP_ENUM_##z(n, BOOST_UNORDERED_CALL_FORWARD, a)))));     \
-  }
-
-      BOOST_UNORDERED_EMPLACE(1, 4, _)
-      BOOST_UNORDERED_EMPLACE(1, 5, _)
-      BOOST_UNORDERED_EMPLACE(1, 6, _)
-      BOOST_UNORDERED_EMPLACE(1, 7, _)
-      BOOST_UNORDERED_EMPLACE(1, 8, _)
-      BOOST_UNORDERED_EMPLACE(1, 9, _)
-      BOOST_PP_REPEAT_FROM_TO(10, BOOST_PP_INC(BOOST_UNORDERED_EMPLACE_LIMIT),
-        BOOST_UNORDERED_EMPLACE, _)
-
-#undef BOOST_UNORDERED_EMPLACE
-
-#endif
 
       iterator insert(value_type const& x) { return this->emplace(x); }
 
@@ -1112,8 +829,7 @@ namespace boost {
         return table_.move_insert_node_type_with_hint_equiv(hint, np);
       }
 
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES) ||                               \
-  (BOOST_COMP_GNUC && BOOST_COMP_GNUC < BOOST_VERSION_NUMBER(4, 6, 0))
+#if  BOOST_COMP_GNUC && BOOST_COMP_GNUC < BOOST_VERSION_NUMBER(4, 6, 0)
     private:
       // Note: Use r-value node_type to insert.
       iterator insert(node_type&);
@@ -1149,18 +865,14 @@ namespace boost {
       template <typename H2, typename P2>
       void merge(boost::unordered_multiset<T, H2, P2, A>& source);
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       template <typename H2, typename P2>
       void merge(boost::unordered_multiset<T, H2, P2, A>&& source);
-#endif
 
       template <typename H2, typename P2>
       void merge(boost::unordered_set<T, H2, P2, A>& source);
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       template <typename H2, typename P2>
       void merge(boost::unordered_set<T, H2, P2, A>&& source);
-#endif
 
       // observers
 
@@ -1632,7 +1344,6 @@ namespace boost {
       table_.merge_unique(source.table_);
     }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template <class T, class H, class P, class A>
     template <typename H2, typename P2>
     void unordered_set<T, H, P, A>::merge(
@@ -1640,7 +1351,6 @@ namespace boost {
     {
       table_.merge_unique(source.table_);
     }
-#endif
 
     template <class T, class H, class P, class A>
     template <typename H2, typename P2>
@@ -1650,7 +1360,6 @@ namespace boost {
       table_.merge_unique(source.table_);
     }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template <class T, class H, class P, class A>
     template <typename H2, typename P2>
     void unordered_set<T, H, P, A>::merge(
@@ -1658,7 +1367,6 @@ namespace boost {
     {
       table_.merge_unique(source.table_);
     }
-#endif
 
     // lookup
 
@@ -2052,7 +1760,6 @@ namespace boost {
       }
     }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template <class T, class H, class P, class A>
     template <typename H2, typename P2>
     void unordered_multiset<T, H, P, A>::merge(
@@ -2062,7 +1769,6 @@ namespace boost {
         insert(source.extract(source.begin()));
       }
     }
-#endif
 
     template <class T, class H, class P, class A>
     template <typename H2, typename P2>
@@ -2074,7 +1780,6 @@ namespace boost {
       }
     }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template <class T, class H, class P, class A>
     template <typename H2, typename P2>
     void unordered_multiset<T, H, P, A>::merge(
@@ -2084,7 +1789,6 @@ namespace boost {
         insert(source.extract(source.begin()));
       }
     }
-#endif
 
     // lookup
 

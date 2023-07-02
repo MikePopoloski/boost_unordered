@@ -71,13 +71,6 @@
 // I'm just using them of everything older than the current test compilers
 // (as of May 2017).
 
-#if !defined(BOOST_UNORDERED_SUN_WORKAROUNDS1)
-#if BOOST_COMP_SUNPRO && BOOST_COMP_SUNPRO < BOOST_VERSION_NUMBER(5, 20, 0)
-#define BOOST_UNORDERED_SUN_WORKAROUNDS1 1
-#else
-#define BOOST_UNORDERED_SUN_WORKAROUNDS1 0
-#endif
-#endif
 
 // BOOST_UNORDERED_EMPLACE_LIMIT = The maximum number of parameters in
 // emplace (not including things like hints). Don't set it to a lower value, as
@@ -128,8 +121,7 @@
 // in allocator_traits and piecewise construction of std::pair
 // Otherwise allocators aren't used for construction/destruction
 
-#if BOOST_UNORDERED_HAVE_PIECEWISE_CONSTRUCT &&                                \
-  !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && BOOST_UNORDERED_TUPLE_ARGS
+#if BOOST_UNORDERED_HAVE_PIECEWISE_CONSTRUCT && BOOST_UNORDERED_TUPLE_ARGS
 #if BOOST_COMP_SUNPRO && BOOST_LIB_STD_GNU
 // Sun C++ std::pair piecewise construction doesn't seem to be exception safe.
 // (At least for Sun C++ 12.5 using libstdc++).
@@ -163,8 +155,7 @@
 //
 // Wrapper around various depreaction attributes.
 
-#if defined(__has_cpp_attribute) &&                                            \
-  (!defined(__cplusplus) || __cplusplus >= 201402)
+#if defined(__has_cpp_attribute)
 #if __has_cpp_attribute(deprecated) && !defined(BOOST_UNORDERED_DEPRECATED)
 #define BOOST_UNORDERED_DEPRECATED(msg) [[deprecated(msg)]]
 #endif
@@ -447,129 +438,11 @@ namespace boost {
 // Either forwarding variadic arguments, or storing the arguments in
 // emplace_args##n
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 #define BOOST_UNORDERED_EMPLACE_TEMPLATE typename... Args
 #define BOOST_UNORDERED_EMPLACE_ARGS BOOST_FWD_REF(Args)... args
 #define BOOST_UNORDERED_EMPLACE_FORWARD boost::forward<Args>(args)...
 
-#else
-
-#define BOOST_UNORDERED_EMPLACE_TEMPLATE typename Args
-#define BOOST_UNORDERED_EMPLACE_ARGS Args const& args
-#define BOOST_UNORDERED_EMPLACE_FORWARD args
-
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-
-#define BOOST_UNORDERED_EARGS_MEMBER(z, n, _)                                  \
-  typedef BOOST_FWD_REF(BOOST_PP_CAT(A, n)) BOOST_PP_CAT(Arg, n);              \
-  BOOST_PP_CAT(Arg, n) BOOST_PP_CAT(a, n);
-
-#else
-
-#define BOOST_UNORDERED_EARGS_MEMBER(z, n, _)                                  \
-  typedef typename boost::add_lvalue_reference<BOOST_PP_CAT(A, n)>::type       \
-    BOOST_PP_CAT(Arg, n);                                                      \
-  BOOST_PP_CAT(Arg, n) BOOST_PP_CAT(a, n);
-
-#endif
-
-#define BOOST_UNORDERED_FWD_PARAM(z, n, a)                                     \
-  BOOST_FWD_REF(BOOST_PP_CAT(A, n)) BOOST_PP_CAT(a, n)
-
-#define BOOST_UNORDERED_CALL_FORWARD(z, i, a)                                  \
-  boost::forward<BOOST_PP_CAT(A, i)>(BOOST_PP_CAT(a, i))
-
-#define BOOST_UNORDERED_EARGS_INIT(z, n, _)                                    \
-  BOOST_PP_CAT(a, n)(BOOST_PP_CAT(b, n))
-
-#define BOOST_UNORDERED_EARGS(z, n, _)                                         \
-  template <BOOST_PP_ENUM_PARAMS_Z(z, n, typename A)>                          \
-  struct BOOST_PP_CAT(emplace_args, n)                                         \
-  {                                                                            \
-    BOOST_PP_REPEAT_##z(n, BOOST_UNORDERED_EARGS_MEMBER, _) BOOST_PP_CAT(      \
-      emplace_args, n)(BOOST_PP_ENUM_BINARY_PARAMS_Z(z, n, Arg, b))            \
-        : BOOST_PP_ENUM_##z(n, BOOST_UNORDERED_EARGS_INIT, _)                  \
-    {                                                                          \
-    }                                                                          \
-  };                                                                           \
-                                                                               \
-  template <BOOST_PP_ENUM_PARAMS_Z(z, n, typename A)>                          \
-  inline BOOST_PP_CAT(emplace_args, n)<BOOST_PP_ENUM_PARAMS_Z(z, n, A)>        \
-    create_emplace_args(BOOST_PP_ENUM_##z(n, BOOST_UNORDERED_FWD_PARAM, b))    \
-  {                                                                            \
-    BOOST_PP_CAT(emplace_args, n)<BOOST_PP_ENUM_PARAMS_Z(z, n, A)> e(          \
-      BOOST_PP_ENUM_PARAMS_Z(z, n, b));                                        \
-    return e;                                                                  \
-  }
-
-namespace boost {
-  namespace unordered {
-    namespace detail {
-      template <typename A0> struct emplace_args1
-      {
-        BOOST_UNORDERED_EARGS_MEMBER(1, 0, _)
-
-        explicit emplace_args1(Arg0 b0) : a0(b0) {}
-      };
-
-      template <typename A0>
-      inline emplace_args1<A0> create_emplace_args(BOOST_FWD_REF(A0) b0)
-      {
-        emplace_args1<A0> e(b0);
-        return e;
-      }
-
-      template <typename A0, typename A1> struct emplace_args2
-      {
-        BOOST_UNORDERED_EARGS_MEMBER(1, 0, _)
-        BOOST_UNORDERED_EARGS_MEMBER(1, 1, _)
-
-        emplace_args2(Arg0 b0, Arg1 b1) : a0(b0), a1(b1) {}
-      };
-
-      template <typename A0, typename A1>
-      inline emplace_args2<A0, A1> create_emplace_args(
-        BOOST_FWD_REF(A0) b0, BOOST_FWD_REF(A1) b1)
-      {
-        emplace_args2<A0, A1> e(b0, b1);
-        return e;
-      }
-
-      template <typename A0, typename A1, typename A2> struct emplace_args3
-      {
-        BOOST_UNORDERED_EARGS_MEMBER(1, 0, _)
-        BOOST_UNORDERED_EARGS_MEMBER(1, 1, _)
-        BOOST_UNORDERED_EARGS_MEMBER(1, 2, _)
-
-        emplace_args3(Arg0 b0, Arg1 b1, Arg2 b2) : a0(b0), a1(b1), a2(b2) {}
-      };
-
-      template <typename A0, typename A1, typename A2>
-      inline emplace_args3<A0, A1, A2> create_emplace_args(
-        BOOST_FWD_REF(A0) b0, BOOST_FWD_REF(A1) b1, BOOST_FWD_REF(A2) b2)
-      {
-        emplace_args3<A0, A1, A2> e(b0, b1, b2);
-        return e;
-      }
-
-      BOOST_UNORDERED_EARGS(1, 4, _)
-      BOOST_UNORDERED_EARGS(1, 5, _)
-      BOOST_UNORDERED_EARGS(1, 6, _)
-      BOOST_UNORDERED_EARGS(1, 7, _)
-      BOOST_UNORDERED_EARGS(1, 8, _)
-      BOOST_UNORDERED_EARGS(1, 9, _)
-      BOOST_PP_REPEAT_FROM_TO(10, BOOST_PP_INC(BOOST_UNORDERED_EMPLACE_LIMIT),
-        BOOST_UNORDERED_EARGS, _)
-    }
-  }
-}
-
-#undef BOOST_UNORDERED_DEFINE_EMPLACE_ARGS
-#undef BOOST_UNORDERED_EARGS_MEMBER
-#undef BOOST_UNORDERED_EARGS_INIT
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -772,7 +645,7 @@ namespace boost {
 
 #if BOOST_UNORDERED_CXX11_CONSTRUCTION
 
-#elif !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#else
 
 namespace boost {
   namespace unordered {
@@ -782,27 +655,6 @@ namespace boost {
         inline void construct_value(T* address, BOOST_FWD_REF(Args)... args)
         {
           new ((void*)address) T(boost::forward<Args>(args)...);
-        }
-      }
-    }
-  }
-}
-
-#else
-
-namespace boost {
-  namespace unordered {
-    namespace detail {
-      namespace func {
-        template <typename T> inline void construct_value(T* address)
-        {
-          new ((void*)address) T();
-        }
-
-        template <typename T, typename A0>
-        inline void construct_value(T* address, BOOST_FWD_REF(A0) a0)
-        {
-          new ((void*)address) T(boost::forward<A0>(a0));
         }
       }
     }
@@ -831,7 +683,6 @@ namespace boost {
 // construct_from_tuple for boost::tuple
 // The workaround for old Sun compilers comes later in the file.
 
-#if !BOOST_UNORDERED_SUN_WORKAROUNDS1
 
 namespace boost {
   namespace unordered {
@@ -858,7 +709,6 @@ namespace boost {
   }
 }
 
-#endif
 
 // construct_from_tuple for std::tuple
 
@@ -901,64 +751,6 @@ namespace boost {
 // the overloads. That means there's no possible ambiguity between the
 // different overloads, so that the compiler doesn't get confused
 
-#if BOOST_UNORDERED_SUN_WORKAROUNDS1
-
-#define BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE(z, n, namespace_)                 \
-  template <typename Alloc, typename T,                                        \
-    BOOST_PP_ENUM_PARAMS_Z(z, n, typename A)>                                  \
-  void construct_from_tuple_impl(boost::unordered::detail::func::length<n>,    \
-    Alloc&, T* ptr,                                                            \
-    namespace_::tuple<BOOST_PP_ENUM_PARAMS_Z(z, n, A)> const& x)               \
-  {                                                                            \
-    new ((void*)ptr)                                                           \
-      T(BOOST_PP_ENUM_##z(n, BOOST_UNORDERED_GET_TUPLE_ARG, namespace_));      \
-  }
-
-#define BOOST_UNORDERED_GET_TUPLE_ARG(z, n, namespace_) namespace_::get<n>(x)
-
-namespace boost {
-  namespace unordered {
-    namespace detail {
-      namespace func {
-        template <int N> struct length
-        {
-        };
-
-        template <typename Alloc, typename T>
-        void construct_from_tuple_impl(
-          boost::unordered::detail::func::length<0>, Alloc&, T* ptr,
-          boost::tuple<>)
-        {
-          new ((void*)ptr) T();
-        }
-
-        BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE(1, 1, boost)
-        BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE(1, 2, boost)
-        BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE(1, 3, boost)
-        BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE(1, 4, boost)
-        BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE(1, 5, boost)
-        BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE(1, 6, boost)
-        BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE(1, 7, boost)
-        BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE(1, 8, boost)
-        BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE(1, 9, boost)
-        BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE(1, 10, boost)
-
-        template <typename Alloc, typename T, typename Tuple>
-        void construct_from_tuple(Alloc& alloc, T* ptr, Tuple const& x)
-        {
-          construct_from_tuple_impl(boost::unordered::detail::func::length<
-                                      boost::tuples::length<Tuple>::value>(),
-            alloc, ptr, x);
-        }
-      }
-    }
-  }
-}
-
-#undef BOOST_UNORDERED_CONSTRUCT_FROM_TUPLE
-#undef BOOST_UNORDERED_GET_TUPLE_ARG
-
-#endif
 
 namespace boost {
   namespace unordered {
@@ -1057,7 +849,7 @@ namespace boost {
             to_std_tuple(a1), to_std_tuple(a2));
         }
 
-#elif !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#else
 
         ////////////////////////////////////////////////////////////////////////
         // Construct from variadic parameters
@@ -1093,87 +885,7 @@ namespace boost {
           BOOST_CATCH_END
         }
 
-#else // BOOST_NO_CXX11_VARIADIC_TEMPLATES
-
-        ////////////////////////////////////////////////////////////////////////
-        // Construct from emplace_args
-
-        // Explicitly write out first three overloads for the sake of sane
-        // error messages.
-
-        template <typename Alloc, typename T, typename A0>
-        inline void construct_from_args(
-          Alloc&, T* address, emplace_args1<A0> const& args)
-        {
-          new ((void*)address) T(boost::forward<A0>(args.a0));
-        }
-
-        template <typename Alloc, typename T, typename A0, typename A1>
-        inline void construct_from_args(
-          Alloc&, T* address, emplace_args2<A0, A1> const& args)
-        {
-          new ((void*)address)
-            T(boost::forward<A0>(args.a0), boost::forward<A1>(args.a1));
-        }
-
-        template <typename Alloc, typename T, typename A0, typename A1,
-          typename A2>
-        inline void construct_from_args(
-          Alloc&, T* address, emplace_args3<A0, A1, A2> const& args)
-        {
-          new ((void*)address) T(boost::forward<A0>(args.a0),
-            boost::forward<A1>(args.a1), boost::forward<A2>(args.a2));
-        }
-
-// Use a macro for the rest.
-
-#define BOOST_UNORDERED_CONSTRUCT_IMPL(z, num_params, _)                       \
-  template <typename Alloc, typename T,                                        \
-    BOOST_PP_ENUM_PARAMS_Z(z, num_params, typename A)>                         \
-  inline void construct_from_args(Alloc&, T* address,                          \
-    boost::unordered::detail::BOOST_PP_CAT(emplace_args, num_params) <         \
-      BOOST_PP_ENUM_PARAMS_Z(z, num_params, A) > const& args)                  \
-  {                                                                            \
-    new ((void*)address)                                                       \
-      T(BOOST_PP_ENUM_##z(num_params, BOOST_UNORDERED_CALL_FORWARD, args.a));  \
-  }
-
-        BOOST_UNORDERED_CONSTRUCT_IMPL(1, 4, _)
-        BOOST_UNORDERED_CONSTRUCT_IMPL(1, 5, _)
-        BOOST_UNORDERED_CONSTRUCT_IMPL(1, 6, _)
-        BOOST_UNORDERED_CONSTRUCT_IMPL(1, 7, _)
-        BOOST_UNORDERED_CONSTRUCT_IMPL(1, 8, _)
-        BOOST_UNORDERED_CONSTRUCT_IMPL(1, 9, _)
-        BOOST_PP_REPEAT_FROM_TO(10, BOOST_PP_INC(BOOST_UNORDERED_EMPLACE_LIMIT),
-          BOOST_UNORDERED_CONSTRUCT_IMPL, _)
-
-#undef BOOST_UNORDERED_CONSTRUCT_IMPL
-
-        // Construct with piecewise_construct
-
-        template <typename Alloc, typename A, typename B, typename A0,
-          typename A1, typename A2>
-        inline typename enable_if<use_piecewise<A0>, void>::type
-        construct_from_args(Alloc& alloc, std::pair<A, B>* address,
-          boost::unordered::detail::emplace_args3<A0, A1, A2> const& args)
-        {
-          boost::unordered::detail::func::construct_from_tuple(
-            alloc, boost::addressof(address->first), args.a1);
-          BOOST_TRY
-          {
-            boost::unordered::detail::func::construct_from_tuple(
-              alloc, boost::addressof(address->second), args.a2);
-          }
-          BOOST_CATCH(...)
-          {
-            boost::unordered::detail::func::destroy(
-              boost::addressof(address->first));
-            BOOST_RETHROW
-          }
-          BOOST_CATCH_END
-        }
-
-#endif // BOOST_NO_CXX11_VARIADIC_TEMPLATES
+#endif
       }
     }
   }
@@ -1654,29 +1366,7 @@ namespace boost {
 // rvalue parameters when type can't be a BOOST_RV_REF(T) parameter
 // e.g. for int
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #define BOOST_UNORDERED_RV_REF(T) BOOST_RV_REF(T)
-#else
-      struct please_ignore_this_overload
-      {
-        typedef please_ignore_this_overload type;
-      };
-
-      template <typename T> struct rv_ref_impl
-      {
-        typedef BOOST_RV_REF(T) type;
-      };
-
-      template <typename T>
-      struct rv_ref : boost::conditional<boost::is_class<T>::value,
-                        boost::unordered::detail::rv_ref_impl<T>,
-                        please_ignore_this_overload>::type
-      {
-      };
-
-#define BOOST_UNORDERED_RV_REF(T)                                              \
-  typename boost::unordered::detail::rv_ref<T>::type
-#endif
 
 #if defined(BOOST_MSVC)
 #pragma warning(push)
@@ -3537,19 +3227,11 @@ namespace boost {
           return no_key();
         }
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
         template <class Arg1, class Arg2, class... Args>
         static no_key extract(Arg1 const&, Arg2 const&, Args const&...)
         {
           return no_key();
         }
-#else
-        template <class Arg1, class Arg2>
-        static no_key extract(Arg1 const&, Arg2 const&)
-        {
-          return no_key();
-        }
-#endif
       };
 
       template <class ValueType> struct map_extractor
@@ -3573,21 +3255,6 @@ namespace boost {
           return v.first;
         }
 
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-        template <class Second>
-        static key_type const& extract(
-          boost::rv<std::pair<key_type, Second> > const& v)
-        {
-          return v.first;
-        }
-
-        template <class Second>
-        static key_type const& extract(
-          boost::rv<std::pair<key_type const, Second> > const& v)
-        {
-          return v.first;
-        }
-#endif
 
         template <class Arg1>
         static key_type const& extract(key_type const& k, Arg1 const&)
@@ -3608,16 +3275,13 @@ namespace boost {
           return no_key();
         }
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
         template <class Arg1, class Arg2, class Arg3, class... Args>
         static no_key extract(
           Arg1 const&, Arg2 const&, Arg3 const&, Args const&...)
         {
           return no_key();
         }
-#endif
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 #define BOOST_UNORDERED_KEY_FROM_TUPLE(namespace_)                             \
   template <typename T2>                                                       \
@@ -3635,23 +3299,6 @@ namespace boost {
     return typename is_key<key_type, T>::type(namespace_ get<0>(k));           \
   }
 
-#else
-
-#define BOOST_UNORDERED_KEY_FROM_TUPLE(namespace_)                             \
-  static no_key extract(                                                       \
-    boost::unordered::piecewise_construct_t, namespace_ tuple<> const&)        \
-  {                                                                            \
-    return no_key();                                                           \
-  }                                                                            \
-                                                                               \
-  template <typename T>                                                        \
-  static typename is_key<key_type, T>::type extract(                           \
-    boost::unordered::piecewise_construct_t, namespace_ tuple<T> const& k)     \
-  {                                                                            \
-    return typename is_key<key_type, T>::type(namespace_ get<0>(k));           \
-  }
-
-#endif
 
         BOOST_UNORDERED_KEY_FROM_TUPLE(boost::)
 
