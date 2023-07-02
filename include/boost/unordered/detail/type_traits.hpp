@@ -9,14 +9,7 @@
 #include <boost/minconfig.hpp>
 #pragma once
 
-#include <boost/type_traits/integral_constant.hpp>
-#include <boost/type_traits/is_convertible.hpp>
-#include <boost/type_traits/make_void.hpp>
-#include <boost/type_traits/type_identity.hpp>
 
-#include <boost/type_traits/enable_if.hpp>
-#include <boost/type_traits/is_integral.hpp>
-#include <boost/type_traits/remove_const.hpp>
 
 // BOOST_UNORDERED_TEMPLATE_DEDUCTION_GUIDES
 
@@ -33,14 +26,14 @@ namespace boost {
       // and up
 
       template <class, class = void>
-      struct is_transparent : public boost::false_type
+      struct is_transparent : public std::false_type
       {
       };
 
       template <class T>
       struct is_transparent<T,
-        typename boost::make_void<typename T::is_transparent>::type>
-          : public boost::true_type
+        typename std::void_t<typename T::is_transparent>>
+          : public std::true_type
       {
       };
 
@@ -59,8 +52,8 @@ namespace boost {
 
         static bool const value =
           are_transparent<Key, hash, key_equal>::value &&
-          !boost::is_convertible<Key, iterator>::value &&
-          !boost::is_convertible<Key, const_iterator>::value;
+          !std::is_convertible<Key, iterator>::value &&
+          !std::is_convertible<Key, const_iterator>::value;
       };
 
       // https://eel.is/c++draft/container.requirements#container.alloc.reqmts-34
@@ -68,7 +61,7 @@ namespace boost {
 
       template <class InputIterator>
       constexpr bool const is_input_iterator_v =
-        !boost::is_integral<InputIterator>::value;
+        !std::is_integral<InputIterator>::value;
 
       template <class A, class = void> struct is_allocator
       {
@@ -77,7 +70,7 @@ namespace boost {
 
       template <class A>
       struct is_allocator<A,
-        boost::void_t<typename A::value_type,
+        std::void_t<typename A::value_type,
           decltype(std::declval<A&>().allocate(std::size_t{}))> >
       {
         constexpr static bool const value = true;
@@ -88,7 +81,7 @@ namespace boost {
 
       template <class H>
       constexpr bool const is_hash_v =
-        !boost::is_integral<H>::value && !is_allocator_v<H>;
+        !std::is_integral<H>::value && !is_allocator_v<H>;
 
       template <class P> constexpr bool const is_pred_v = !is_allocator_v<P>;
     } // namespace detail

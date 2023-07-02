@@ -19,15 +19,13 @@
 #include <boost/core/empty_value.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/core/pointer_traits.hpp>
-#include <boost/cstdint.hpp>
-#include <boost/type_traits/has_trivial_copy.hpp>
-#include <boost/type_traits/is_nothrow_swappable.hpp>
 #include <boost/unordered/detail/xmx.hpp>
 #include <boost/unordered/detail/mulx.hpp>
 #include <boost/unordered/hash_traits.hpp>
 #include <climits>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <iterator>
 #include <limits>
@@ -82,9 +80,9 @@
 #endif
 
 #define BOOST_UNORDERED_STATIC_ASSERT_HASH_PRED(Hash, Pred)                    \
-  static_assert(boost::is_nothrow_swappable<Hash>::value,                      \
+  static_assert(std::is_nothrow_swappable<Hash>::value,                      \
     "Template parameter Hash is required to be nothrow Swappable.");           \
-  static_assert(boost::is_nothrow_swappable<Pred>::value,                      \
+  static_assert(std::is_nothrow_swappable<Pred>::value,                      \
     "Template parameter Pred is required to be nothrow Swappable");
 
 // This is the only predef defined needed for boost::unordered, so pull it
@@ -259,7 +257,7 @@ private:
 
   inline static int match_word(std::size_t hash)
   {
-    static constexpr boost::uint32_t word[]=
+    static constexpr std::uint32_t word[]=
     {
       0x08080808u,0x09090909u,0x02020202u,0x03030303u,0x04040404u,0x05050505u,0x06060606u,0x07070707u,
       0x08080808u,0x09090909u,0x0A0A0A0Au,0x0B0B0B0Bu,0x0C0C0C0Cu,0x0D0D0D0Du,0x0E0E0E0Eu,0x0F0F0F0Fu,
@@ -492,7 +490,7 @@ struct group15
 
   struct dummy_group_type
   {
-    alignas(16) boost::uint64_t m[2]=
+    alignas(16) std::uint64_t m[2]=
       {0x0000000000004000ull,0x0000000000000000ull};
   };
 
@@ -514,8 +512,8 @@ struct group15
     BOOST_ASSERT(pos<N);
     return 
       pos==N-1&&
-      (m[0] & boost::uint64_t(0x4000400040004000ull))==boost::uint64_t(0x4000ull)&&
-      (m[1] & boost::uint64_t(0x4000400040004000ull))==0;
+      (m[0] & std::uint64_t(0x4000400040004000ull))==std::uint64_t(0x4000ull)&&
+      (m[1] & std::uint64_t(0x4000400040004000ull))==0;
   }
 
   inline void reset(std::size_t pos)
@@ -538,35 +536,35 @@ struct group15
 
   inline bool is_not_overflowed(std::size_t hash)const
   {
-    return !(reinterpret_cast<const boost::uint16_t*>(m)[hash%8] & 0x8000u);
+    return !(reinterpret_cast<const std::uint16_t*>(m)[hash%8] & 0x8000u);
   }
 
   inline void mark_overflow(std::size_t hash)
   {
-    reinterpret_cast<boost::uint16_t*>(m)[hash%8]|=0x8000u;
+    reinterpret_cast<std::uint16_t*>(m)[hash%8]|=0x8000u;
   }
 
   static inline bool maybe_caused_overflow(unsigned char* pc)
   {
     std::size_t     pos=reinterpret_cast<uintptr_t>(pc)%sizeof(group15);
     group15        *pg=reinterpret_cast<group15*>(pc-pos);
-    boost::uint64_t x=((pg->m[0])>>pos)&0x000100010001ull;
-    boost::uint32_t y=static_cast<boost::uint32_t>(x|(x>>15)|(x>>30));
+    std::uint64_t x=((pg->m[0])>>pos)&0x000100010001ull;
+    std::uint32_t y=static_cast<std::uint32_t>(x|(x>>15)|(x>>30));
     return !pg->is_not_overflowed(y);
   };
 
   inline int match_available()const
   {
-    boost::uint64_t x=~(m[0]|m[1]);
-    boost::uint32_t y=static_cast<boost::uint32_t>(x&(x>>32));
+    std::uint64_t x=~(m[0]|m[1]);
+    std::uint32_t y=static_cast<std::uint32_t>(x&(x>>32));
     y&=y>>16;
     return y&0x7FFF;
   }
 
   inline int match_occupied()const
   {
-    boost::uint64_t x=m[0]|m[1];
-    boost::uint32_t y=static_cast<boost::uint32_t>(x|(x>>32));
+    std::uint64_t x=m[0]|m[1];
+    std::uint32_t y=static_cast<std::uint32_t>(x|(x>>32));
     y|=y>>16;
     return y&0x7FFF;
   }
@@ -611,9 +609,9 @@ private:
     set_impl(m[1],pos,n>>4);
   }
 
-  static inline void set_impl(boost::uint64_t& x,std::size_t pos,std::size_t n)
+  static inline void set_impl(std::uint64_t& x,std::size_t pos,std::size_t n)
   {
-    static constexpr boost::uint64_t mask[]=
+    static constexpr std::uint64_t mask[]=
     {
       0x0000000000000000ull,0x0000000000000001ull,0x0000000000010000ull,
       0x0000000000010001ull,0x0000000100000000ull,0x0000000100000001ull,
@@ -622,7 +620,7 @@ private:
       0x0001000100000000ull,0x0001000100000001ull,0x0001000100010000ull,
       0x0001000100010001ull,
     };
-    static constexpr boost::uint64_t imask[]=
+    static constexpr std::uint64_t imask[]=
     {
       0x0001000100010001ull,0x0001000100010000ull,0x0001000100000001ull,
       0x0001000100000000ull,0x0001000000010001ull,0x0001000000010000ull,
@@ -639,7 +637,7 @@ private:
 
   inline int match_impl(std::size_t n)const
   {
-    static constexpr boost::uint64_t mask[]=
+    static constexpr std::uint64_t mask[]=
     {
       0x0000000000000000ull,0x000000000000ffffull,0x00000000ffff0000ull,
       0x00000000ffffffffull,0x0000ffff00000000ull,0x0000ffff0000ffffull,
@@ -650,14 +648,14 @@ private:
     };
 
     BOOST_ASSERT(n<256);
-    boost::uint64_t x=m[0]^mask[n&0xFu];
+    std::uint64_t x=m[0]^mask[n&0xFu];
                     x=~((m[1]^mask[n>>4])|x);
-    boost::uint32_t y=static_cast<boost::uint32_t>(x&(x>>32));
+    std::uint32_t y=static_cast<std::uint32_t>(x&(x>>32));
                     y&=y>>16;
     return          y&0x7FFF;
   }
 
-  alignas(16) boost::uint64_t m[2];
+  alignas(16) std::uint64_t m[2];
 };
 
 #endif

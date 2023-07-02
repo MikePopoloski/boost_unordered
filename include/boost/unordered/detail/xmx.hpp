@@ -12,9 +12,9 @@
 #ifndef BOOST_UNORDERED_DETAIL_XMX_HPP
 #define BOOST_UNORDERED_DETAIL_XMX_HPP
 
-#include <boost/cstdint.hpp>
 #include <climits>
 #include <cstddef>
+#include <cstdint>
 
 namespace boost{
 namespace unordered{
@@ -45,7 +45,7 @@ static inline std::size_t xmx(std::size_t x)noexcept
 {
 #if defined(BOOST_UNORDERED_64B_ARCHITECTURE)
 
-  boost::uint64_t z=(boost::uint64_t)x;
+  std::uint64_t z=(std::uint64_t)x;
 
   z^=z>>23;
   z*=0xff51afd7ed558ccdull;
