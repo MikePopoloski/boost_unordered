@@ -9,7 +9,6 @@
 
 #include <boost/current_function.hpp>
 #include <boost/config.hpp>
-#include <boost/config/workaround.hpp>
 #include <boost/cstdint.hpp>
 #include <iosfwd>
 #include <string>

@@ -10,7 +10,6 @@
 #define BOOST_TT_REMOVE_REFERENCE_HPP_INCLUDED
 
 #include <boost/config.hpp>
-#include <boost/detail/workaround.hpp>
 
 namespace boost {
 

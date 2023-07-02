@@ -11,7 +11,6 @@
 #include <boost/container_hash/is_range.hpp>
 #include <boost/type_traits/enable_if.hpp>
 #include <boost/config.hpp>
-#include <boost/config/workaround.hpp>
 
 #if defined(BOOST_NO_CXX11_HDR_TUPLE)
 

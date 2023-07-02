@@ -7,7 +7,6 @@
 #define BOOST_TYPE_TRAITS_INTEGRAL_CONSTANT_HPP
 
 #include <boost/config.hpp>
-#include <boost/detail/workaround.hpp>
 
 #if defined(BOOST_MPL_CFG_NO_ADL_BARRIER_NAMESPACE)
 

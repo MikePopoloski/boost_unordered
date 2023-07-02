@@ -16,7 +16,6 @@
 #include <cstddef> // for std::size_t
 
 #include <boost/config.hpp>
-#include <boost/detail/workaround.hpp>
 #include <boost/type_traits/alignment_of.hpp>
 #include <boost/type_traits/type_with_alignment.hpp>
 #include <boost/type_traits/is_pod.hpp>

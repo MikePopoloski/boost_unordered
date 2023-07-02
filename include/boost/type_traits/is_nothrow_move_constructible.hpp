@@ -15,7 +15,6 @@
 #include <boost/config.hpp>
 #include <boost/type_traits/intrinsics.hpp>
 #include <boost/type_traits/integral_constant.hpp>
-#include <boost/detail/workaround.hpp>
 #include <boost/type_traits/is_complete.hpp>
 #include <boost/static_assert.hpp>
 

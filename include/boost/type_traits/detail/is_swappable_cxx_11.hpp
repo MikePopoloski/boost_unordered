@@ -9,7 +9,6 @@
 //  http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/config.hpp>
-#include <boost/config/workaround.hpp>
 #include <boost/type_traits/declval.hpp>
 #include <boost/type_traits/integral_constant.hpp>
 #if __cplusplus >= 201103L || defined(BOOST_DINKUMWARE_STDLIB)

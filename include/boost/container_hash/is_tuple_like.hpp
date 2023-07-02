@@ -7,7 +7,6 @@
 
 #include <boost/type_traits/integral_constant.hpp>
 #include <boost/config.hpp>
-#include <boost/config/workaround.hpp>
 #include <utility>
 
 namespace boost

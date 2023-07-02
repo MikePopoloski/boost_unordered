@@ -13,7 +13,6 @@
 #include <boost/config.hpp>
 #endif
 #include <boost/version.hpp>
-#include <boost/config/workaround.hpp>
 
 //
 // whenever we have a conversion function with ellipses

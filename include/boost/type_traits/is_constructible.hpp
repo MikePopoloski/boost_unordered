@@ -10,7 +10,6 @@
 #define BOOST_TT_IS_CONSTRUCTIBLE_HPP_INCLUDED
 
 #include <boost/type_traits/integral_constant.hpp>
-#include <boost/detail/workaround.hpp>
 
 #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_DECLTYPE)
 

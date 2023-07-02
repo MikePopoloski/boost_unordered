@@ -14,7 +14,6 @@
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/type_traits/is_function.hpp>
 #include <boost/type_traits/detail/yes_no_type.hpp>
-#include <boost/config/workaround.hpp>
 #include <cstddef>
 
 /*

@@ -13,7 +13,6 @@
 #ifndef BOOST_IS_POLYMORPHIC
 #include <boost/type_traits/is_class.hpp>
 #endif
-#include <boost/detail/workaround.hpp>
 
 #if defined(BOOST_MSVC) && (BOOST_MSVC >= 1700)
 #pragma warning(push)

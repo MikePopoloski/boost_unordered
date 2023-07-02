@@ -21,7 +21,6 @@
 #include <boost/exception/exception.hpp>
 #include <boost/assert/source_location.hpp>
 #include <boost/config.hpp>
-#include <boost/config/workaround.hpp>
 #include <exception>
 #include <utility>
 #include <cstddef>

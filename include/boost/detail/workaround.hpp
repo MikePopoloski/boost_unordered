@@ -5,6 +5,5 @@
 #ifndef BOOST_WORKAROUND_DWA2002126_HPP
 #define BOOST_WORKAROUND_DWA2002126_HPP
 
-#include <boost/config/workaround.hpp>
 
 #endif // BOOST_WORKAROUND_DWA2002126_HPP

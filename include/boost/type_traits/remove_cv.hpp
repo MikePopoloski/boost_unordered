@@ -12,7 +12,6 @@
 #define BOOST_TT_REMOVE_CV_HPP_INCLUDED
 
 #include <boost/config.hpp>
-#include <boost/detail/workaround.hpp>
 #include <cstddef> // size_t
 
 namespace boost {

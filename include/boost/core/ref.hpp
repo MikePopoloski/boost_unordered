@@ -2,7 +2,6 @@
 #define BOOST_CORE_REF_HPP
 
 #include <boost/config.hpp>
-#include <boost/config/workaround.hpp>
 #include <boost/core/addressof.hpp>
 #include <boost/core/enable_if.hpp>
 

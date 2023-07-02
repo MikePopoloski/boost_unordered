@@ -9,7 +9,6 @@
 #include <boost/container_hash/is_range.hpp>
 #include <boost/type_traits/integral_constant.hpp>
 #include <boost/config.hpp>
-#include <boost/config/workaround.hpp>
 
 #if !defined(BOOST_NO_CXX11_DECLTYPE) && !defined(BOOST_NO_SFINAE_EXPR)
 
