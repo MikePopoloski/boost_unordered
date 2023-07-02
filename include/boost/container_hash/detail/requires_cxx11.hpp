@@ -8,12 +8,7 @@
 #include <boost/config.hpp>
 #include <boost/config/pragma_message.hpp>
 
-#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || \
-    defined(BOOST_NO_CXX11_RVALUE_REFERENCES) || \
-    defined(BOOST_NO_CXX11_DECLTYPE) || \
-    defined(BOOST_NO_CXX11_CONSTEXPR) || \
-    defined(BOOST_NO_CXX11_NOEXCEPT) || \
-    defined(BOOST_NO_CXX11_HDR_TUPLE)
+#if defined(BOOST_NO_CXX11_CONSTEXPR) || defined(BOOST_NO_CXX11_NOEXCEPT) || defined(BOOST_NO_CXX11_HDR_TUPLE)
 
 BOOST_PRAGMA_MESSAGE("C++03 support is deprecated in Boost.ContainerHash 1.82 and will be removed in Boost.ContainerHash 1.84.")
 

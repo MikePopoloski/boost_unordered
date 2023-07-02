@@ -16,7 +16,7 @@
 
 namespace boost
 {
-#if !defined(BOOST_NO_CXX11_DECLTYPE) && !defined(BOOST_NO_SFINAE_EXPR)
+#if !defined(BOOST_NO_SFINAE_EXPR)
 
 namespace hash_detail
 {

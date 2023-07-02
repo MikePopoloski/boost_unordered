@@ -89,13 +89,11 @@ public:
     BOOST_FORCEINLINE explicit reference_wrapper(T& t) BOOST_NOEXCEPT : t_(boost::addressof(t)) {}
 
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     /**
      @remark Construction from a temporary object is disabled.
     */
     BOOST_DELETED_FUNCTION(reference_wrapper(T&& t))
 public:
-#endif
 
     template<class Y> friend class reference_wrapper;
 
@@ -177,7 +175,6 @@ template<class T> BOOST_FORCEINLINE reference_wrapper<T const> BOOST_REF_CONST c
 
 #undef BOOST_REF_CONST
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 /**
  @cond
@@ -203,7 +200,6 @@ template<class T> void cref(T const&&) BOOST_REF_DELETE;
 
 #undef BOOST_REF_DELETE
 
-#endif
 
 // is_reference_wrapper
 

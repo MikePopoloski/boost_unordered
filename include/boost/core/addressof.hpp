@@ -71,10 +71,7 @@ struct addrof {
     }
 };
 
-#if !defined(BOOST_NO_CXX11_NULLPTR)
-#if !defined(BOOST_NO_CXX11_DECLTYPE) && \
-    (defined(__INTEL_COMPILER) || \
-        (defined(__clang__) && !defined(_LIBCPP_VERSION)))
+#if  defined(__INTEL_COMPILER) ||  (defined(__clang__) && !defined(_LIBCPP_VERSION))
 typedef decltype(nullptr) addrof_null_t;
 #else
 typedef std::nullptr_t addrof_null_t;
@@ -111,13 +108,10 @@ struct addrof<const volatile addrof_null_t> {
         return &o;
     }
 };
-#endif
 
 } /* detail */
 
-#if defined(BOOST_NO_CXX11_SFINAE_EXPR) || \
-    defined(BOOST_NO_CXX11_CONSTEXPR) || \
-    defined(BOOST_NO_CXX11_DECLTYPE)
+#if defined(BOOST_NO_CXX11_SFINAE_EXPR) ||  defined(BOOST_NO_CXX11_CONSTEXPR)
 #define BOOST_CORE_NO_CONSTEXPR_ADDRESSOF
 
 template<class T>
@@ -217,8 +211,7 @@ addressof(T& o) BOOST_NOEXCEPT
 } /* boost */
 #endif
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && \
-    !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS)
+#if  !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS)
 namespace boost {
 
 template<class T>

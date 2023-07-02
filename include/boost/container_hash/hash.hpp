@@ -38,29 +38,17 @@
 #include <climits>
 #include <cstring>
 
-#if !defined(BOOST_NO_CXX11_SMART_PTR)
 # include <memory>
-#endif
 
-#if !defined(BOOST_NO_CXX11_HDR_TYPEINDEX)
 #include <typeindex>
-#endif
 
-#if !defined(BOOST_NO_CXX11_HDR_SYSTEM_ERROR)
 #include <system_error>
-#endif
 
-#if !defined(BOOST_NO_CXX17_HDR_OPTIONAL)
 #include <optional>
-#endif
 
-#if !defined(BOOST_NO_CXX17_HDR_VARIANT)
 #include <variant>
-#endif
 
-#if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
 # include <string_view>
-#endif
 
 namespace boost
 {
@@ -353,9 +341,7 @@ namespace boost
         return boost::hash_unordered_range( v.begin(), v.end() );
     }
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && ( \
-    ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) || \
-    ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
+#if (  ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) ||  ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
 
     // resolve ambiguity with unconstrained stdext::hash_value in <xhash> :-/
 
@@ -395,7 +381,6 @@ namespace boost
 
     // std::unique_ptr, std::shared_ptr
 
-#if !defined(BOOST_NO_CXX11_SMART_PTR)
 
     template <typename T>
     std::size_t hash_value( std::shared_ptr<T> const& x )
@@ -409,22 +394,18 @@ namespace boost
         return boost::hash_value( x.get() );
     }
 
-#endif
 
     // std::type_index
 
-#if !defined(BOOST_NO_CXX11_HDR_TYPEINDEX)
 
     inline std::size_t hash_value( std::type_index const& v )
     {
         return v.hash_code();
     }
 
-#endif
 
     // std::error_code, std::error_condition
 
-#if !defined(BOOST_NO_CXX11_HDR_SYSTEM_ERROR)
 
     inline std::size_t hash_value( std::error_code const& v )
     {
@@ -446,11 +427,9 @@ namespace boost
         return seed;
     }
 
-#endif
 
     // std::nullptr_t
 
-#if !defined(BOOST_NO_CXX11_NULLPTR)
 
     template <typename T>
     typename boost::enable_if_<boost::is_same<T, std::nullptr_t>::value, std::size_t>::type
@@ -459,11 +438,9 @@ namespace boost
         return boost::hash_value( static_cast<void*>( nullptr ) );
     }
 
-#endif
 
     // std::optional
 
-#if !defined(BOOST_NO_CXX17_HDR_OPTIONAL)
 
     template <typename T>
     std::size_t hash_value( std::optional<T> const& v )
@@ -479,11 +456,9 @@ namespace boost
         }
     }
 
-#endif
 
     // std::variant
 
-#if !defined(BOOST_NO_CXX17_HDR_VARIANT)
 
     inline std::size_t hash_value( std::monostate )
     {
@@ -501,7 +476,6 @@ namespace boost
         return seed;
     }
 
-#endif
 
     //
     // boost::hash_combine
@@ -580,9 +554,7 @@ namespace boost
         }
     };
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && ( \
-    ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) || \
-    ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
+#if (  ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) ||  ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
 
     // Dinkumware has stdext::hash_value for basic_string in <xhash> :-/
 
@@ -611,7 +583,6 @@ namespace boost
         template<> struct hash_is_avalanching< boost::hash< std::basic_string<char8_t> > >: boost::true_type {};
 #endif
 
-#if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
 
         template<class Ch> struct hash_is_avalanching< boost::hash< std::basic_string_view<Ch> > >: boost::is_integral<Ch> {};
 
@@ -619,7 +590,6 @@ namespace boost
         template<> struct hash_is_avalanching< boost::hash< std::basic_string_view<char8_t> > >: boost::true_type {};
 #endif
 
-#endif
     } // namespace unordered
 
 } // namespace boost

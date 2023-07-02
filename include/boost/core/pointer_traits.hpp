@@ -27,27 +27,10 @@ struct ptr_first {
     typedef ptr_none type;
 };
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 template<template<class, class...> class T, class U, class... Args>
 struct ptr_first<T<U, Args...> > {
     typedef U type;
 };
-#else
-template<template<class> class T, class U>
-struct ptr_first<T<U> > {
-    typedef U type;
-};
-
-template<template<class, class> class T, class U1, class U2>
-struct ptr_first<T<U1, U2> > {
-    typedef U1 type;
-};
-
-template<template<class, class, class> class T, class U1, class U2, class U3>
-struct ptr_first<T<U1, U2, U3> > {
-    typedef U1 type;
-};
-#endif
 
 template<class T, class = void>
 struct ptr_element {
@@ -73,28 +56,10 @@ struct ptr_difference<T,
 template<class, class>
 struct ptr_transform { };
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 template<template<class, class...> class T, class U, class... Args, class V>
 struct ptr_transform<T<U, Args...>, V> {
     typedef T<V, Args...> type;
 };
-#else
-template<template<class> class T, class U, class V>
-struct ptr_transform<T<U>, V> {
-    typedef T<V> type;
-};
-
-template<template<class, class> class T, class U1, class U2, class V>
-struct ptr_transform<T<U1, U2>, V> {
-    typedef T<V, U2> type;
-};
-
-template<template<class, class, class> class T,
-    class U1, class U2, class U3, class V>
-struct ptr_transform<T<U1, U2, U3>, V> {
-    typedef T<V, U2, U3> type;
-};
-#endif
 
 template<class T, class U, class = void>
 struct ptr_rebind

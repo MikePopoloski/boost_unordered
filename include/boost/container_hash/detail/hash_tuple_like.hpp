@@ -55,7 +55,6 @@ inline std::size_t hash_tuple_like( T const& v )
 
 } // namespace hash_detail
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 
 template <class T>
@@ -69,74 +68,6 @@ std::size_t>::type
 }
 
 
-#else
-
-inline std::size_t hash_value( std::tuple<> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-template<typename A0>
-inline std::size_t hash_value( std::tuple<A0> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-template<typename A0, typename A1>
-inline std::size_t hash_value( std::tuple<A0, A1> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-template<typename A0, typename A1, typename A2>
-inline std::size_t hash_value( std::tuple<A0, A1, A2> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-template<typename A0, typename A1, typename A2, typename A3>
-inline std::size_t hash_value( std::tuple<A0, A1, A2, A3> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-template<typename A0, typename A1, typename A2, typename A3, typename A4>
-inline std::size_t hash_value( std::tuple<A0, A1, A2, A3, A4> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-template<typename A0, typename A1, typename A2, typename A3, typename A4, typename A5>
-inline std::size_t hash_value( std::tuple<A0, A1, A2, A3, A4, A5> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-template<typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6>
-inline std::size_t hash_value( std::tuple<A0, A1, A2, A3, A4, A5, A6> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-template<typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7>
-inline std::size_t hash_value( std::tuple<A0, A1, A2, A3, A4, A5, A6, A7> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-template<typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8>
-inline std::size_t hash_value( std::tuple<A0, A1, A2, A3, A4, A5, A6, A7, A8> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-template<typename A0, typename A1, typename A2, typename A3, typename A4, typename A5, typename A6, typename A7, typename A8, typename A9>
-inline std::size_t hash_value( std::tuple<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9> const& v )
-{
-    return boost::hash_detail::hash_tuple_like( v );
-}
-
-#endif // #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 } // namespace boost
 

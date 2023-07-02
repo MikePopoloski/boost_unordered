@@ -68,30 +68,11 @@ struct allocator_traits {
         boost::allocator_construct(a, p);
     }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
     template<class T, class V, class... Args>
     static void construct(A& a, T* p, V&& v, Args&&... args) {
         boost::allocator_construct(a, p, std::forward<V>(v),
             std::forward<Args>(args)...);
     }
-#else
-    template<class T, class V>
-    static void construct(A& a, T* p, V&& v) {
-        boost::allocator_construct(a, p, std::forward<V>(v));
-    }
-#endif
-#else
-    template<class T, class V>
-    static void construct(A& a, T* p, const V& v) {
-        boost::allocator_construct(a, p, v);
-    }
-
-    template<class T, class V>
-    static void construct(A& a, T* p, V& v) {
-        boost::allocator_construct(a, p, v);
-    }
-#endif
 
     template<class T>
     static void destroy(A& a, T* p) {

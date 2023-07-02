@@ -23,9 +23,7 @@
 #include <cstddef>
 #include <cstring>
 #include <iosfwd>
-#if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
 # include <string_view>
-#endif
 
 namespace boost
 {
@@ -427,7 +425,6 @@ template<> struct tn_holder<void>
 
 // nullptr_t
 
-#if !defined(BOOST_NO_CXX11_NULLPTR)
 
 template<> struct tn_holder<std::nullptr_t>
 {
@@ -437,7 +434,6 @@ template<> struct tn_holder<std::nullptr_t>
     }
 };
 
-#endif
 
 // cv
 
@@ -475,7 +471,6 @@ template<class T> struct tn_holder<T&>
     }
 };
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 template<class T> struct tn_holder<T&&>
 {
@@ -485,11 +480,9 @@ template<class T> struct tn_holder<T&&>
     }
 };
 
-#endif
 
 // function types
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 // tn_add_each
 
@@ -740,7 +733,6 @@ template<class R, class... A> struct tn_holder<R(A...) const volatile && noexcep
 
 #endif
 
-#endif // #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 // pointers
 
@@ -870,7 +862,7 @@ template<class R, class T> struct tn_holder<R T::*>
     }
 };
 
-#if defined(BOOST_MSVC) && BOOST_MSVC < 1900 && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if defined(BOOST_MSVC) && BOOST_MSVC < 1900
 
 template<class R, class T, class... A> struct tn_holder<R(T::*)(A...)>
 {
@@ -989,7 +981,6 @@ template<> struct tn_holder<std::ostream>
     }
 };
 
-#if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
 
 template<> struct tn_holder<std::string_view>
 {
@@ -1043,11 +1034,9 @@ template<> struct tn_holder< std::basic_string_view<char8_t> >
 
 #endif
 
-#endif
 
 // class templates
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 template<template<class...> class L, class... T> struct tn_holder< L<T...> >
 {
@@ -1060,27 +1049,6 @@ template<template<class...> class L, class... T> struct tn_holder< L<T...> >
     }
 };
 
-#else
-
-template<template<class T1> class L, class T1> struct tn_holder< L<T1> >
-{
-    static std::string type_name( std::string const& suffix )
-    {
-        std::string tn = detail::class_template_name< L<T1> >();
-        return tn + '<' + tn_holder<T1>::type_name( "" ) + '>' + suffix;
-    }
-};
-
-template<template<class T1, class T2> class L, class T1, class T2> struct tn_holder< L<T1, T2> >
-{
-    static std::string type_name( std::string const& suffix )
-    {
-        std::string tn = detail::class_template_name< L<T1, T2> >();
-        return tn + '<' + tn_holder<T1>::type_name( "" ) + ", " + tn_holder<T2>::type_name( "" ) + '>' + suffix;
-    }
-};
-
-#endif
 
 // sequence containers
 

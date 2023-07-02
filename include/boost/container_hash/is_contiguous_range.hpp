@@ -10,7 +10,7 @@
 #include <boost/type_traits/integral_constant.hpp>
 #include <boost/config.hpp>
 
-#if !defined(BOOST_NO_CXX11_DECLTYPE) && !defined(BOOST_NO_SFINAE_EXPR)
+#if !defined(BOOST_NO_SFINAE_EXPR)
 
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/type_traits/declval.hpp>
@@ -50,9 +50,7 @@ template<class T> struct is_contiguous_range: integral_constant< bool, is_range<
 #include <cstddef>
 #include <vector>
 #include <string>
-#if !defined(BOOST_NO_CXX11_HDR_ARRAY)
 #include <array>
-#endif
 
 namespace boost
 {
@@ -71,7 +69,6 @@ template<class E, class T, class A> struct is_contiguous_range< std::basic_strin
 {
 };
 
-#if !defined(BOOST_NO_CXX11_HDR_ARRAY)
 
 template<class T, std::size_t N> struct is_contiguous_range< std::array<T, N> >: true_type
 {
@@ -81,7 +78,6 @@ template<class T, std::size_t N> struct is_contiguous_range< std::array<T, N> co
 {
 };
 
-#endif
 
 } // namespace container_hash
 } // namespace boost

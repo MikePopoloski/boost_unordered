@@ -12,12 +12,8 @@ Distributed under the Boost Software License, Version 1.0.
 #include <boost/core/pointer_traits.hpp>
 #include <limits>
 #include <new>
-#if !defined(BOOST_NO_CXX11_ALLOCATOR)
 #include <type_traits>
-#endif
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #include <utility>
-#endif
 
 #if defined(BOOST_GCC_VERSION) && (BOOST_GCC_VERSION >= 40300)
 #define BOOST_DETAIL_ALLOC_EMPTY(T) __is_empty(T)
@@ -107,28 +103,10 @@ namespace detail {
 template<class, class>
 struct alloc_to { };
 
-#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-template<template<class> class A, class T, class U>
-struct alloc_to<A<U>, T> {
-    typedef A<T> type;
-};
-
-template<template<class, class> class A, class T, class U, class V>
-struct alloc_to<A<U, V>, T> {
-    typedef A<T, V> type;
-};
-
-template<template<class, class, class> class A, class T, class U, class V1,
-    class V2>
-struct alloc_to<A<U, V1, V2>, T> {
-    typedef A<T, V1, V2> type;
-};
-#else
 template<template<class, class...> class A, class T, class U, class... V>
 struct alloc_to<A<U, V...>, T> {
     typedef A<T, V...> type;
 };
-#endif
 
 template<class A, class T, class = void>
 struct alloc_rebind {
@@ -215,18 +193,11 @@ struct allocator_difference_type {
 
 namespace detail {
 
-#if defined(BOOST_NO_CXX11_ALLOCATOR)
-template<class A, class = void>
-struct alloc_size_type {
-    typedef std::size_t type;
-};
-#else
 template<class A, class = void>
 struct alloc_size_type {
     typedef typename std::make_unsigned<typename
         boost::allocator_difference_type<A>::type>::type type;
 };
-#endif
 
 template<class A>
 struct alloc_size_type<A,
@@ -243,30 +214,7 @@ struct allocator_size_type {
 
 namespace detail {
 
-#if defined(BOOST_NO_CXX11_ALLOCATOR)
-template<bool V>
-struct alloc_bool {
-    typedef bool value_type;
-    typedef alloc_bool type;
-
-    static const bool value = V;
-
-    operator bool() const BOOST_NOEXCEPT {
-        return V;
-    }
-
-    bool operator()() const BOOST_NOEXCEPT {
-        return V;
-    }
-};
-
-template<bool V>
-const bool alloc_bool<V>::value;
-
-typedef alloc_bool<false> alloc_false;
-#else
 typedef std::false_type alloc_false;
-#endif
 
 template<class A, class = void>
 struct alloc_pocca {
@@ -330,22 +278,10 @@ struct allocator_propagate_on_container_swap {
 
 namespace detail {
 
-#if !defined(BOOST_NO_CXX11_ALLOCATOR)
 template<class A, class = void>
 struct alloc_equal {
     typedef typename std::is_empty<A>::type type;
 };
-#elif defined(BOOST_DETAIL_ALLOC_EMPTY)
-template<class A, class = void>
-struct alloc_equal {
-    typedef alloc_bool<BOOST_DETAIL_ALLOC_EMPTY(A)> type;
-};
-#else
-template<class A, class = void>
-struct alloc_equal {
-    typedef alloc_false type;
-};
-#endif
 
 template<class A>
 struct alloc_equal<A,
@@ -375,15 +311,6 @@ allocator_deallocate(A& a, typename allocator_pointer<A>::type p,
     a.deallocate(p, n);
 }
 
-#if defined(BOOST_NO_CXX11_ALLOCATOR)
-template<class A>
-inline typename allocator_pointer<A>::type
-allocator_allocate(A& a, typename allocator_size_type<A>::type n,
-    typename allocator_const_void_pointer<A>::type h)
-{
-    return a.allocate(n, h);
-}
-#else
 namespace detail {
 
 template<class>
@@ -425,22 +352,9 @@ allocator_allocate(A& a, typename allocator_size_type<A>::type n,
 {
     return a.allocate(n);
 }
-#endif
 
 namespace detail {
 
-#if defined(BOOST_NO_CXX11_ALLOCATOR)
-template<class A, class = void>
-struct alloc_has_construct {
-    BOOST_STATIC_CONSTEXPR bool value = false;
-};
-
-template<class A>
-struct alloc_has_construct<A,
-    typename alloc_void<typename A::_default_construct_destroy>::type> {
-    BOOST_STATIC_CONSTEXPR bool value = true;
-};
-#else
 template<class A, class T, class... Args>
 class alloc_has_construct {
     template<class O>
@@ -454,7 +368,6 @@ class alloc_has_construct {
 public:
     BOOST_STATIC_CONSTEXPR bool value = sizeof(check<A>(0)) > 1;
 };
-#endif
 
 template<bool, class = void>
 struct alloc_if { };
@@ -466,53 +379,6 @@ struct alloc_if<true, T> {
 
 } /* detail */
 
-#if defined(BOOST_NO_CXX11_ALLOCATOR)
-template<class A, class T>
-inline typename detail::alloc_if<detail::alloc_has_construct<A>::value>::type
-allocator_construct(A& a, T* p)
-{
-    a.construct(p);
-}
-
-template<class A, class T>
-inline typename detail::alloc_if<!detail::alloc_has_construct<A>::value>::type
-allocator_construct(A&, T* p)
-{
-    ::new((void*)p) T();
-}
-
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-template<class A, class T, class V, class... Args>
-inline void
-allocator_construct(A&, T* p, V&& v, Args&&... args)
-{
-    ::new((void*)p) T(std::forward<V>(v), std::forward<Args>(args)...);
-}
-#else
-template<class A, class T, class V>
-inline void
-allocator_construct(A&, T* p, V&& v)
-{
-    ::new((void*)p) T(std::forward<V>(v));
-}
-#endif
-#else
-template<class A, class T, class V>
-inline void
-allocator_construct(A&, T* p, const V& v)
-{
-    ::new((void*)p) T(v);
-}
-
-template<class A, class T, class V>
-inline void
-allocator_construct(A&, T* p, V& v)
-{
-    ::new((void*)p) T(v);
-}
-#endif
-#else
 template<class A, class T, class... Args>
 inline typename std::enable_if<detail::alloc_has_construct<A, T,
     Args...>::value>::type
@@ -528,22 +394,9 @@ allocator_construct(A&, T* p, Args&&... args)
 {
     ::new((void*)p) T(std::forward<Args>(args)...);
 }
-#endif
 
 namespace detail {
 
-#if defined(BOOST_NO_CXX11_ALLOCATOR)
-template<class A, class, class = void>
-struct alloc_has_destroy {
-    BOOST_STATIC_CONSTEXPR bool value = false;
-};
-
-template<class A, class T>
-struct alloc_has_destroy<A, T,
-    typename alloc_void<typename A::_default_construct_destroy>::type> {
-    BOOST_STATIC_CONSTEXPR bool value = true;
-};
-#else
 template<class A, class T>
 class alloc_has_destroy {
     template<class O>
@@ -556,7 +409,6 @@ class alloc_has_destroy {
 public:
     BOOST_STATIC_CONSTEXPR bool value = sizeof(check<A>(0)) > 1;
 };
-#endif
 
 } /* detail */
 
@@ -577,33 +429,6 @@ allocator_destroy(A&, T* p)
 
 namespace detail {
 
-#if defined(BOOST_NO_CXX11_ALLOCATOR)
-template<class T, T>
-struct alloc_no {
-    char x, y;
-};
-
-template<class A>
-class alloc_has_max_size {
-    template<class O>
-    static alloc_no<typename boost::allocator_size_type<O>::type(O::*)(),
-        &O::max_size> check(int);
-
-    template<class O>
-    static alloc_no<typename boost::allocator_size_type<O>::type(O::*)() const,
-        &O::max_size> check(int);
-
-    template<class O>
-    static alloc_no<typename boost::allocator_size_type<O>::type(*)(),
-        &O::max_size> check(int);
-
-    template<class>
-    static char check(long);
-
-public:
-    BOOST_STATIC_CONSTEXPR bool value = sizeof(check<A>(0)) > 1;
-};
-#else
 template<class A>
 class alloc_has_max_size {
     template<class O>
@@ -616,7 +441,6 @@ class alloc_has_max_size {
 public:
     BOOST_STATIC_CONSTEXPR bool value = sizeof(check<A>(0)) > 1;
 };
-#endif
 
 } /* detail */
 
@@ -640,28 +464,6 @@ allocator_max_size(const A&) BOOST_NOEXCEPT
 
 namespace detail {
 
-#if defined(BOOST_NO_CXX11_ALLOCATOR)
-template<class A>
-class alloc_has_soccc {
-    template<class O>
-    static alloc_no<O(O::*)(), &O::select_on_container_copy_construction>
-    check(int);
-
-    template<class O>
-    static alloc_no<O(O::*)() const, &O::select_on_container_copy_construction>
-    check(int);
-
-    template<class O>
-    static alloc_no<O(*)(), &O::select_on_container_copy_construction>
-    check(int);
-
-    template<class>
-    static char check(long);
-
-public:
-    BOOST_STATIC_CONSTEXPR bool value = sizeof(check<A>(0)) > 1;
-};
-#else
 template<class A>
 class alloc_has_soccc {
     template<class O>
@@ -674,7 +476,6 @@ class alloc_has_soccc {
 public:
     BOOST_STATIC_CONSTEXPR bool value = sizeof(check<A>(0)) > 1;
 };
-#endif
 
 } /* detail */
 

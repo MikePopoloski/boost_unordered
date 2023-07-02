@@ -582,7 +582,6 @@ BOOST_CXX14_CONSTEXPR T bit_ceil( T x ) BOOST_NOEXCEPT
 
 #endif
 
-#if !defined(BOOST_NO_CXX11_SCOPED_ENUMS)
 
 enum class endian
 {
@@ -593,23 +592,6 @@ enum class endian
 
 typedef endian endian_type;
 
-#else
-
-namespace endian
-{
-
-enum type
-{
-    big,
-    little,
-    native BOOST_CORE_BIT_NATIVE_INITIALIZER
-};
-
-} // namespace endian
-
-typedef endian::type endian_type;
-
-#endif
 
 #undef BOOST_CORE_BIT_NATIVE_INITIALIZER
 
