@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/mjp/boost_unordered/include
 
-CXX_FLAGS = 
+CXX_FLAGS = -std=c++20
 
