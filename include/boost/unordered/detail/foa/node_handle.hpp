@@ -27,7 +27,7 @@ struct insert_return_type
 
 template <class T>
 union opt_storage {
-  BOOST_ATTRIBUTE_NO_UNIQUE_ADDRESS T t_;
+  [[no_unique_address]] T t_;
 
   opt_storage(){}
   ~opt_storage(){}
@@ -46,7 +46,7 @@ struct node_handle_base
   private:
     using node_value_type=typename type_policy::value_type;
     element_type p_;
-    BOOST_ATTRIBUTE_NO_UNIQUE_ADDRESS opt_storage<Allocator> a_;
+    [[no_unique_address]] opt_storage<Allocator> a_;
 
   protected:
     node_value_type& data()noexcept
@@ -161,7 +161,7 @@ struct node_handle_base
 
     allocator_type get_allocator()const noexcept{return al();}
     explicit operator bool()const noexcept{ return !empty();}
-    BOOST_ATTRIBUTE_NODISCARD bool empty()const noexcept{return p_.p==nullptr;}
+    [[nodiscard]] bool empty()const noexcept{return p_.p==nullptr;}
 
     void swap(node_handle_base& nh) noexcept(
       boost::allocator_is_always_equal<Allocator>::type::value||

@@ -304,7 +304,7 @@ namespace boost {
       /// Capacity
       ///
 
-      BOOST_ATTRIBUTE_NODISCARD bool empty() const noexcept
+      [[nodiscard]] bool empty() const noexcept
       {
         return table_.empty();
       }
