@@ -11,7 +11,6 @@
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/seq/size.hpp>
-#include <boost/unordered/detail/narrow_cast.hpp>
 
 #include <boost/config.hpp>
 
@@ -119,7 +118,7 @@ namespace boost {
           std::size_t sizes_under_32bit = inv_sizes32_len;
           if (BOOST_LIKELY(size_index < sizes_under_32bit)) {
             return fast_modulo(
-              narrow_cast<boost::uint32_t>(hash) + narrow_cast<boost::uint32_t>(hash >> 32),
+              static_cast<boost::uint32_t>(hash) + static_cast<boost::uint32_t>(hash >> 32),
               inv_sizes32[size_index], boost::uint32_t(sizes[size_index]));
           } else {
             return positions[size_index - sizes_under_32bit](hash);
