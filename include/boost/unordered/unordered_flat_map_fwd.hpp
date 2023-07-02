@@ -9,7 +9,7 @@
 #include <boost/config.hpp>
 #pragma once
 
-#include <boost/functional/hash_fwd.hpp>
+#include <boost/container_hash/hash_fwd.hpp>
 #include <boost/unordered/detail/fwd.hpp>
 #include <functional>
 #include <memory>
