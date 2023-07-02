@@ -7,7 +7,7 @@
 #ifndef BOOST_UNORDERED_FWD_HPP_INCLUDED
 #define BOOST_UNORDERED_FWD_HPP_INCLUDED
 
-#include <boost/config.hpp>
+#include <boost/minconfig.hpp>
 #pragma once
 
 #include <utility>

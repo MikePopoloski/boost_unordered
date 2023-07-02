@@ -1,0 +1,61 @@
+#pragma once
+
+// This is a minimal header that contains only the small set
+// config entries needed to use boost::unordered, so that the
+// whole boost config lib doesn't need to be pulled in.
+#if defined(_MSC_VER)
+#  ifndef BOOST_MSVC
+#    define BOOST_MSVC _MSC_VER
+#  endif
+#elif defined __clang__
+#  ifndef BOOST_CLANG
+#    define BOOST_CLANG 1
+#  endif
+#elif defined(__GNUC__)
+#  ifndef BOOST_GCC
+#    define BOOST_GCC (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#  endif
+#endif
+
+#if !defined(BOOST_FORCEINLINE)
+#  if defined(_MSC_VER)
+#    define BOOST_FORCEINLINE __forceinline
+#  elif defined(__GNUC__) && __GNUC__ > 3
+     // Clang also defines __GNUC__ (as 4)
+#    define BOOST_FORCEINLINE inline __attribute__ ((__always_inline__))
+#  else
+#    define BOOST_FORCEINLINE inline
+#  endif
+#endif
+
+#if !defined(BOOST_NOINLINE)
+#  if defined(_MSC_VER)
+#    define BOOST_NOINLINE __declspec(noinline)
+#  elif defined(__GNUC__) && __GNUC__ > 3
+     // Clang also defines __GNUC__ (as 4)
+#    if defined(__CUDACC__)
+       // nvcc doesn't always parse __noinline__,
+       // see: https://svn.boost.org/trac/boost/ticket/9392
+#      define BOOST_NOINLINE __attribute__ ((noinline))
+#    elif defined(__HIP__)
+       // See https://github.com/boostorg/config/issues/392
+#      define BOOST_NOINLINE __attribute__ ((noinline))
+#    else
+#      define BOOST_NOINLINE __attribute__ ((__noinline__))
+#    endif
+#  else
+#    define BOOST_NOINLINE
+#  endif
+#endif
+
+#if defined(BOOST_GCC) || defined(BOOST_CLANG)
+#define BOOST_LIKELY(x) __builtin_expect(x, 1)
+#define BOOST_UNLIKELY(x) __builtin_expect(x, 0)
+#endif
+
+#if !defined(BOOST_LIKELY)
+#  define BOOST_LIKELY(x) x
+#endif
+#if !defined(BOOST_UNLIKELY)
+#  define BOOST_UNLIKELY(x) x
+#endif

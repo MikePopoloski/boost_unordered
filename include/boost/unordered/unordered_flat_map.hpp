@@ -5,7 +5,7 @@
 #ifndef BOOST_UNORDERED_UNORDERED_FLAT_MAP_HPP_INCLUDED
 #define BOOST_UNORDERED_UNORDERED_FLAT_MAP_HPP_INCLUDED
 
-#include <boost/config.hpp>
+#include <boost/minconfig.hpp>
 #pragma once
 
 #include <boost/unordered/detail/foa.hpp>

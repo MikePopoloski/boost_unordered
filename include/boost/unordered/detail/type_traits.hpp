@@ -6,7 +6,7 @@
 #ifndef BOOST_UNORDERED_DETAIL_TYPE_TRAITS_HPP
 #define BOOST_UNORDERED_DETAIL_TYPE_TRAITS_HPP
 
-#include <boost/config.hpp>
+#include <boost/minconfig.hpp>
 #pragma once
 
 #include <boost/type_traits/integral_constant.hpp>

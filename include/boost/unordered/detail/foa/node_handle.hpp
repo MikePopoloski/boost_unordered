@@ -9,7 +9,7 @@
 #ifndef BOOST_UNORDERED_DETAIL_FOA_NODE_HANDLE_HPP
 #define BOOST_UNORDERED_DETAIL_FOA_NODE_HANDLE_HPP
 
-#include <boost/config.hpp>
+#include <boost/minconfig.hpp>
 #include <boost/core/allocator_access.hpp>
 
 namespace boost{

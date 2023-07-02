@@ -13,7 +13,7 @@
 #define BOOST_UNORDERED_DETAIL_FOA_HPP
 
 #include <boost/assert.hpp>
-#include <boost/config.hpp>
+#include <boost/minconfig.hpp>
 #include <boost/core/allocator_traits.hpp>
 #include <boost/core/bit.hpp>
 #include <boost/core/empty_value.hpp>
