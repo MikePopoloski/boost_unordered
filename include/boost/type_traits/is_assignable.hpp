@@ -21,7 +21,7 @@ namespace boost{
 
 }
 
-#if !defined(BOOST_NO_CXX11_DECLTYPE) && !BOOST_WORKAROUND(BOOST_MSVC, < 1800)
+#if !defined(BOOST_NO_CXX11_DECLTYPE)
 
 #include <boost/type_traits/detail/yes_no_type.hpp>
 #include <boost/type_traits/declval.hpp>

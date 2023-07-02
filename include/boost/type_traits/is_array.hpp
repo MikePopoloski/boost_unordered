@@ -28,7 +28,7 @@ namespace boost {
    template <class T, std::size_t N> struct is_array<T const[N]> : public true_type{};
    template <class T, std::size_t N> struct is_array<T volatile[N]> : public true_type{};
    template <class T, std::size_t N> struct is_array<T const volatile[N]> : public true_type{};
-#if !BOOST_WORKAROUND(BOOST_BORLANDC, < 0x600) && !defined(__IBMCPP__) &&  !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840))
+#if !defined(__IBMCPP__)
    template <class T> struct is_array<T[]> : public true_type{};
    template <class T> struct is_array<T const[]> : public true_type{};
    template <class T> struct is_array<T const volatile[]> : public true_type{};

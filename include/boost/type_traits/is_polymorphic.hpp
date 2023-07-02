@@ -29,9 +29,6 @@ namespace detail{
 template <class T>
 struct is_polymorphic_imp1
 {
-# if BOOST_WORKAROUND(__MWERKS__, <= 0x2407) // CWPro7 should return false always.
-    typedef char d1, (&d2)[2];
-# else 
    struct d1 : public T
    {
       d1();
@@ -60,7 +57,6 @@ struct is_polymorphic_imp1
       d2(const d2&);
       d2& operator=(const d2&);
    };
-# endif 
    BOOST_STATIC_CONSTANT(bool, value = (sizeof(d2) == sizeof(d1)));
 };
 

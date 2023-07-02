@@ -49,22 +49,12 @@ struct is_class_or_union
 template <typename T>
 struct is_class_or_union
 {
-# if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x581))// we simply can't detect it this way.
-    BOOST_STATIC_CONSTANT(bool, value = false);
-# else
     template <class U> static ::boost::type_traits::yes_type is_class_or_union_tester(void(U::*)(void));
 
-#  if BOOST_WORKAROUND(__MWERKS__, <= 0x3000) // no SFINAE
-    static ::boost::type_traits::no_type is_class_or_union_tester(...);
-    BOOST_STATIC_CONSTANT(
-        bool, value = sizeof(is_class_or_union_tester(0)) == sizeof(::boost::type_traits::yes_type));
-#  else
     template <class U>
     static ::boost::type_traits::no_type is_class_or_union_tester(...);
     BOOST_STATIC_CONSTANT(
         bool, value = sizeof(is_class_or_union_tester<T>(0)) == sizeof(::boost::type_traits::yes_type));
-#  endif
-# endif
 };
 #endif
 
@@ -131,13 +121,7 @@ template <typename T> struct is_enum_impl
     
 #endif
 
-#if BOOST_WORKAROUND(BOOST_BORLANDC, < 0x600)
-    typedef ::boost::detail::is_enum_helper<
-          ::boost::detail::is_enum_impl<T>::selector
-        > se_t;
-#else
     typedef ::boost::detail::is_enum_helper<selector> se_t;
-#endif
 
     typedef typename se_t::template type<T> helper;
     BOOST_STATIC_CONSTANT(bool, value = helper::value);

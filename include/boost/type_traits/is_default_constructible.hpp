@@ -15,14 +15,11 @@
 #include <boost/type_traits/is_complete.hpp>
 #include <boost/static_assert.hpp>
 
-#if BOOST_WORKAROUND(BOOST_GCC_VERSION, < 40700)
-#include <boost/type_traits/is_abstract.hpp>
-#endif
 #if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ <= 5)) || (defined(BOOST_MSVC) && (BOOST_MSVC == 1800))
 #include <utility> // std::pair
 #endif
 
-#if !defined(BOOST_NO_CXX11_DECLTYPE) && !BOOST_WORKAROUND(BOOST_MSVC, < 1800) && !BOOST_WORKAROUND(BOOST_GCC_VERSION, < 40500)
+#if !defined(BOOST_NO_CXX11_DECLTYPE)
 
 #include <boost/type_traits/detail/yes_no_type.hpp>
 
@@ -38,31 +35,12 @@ namespace boost{
          template<typename>
          static boost::type_traits::no_type test(...);
       };
-#if BOOST_WORKAROUND(BOOST_GCC_VERSION, < 40700)
-      template<class T, bool b> 
-      struct is_default_constructible_abstract_filter
-      {
-          static const bool value = sizeof(is_default_constructible_imp::test<T>(0)) == sizeof(boost::type_traits::yes_type);
-      };
-      template<class T> 
-      struct is_default_constructible_abstract_filter<T, true>
-      {
-          static const bool value = false;
-      };
-#endif
    }
 
-#if BOOST_WORKAROUND(BOOST_GCC_VERSION, < 40700)
-   template <class T> struct is_default_constructible : public integral_constant<bool, detail::is_default_constructible_abstract_filter<T, boost::is_abstract<T>::value>::value>
-   {
-      BOOST_STATIC_ASSERT_MSG(boost::is_complete<T>::value, "Arguments to is_default_constructible must be complete types");
-   };
-#else
    template <class T> struct is_default_constructible : public integral_constant<bool, sizeof(boost::detail::is_default_constructible_imp::test<T>(0)) == sizeof(boost::type_traits::yes_type)>
    {
       BOOST_STATIC_ASSERT_MSG(boost::is_complete<T>::value, "Arguments to is_default_constructible must be complete types");
    };
-#endif
    template <class T, std::size_t N> struct is_default_constructible<T[N]> : public is_default_constructible<T>{};
    template <class T> struct is_default_constructible<T[]> : public is_default_constructible<T>{};
    template <class T> struct is_default_constructible<T&> : public integral_constant<bool, false>{};

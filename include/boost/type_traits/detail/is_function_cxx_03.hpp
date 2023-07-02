@@ -59,18 +59,11 @@ struct is_function_impl
 template <typename T>
 struct is_function_impl
 {
-#if BOOST_WORKAROUND(BOOST_MSVC_FULL_VER, >= 140050000)
-#pragma warning(push)
-#pragma warning(disable:6334)
-#endif
     static T* t;
     BOOST_STATIC_CONSTANT(
         bool, value = sizeof(::boost::type_traits::is_function_ptr_tester(t))
         == sizeof(::boost::type_traits::yes_type)
         );
-#if BOOST_WORKAROUND(BOOST_MSVC_FULL_VER, >= 140050000)
-#pragma warning(pop)
-#endif
 };
 
 template <typename T>
@@ -95,14 +88,9 @@ template <class T> struct is_function : integral_constant<bool, ::boost::detail:
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 template <class T> struct is_function<T&&> : public false_type {};
 #endif
-#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1600)
 template <class T> struct is_function<T&> : public false_type {};
-#endif
 #endif
 } // namespace boost
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && defined(BOOST_MSVC) && BOOST_WORKAROUND(BOOST_MSVC, <= 1700)
-#include <boost/type_traits/detail/is_function_msvc10_fix.hpp>
-#endif
 
 #endif // BOOST_TT_IS_FUNCTION_CXX_03_HPP_INCLUDED

@@ -26,10 +26,6 @@ namespace boost {
 namespace detail {
 
 #ifndef BOOST_IS_BASE_OF
-#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x581)) \
- && !BOOST_WORKAROUND(__SUNPRO_CC , <= 0x540) \
- && !BOOST_WORKAROUND(__EDG_VERSION__, <= 243) \
- && !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840))
 
                              // The EDG version number is a lower estimate.
                              // It is not currently known which EDG version
@@ -118,23 +114,14 @@ struct bd_helper
    // an internal compiler error when compiling with /vmg (thanks to
    // Aleksey Gurtovoy for figuring out the workaround).
    //
-#if !BOOST_WORKAROUND(BOOST_MSVC, == 1310)
     template <typename T>
     static type_traits::yes_type check_sig(D const volatile *, T);
     static type_traits::no_type  check_sig(B const volatile *, int);
-#else
-    static type_traits::yes_type check_sig(D const volatile *, long);
-    static type_traits::no_type  check_sig(B const volatile * const&, int);
-#endif
 };
 
 template<typename B, typename D>
 struct is_base_and_derived_impl2
 {
-#if BOOST_WORKAROUND(BOOST_MSVC_FULL_VER, >= 140050000)
-#pragma warning(push)
-#pragma warning(disable:6334)
-#endif
     //
     // May silently do the wrong thing with incomplete types
     // unless we trap them here:
@@ -144,36 +131,14 @@ struct is_base_and_derived_impl2
 
     struct Host
     {
-#if !BOOST_WORKAROUND(BOOST_MSVC, == 1310)
         operator B const volatile *() const;
-#else
-        operator B const volatile * const&() const;
-#endif
         operator D const volatile *();
     };
 
     BOOST_STATIC_CONSTANT(bool, value =
         sizeof(bd_helper<B,D>::check_sig(Host(), 0)) == sizeof(type_traits::yes_type));
-#if BOOST_WORKAROUND(BOOST_MSVC_FULL_VER, >= 140050000)
-#pragma warning(pop)
-#endif
 };
 
-#else
-
-//
-// broken version:
-//
-template<typename B, typename D>
-struct is_base_and_derived_impl2
-{
-    BOOST_STATIC_CONSTANT(bool, value =
-        (::boost::is_convertible<D*,B*>::value));
-};
-
-#define BOOST_BROKEN_IS_BASE_AND_DERIVED
-
-#endif
 
 template <typename B, typename D>
 struct is_base_and_derived_impl3
@@ -235,9 +200,6 @@ template <class Base, class Derived> struct is_base_and_derived<Base&, Derived> 
 template <class Base, class Derived> struct is_base_and_derived<Base, Derived&> : public false_type{};
 template <class Base, class Derived> struct is_base_and_derived<Base&, Derived&> : public false_type{};
 
-#if BOOST_WORKAROUND(BOOST_CODEGEARC, BOOST_TESTED_AT(0x610))
-template <class Base> struct is_base_and_derived<Base, Base> : public true_type{};
-#endif
 
 } // namespace boost
 

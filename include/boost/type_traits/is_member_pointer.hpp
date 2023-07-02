@@ -32,11 +32,9 @@ template <class T> struct is_member_pointer : public integral_constant<bool, __i
 template <class T> struct is_member_pointer : public integral_constant<bool, ::boost::is_member_function_pointer<T>::value>{};
 template <class T, class U> struct is_member_pointer<U T::* > : public true_type{};
 
-#if !BOOST_WORKAROUND(__MWERKS__,<=0x3003) && !BOOST_WORKAROUND(__IBMCPP__, <=600)
 template <class T, class U> struct is_member_pointer<U T::*const> : public true_type{};
 template <class T, class U> struct is_member_pointer<U T::*const volatile> : public true_type{};
 template <class T, class U> struct is_member_pointer<U T::*volatile> : public true_type{};
-#endif
 
 #endif
 

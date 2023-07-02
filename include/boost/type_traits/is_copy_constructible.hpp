@@ -12,11 +12,10 @@
 #include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_DECLTYPE) && !BOOST_WORKAROUND(BOOST_MSVC, < 1800) && !BOOST_WORKAROUND(BOOST_GCC_VERSION, < 40900)
+#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_DECLTYPE)
 
 #include <boost/type_traits/is_constructible.hpp>
 
-#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1800)
 
 namespace boost {
 
@@ -29,36 +28,6 @@ template <> struct is_copy_constructible<void volatile> : public false_type{};
 
 } // namespace boost
 
-#else
-//
-// Special version for VC12 which has a problem when a base class (such as non_copyable) has a deleted
-// copy constructor.  In this case the compiler thinks there really is a copy-constructor and tries to
-// instantiate the deleted member.  std::is_copy_constructible has the same issue (or at least returns
-// an incorrect value, which just defers the issue into the users code) as well.  We can at least fix
-// boost::non_copyable as a base class as a special case:
-//
-#include <boost/type_traits/is_noncopyable.hpp>
-
-namespace boost {
-
-   namespace detail
-   {
-
-      template <class T, bool b> struct is_copy_constructible_imp : public boost::is_constructible<T, const T&>{};
-      template <class T> struct is_copy_constructible_imp<T, true> : public false_type{};
-
-   }
-
-   template <class T> struct is_copy_constructible : public detail::is_copy_constructible_imp<T, is_noncopyable<T>::value>{};
-
-   template <> struct is_copy_constructible<void> : public false_type{};
-   template <> struct is_copy_constructible<void const> : public false_type{};
-   template <> struct is_copy_constructible<void const volatile> : public false_type{};
-   template <> struct is_copy_constructible<void volatile> : public false_type{};
-
-} // namespace boost
-
-#endif
 
 #else
 

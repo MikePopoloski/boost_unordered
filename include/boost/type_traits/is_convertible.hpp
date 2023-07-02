@@ -328,9 +328,6 @@ struct is_convertible_basic_impl
 #ifdef BOOST_MSVC
 #pragma warning(push)
 #pragma warning(disable:4244)
-#if BOOST_WORKAROUND(BOOST_MSVC_FULL_VER, >= 140050000)
-#pragma warning(disable:6334)
-#endif
 #endif
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     typedef typename add_rvalue_reference<From>::type rvalue_type; 
@@ -409,7 +406,6 @@ struct is_convertible_impl_select<true, false, true>
 template <typename From, typename To>
 struct is_convertible_impl_dispatch_base
 {
-#if !BOOST_WORKAROUND(__HP_aCC, < 60700)
    typedef is_convertible_impl_select< 
       ::boost::is_arithmetic<From>::value, 
       ::boost::is_arithmetic<To>::value,
@@ -420,9 +416,6 @@ struct is_convertible_impl_dispatch_base
       false
 #endif
    > selector;
-#else
-   typedef is_convertible_impl_select<false, false, false> selector;
-#endif
    typedef typename selector::template rebind<From, To> isc_binder;
    typedef typename isc_binder::type type;
 };

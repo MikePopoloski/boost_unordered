@@ -26,14 +26,7 @@
 #   define BOOST_TT_DECL /**/
 #endif
 
-# if (BOOST_WORKAROUND(__MWERKS__, < 0x3000)                         \
-    || BOOST_WORKAROUND(__IBMCPP__, < 600 )                         \
-    || BOOST_WORKAROUND(BOOST_BORLANDC, < 0x5A0)                      \
-    || defined(__ghs)                                               \
-    || BOOST_WORKAROUND(__HP_aCC, < 60700)           \
-    || BOOST_WORKAROUND(MPW_CPLUS, BOOST_TESTED_AT(0x890))          \
-    || BOOST_WORKAROUND(__SUNPRO_CC, BOOST_TESTED_AT(0x580)))       \
-    && defined(BOOST_NO_IS_ABSTRACT)
+# if defined(__ghs)     && defined(BOOST_NO_IS_ABSTRACT)
 
 #   define BOOST_TT_NO_CONFORMING_IS_CLASS_IMPLEMENTATION 1
 
@@ -57,9 +50,6 @@
 // if tests for cv-qualified member functions don't 
 // work in is_member_function_pointer
 //
-#if BOOST_WORKAROUND(__MWERKS__, < 0x3000) || BOOST_WORKAROUND(__IBMCPP__, <= 600)
-#  define BOOST_TT_NO_CV_FUNC_TEST
-#endif
 
 //
 // Macros that have been deprecated, defined here for backwards compatibility:
@@ -70,7 +60,7 @@
 //
 // Can we implement "accurate" binary operator detection:
 //
-#if !defined(BOOST_NO_SFINAE_EXPR) && !defined(BOOST_NO_CXX11_DECLTYPE) && !BOOST_WORKAROUND(BOOST_MSVC, < 1900) && !BOOST_WORKAROUND(BOOST_GCC, < 40900)
+#if !defined(BOOST_NO_SFINAE_EXPR) && !defined(BOOST_NO_CXX11_DECLTYPE)
 #  define BOOST_TT_HAS_ACCURATE_BINARY_OPERATOR_DETECTION
 #endif
 
@@ -81,8 +71,7 @@
 //
 // Can we implement accurate is_function/is_member_function_pointer (post C++03)?
 //
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && !BOOST_WORKAROUND(BOOST_GCC, < 40805)\
-      && !BOOST_WORKAROUND(BOOST_MSVC, < 1900) && !BOOST_WORKAROUND(__clang_major__, <= 4)
+#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #  define BOOST_TT_HAS_ACCURATE_IS_FUNCTION
 #endif
 

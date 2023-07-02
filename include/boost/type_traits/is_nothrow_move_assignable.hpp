@@ -38,7 +38,7 @@ template <class T> struct is_nothrow_move_assignable<T&> : public false_type{};
 template <class T> struct is_nothrow_move_assignable<T&&> : public false_type{};
 #endif
 
-#elif !defined(BOOST_NO_CXX11_NOEXCEPT) && !defined(BOOST_NO_SFINAE_EXPR) && !BOOST_WORKAROUND(BOOST_GCC_VERSION, < 40700)
+#elif !defined(BOOST_NO_CXX11_NOEXCEPT) && !defined(BOOST_NO_SFINAE_EXPR)
 
 namespace detail{
 
