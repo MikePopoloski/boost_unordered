@@ -14,8 +14,6 @@
 #include <boost/unordered/unordered_node_map.hpp>
 #include <boost/unordered/unordered_node_set.hpp>
 #else
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
 #endif
 #include "postfix.hpp"
 // clang-format on

@@ -142,7 +142,6 @@ UNORDERED_AUTO_TEST (use_fwd_declared_trait_without_definition) {
 #include <boost/unordered/unordered_flat_set.hpp>
 #include <boost/unordered/unordered_node_set.hpp>
 #else
-#include <boost/unordered_set.hpp>
 #endif
 
 UNORDERED_AUTO_TEST (use_fwd_declared_trait) {

@@ -101,7 +101,6 @@ bool call_not_equals(
   return x != y;
 }
 
-#include <boost/unordered_map.hpp>
 #endif
 #include "../helpers/test.hpp"
 

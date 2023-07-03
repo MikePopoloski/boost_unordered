@@ -2,7 +2,6 @@
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
 
-#include <boost/unordered_map.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include <string>
 

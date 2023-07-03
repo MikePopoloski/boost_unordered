@@ -11,8 +11,6 @@
 #include "./metafunctions.hpp"
 #include <algorithm>
 #include <boost/core/lightweight_test.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
 
 namespace test {
   template <class T1, class T2>
