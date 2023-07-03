@@ -17,7 +17,6 @@
 #include <boost/container_hash/detail/hash_tuple_like.hpp>
 #include <boost/container_hash/detail/hash_mix.hpp>
 #include <boost/container_hash/detail/hash_range.hpp>
-#include <boost/cstdint.hpp>
 
 #include <string>
 #include <iterator>

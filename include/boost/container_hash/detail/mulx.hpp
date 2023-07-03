@@ -5,7 +5,6 @@
 #ifndef BOOST_HASH_DETAIL_MULX_HPP
 #define BOOST_HASH_DETAIL_MULX_HPP
 
-#include <boost/cstdint.hpp>
 #if defined(_MSC_VER)
 # include <intrin.h>
 #endif

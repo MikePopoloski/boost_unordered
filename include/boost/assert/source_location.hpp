@@ -8,10 +8,9 @@
 // http://www.boost.org/LICENSE_1_0.txt
 
 #include <boost/current_function.hpp>
-#include <boost/config.hpp>
-#include <boost/cstdint.hpp>
 #include <iosfwd>
 #include <string>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 
@@ -28,43 +27,43 @@ private:
 
     char const * file_;
     char const * function_;
-    boost::uint_least32_t line_;
-    boost::uint_least32_t column_;
+    std::uint_least32_t line_;
+    std::uint_least32_t column_;
 
 public:
 
-    BOOST_CONSTEXPR source_location() BOOST_NOEXCEPT: file_( "" ), function_( "" ), line_( 0 ), column_( 0 )
+    constexpr source_location() noexcept: file_( "" ), function_( "" ), line_( 0 ), column_( 0 )
     {
     }
 
-    BOOST_CONSTEXPR source_location( char const * file, boost::uint_least32_t ln, char const * function, boost::uint_least32_t col = 0 ) BOOST_NOEXCEPT: file_( file ), function_( function ), line_( ln ), column_( col )
+    constexpr source_location( char const * file, std::uint_least32_t ln, char const * function, std::uint_least32_t col = 0 ) noexcept: file_( file ), function_( function ), line_( ln ), column_( col )
     {
     }
 
 #if defined(__cpp_lib_source_location) && __cpp_lib_source_location >= 201907L
 
-    BOOST_CONSTEXPR source_location( std::source_location const& loc ) BOOST_NOEXCEPT: file_( loc.file_name() ), function_( loc.function_name() ), line_( loc.line() ), column_( loc.column() )
+    constexpr source_location( std::source_location const& loc ) noexcept: file_( loc.file_name() ), function_( loc.function_name() ), line_( loc.line() ), column_( loc.column() )
     {
     }
 
 #endif
 
-    BOOST_CONSTEXPR char const * file_name() const BOOST_NOEXCEPT
+    constexpr char const * file_name() const noexcept
     {
         return file_;
     }
 
-    BOOST_CONSTEXPR char const * function_name() const BOOST_NOEXCEPT
+    constexpr char const * function_name() const noexcept
     {
         return function_;
     }
 
-    BOOST_CONSTEXPR boost::uint_least32_t line() const BOOST_NOEXCEPT
+    constexpr std::uint_least32_t line() const noexcept
     {
         return line_;
     }
 
-    BOOST_CONSTEXPR boost::uint_least32_t column() const BOOST_NOEXCEPT
+    constexpr std::uint_least32_t column() const noexcept
     {
         return column_;
     }
@@ -122,12 +121,12 @@ public:
 # pragma warning( pop )
 #endif
 
-    inline friend bool operator==( source_location const& s1, source_location const& s2 ) BOOST_NOEXCEPT
+    inline friend bool operator==( source_location const& s1, source_location const& s2 ) noexcept
     {
         return std::strcmp( s1.file_, s2.file_ ) == 0 && std::strcmp( s1.function_, s2.function_ ) == 0 && s1.line_ == s2.line_ && s1.column_ == s2.column_;
     }
 
-    inline friend bool operator!=( source_location const& s1, source_location const& s2 ) BOOST_NOEXCEPT
+    inline friend bool operator!=( source_location const& s1, source_location const& s2 ) noexcept
     {
         return !( s1 == s2 );
     }
@@ -164,7 +163,7 @@ template<class E, class T> std::basic_ostream<E, T> & operator<<( std::basic_ost
 
 # define BOOST_CURRENT_LOCATION ::boost::source_location(::std::source_location::current())
 
-#elif defined(BOOST_CLANG) && BOOST_CLANG_VERSION >= 90000
+#elif defined(BOOST_CLANG)
 
 # define BOOST_CURRENT_LOCATION ::boost::source_location(__builtin_FILE(), __builtin_LINE(), __builtin_FUNCTION(), __builtin_COLUMN())
 

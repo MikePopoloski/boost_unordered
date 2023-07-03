@@ -49,8 +49,11 @@
 #endif
 
 #if defined(BOOST_GCC) || defined(BOOST_CLANG)
-#define BOOST_LIKELY(x) __builtin_expect(x, 1)
-#define BOOST_UNLIKELY(x) __builtin_expect(x, 0)
+#  define BOOST_LIKELY(x) __builtin_expect(x, 1)
+#  define BOOST_UNLIKELY(x) __builtin_expect(x, 0)
+#  define BOOST_SYMBOL_VISIBLE __attribute__((__visibility__("default")))
+#else
+#  define BOOST_SYMBOL_VISIBLE
 #endif
 
 #if !defined(BOOST_LIKELY)
@@ -58,4 +61,25 @@
 #endif
 #if !defined(BOOST_UNLIKELY)
 #  define BOOST_UNLIKELY(x) x
+#endif
+
+#if !defined(BOOST_NORETURN)
+#  if defined(_MSC_VER)
+#    define BOOST_NORETURN __declspec(noreturn)
+#  elif defined(__GNUC__) || defined(__CODEGEARC__) && defined(__clang__)
+#    define BOOST_NORETURN __attribute__ ((__noreturn__))
+#  elif defined(__has_attribute) && defined(__SUNPRO_CC) && (__SUNPRO_CC > 0x5130)
+#    if __has_attribute(noreturn)
+#      define BOOST_NORETURN [[noreturn]]
+#    endif
+#  elif defined(__has_cpp_attribute)
+#    if __has_cpp_attribute(noreturn)
+#      define BOOST_NORETURN [[noreturn]]
+#    endif
+#  endif
+#endif
+
+#if !defined(BOOST_NORETURN)
+#  define BOOST_NO_NORETURN
+#  define BOOST_NORETURN
 #endif

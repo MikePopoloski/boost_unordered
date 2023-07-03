@@ -5,7 +5,6 @@
 #ifndef BOOST_HASH_DETAIL_HASH_MIX_HPP
 #define BOOST_HASH_DETAIL_HASH_MIX_HPP
 
-#include <boost/cstdint.hpp>
 #include <cstddef>
 #include <climits>
 

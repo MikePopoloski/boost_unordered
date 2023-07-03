@@ -20,7 +20,6 @@
 
 #include <boost/exception/exception.hpp>
 #include <boost/assert/source_location.hpp>
-#include <boost/config.hpp>
 #include <exception>
 #include <utility>
 #include <cstddef>
@@ -48,7 +47,7 @@ typedef char (&wrapexcept_s2)[ 2 ];
 template<class T> wrapexcept_s1 wrapexcept_is_convertible( T* );
 template<class T> wrapexcept_s2 wrapexcept_is_convertible( void* );
 
-template<class E, class B, std::size_t I = sizeof( wrapexcept_is_convertible<B>( static_cast< E* >( BOOST_NULLPTR ) ) ) > struct wrapexcept_add_base;
+template<class E, class B, std::size_t I = sizeof( wrapexcept_is_convertible<B>( static_cast< E* >( nullptr ) ) ) > struct wrapexcept_add_base;
 
 template<class E, class B> struct wrapexcept_add_base<E, B, 1>
 {
@@ -103,18 +102,18 @@ public:
         set_info( *this, throw_column( loc.column() ) );
     }
 
-    virtual boost::exception_detail::clone_base const * clone() const BOOST_OVERRIDE
+    virtual boost::exception_detail::clone_base const * clone() const override
     {
         wrapexcept * p = new wrapexcept( *this );
         deleter del = { p };
 
         boost::exception_detail::copy_boost_exception( p, this );
 
-        del.p_ = BOOST_NULLPTR;
+        del.p_ = nullptr;
         return p;
     }
 
-    virtual void rethrow() const BOOST_OVERRIDE
+    virtual void rethrow() const override
     {
 #if defined( BOOST_NO_EXCEPTIONS )
 
