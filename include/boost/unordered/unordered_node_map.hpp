@@ -14,7 +14,6 @@
 #include <boost/unordered/detail/type_traits.hpp>
 #include <boost/unordered/unordered_node_map_fwd.hpp>
 
-#include <boost/core/allocator_access.hpp>
 #include <boost/container_hash/hash.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -87,29 +86,29 @@ namespace boost {
         template <class A, class... Args>
         static void construct(A& al, init_type* p, Args&&... args)
         {
-          boost::allocator_construct(al, p, std::forward<Args>(args)...);
+          std::allocator_traits<A>::construct(al, p, std::forward<Args>(args)...);
         }
 
         template <class A, class... Args>
         static void construct(A& al, value_type* p, Args&&... args)
         {
-          boost::allocator_construct(al, p, std::forward<Args>(args)...);
+          std::allocator_traits<A>::construct(al, p, std::forward<Args>(args)...);
         }
 
         template <class A, class... Args>
         static void construct(A& al, element_type* p, Args&&... args)
         {
-          p->p = boost::to_address(boost::allocator_allocate(al, 1));
+          p->p = std::to_address(std::allocator_traits<A>::allocate(al, 1));
           BOOST_TRY
           {
-            boost::allocator_construct(al, p->p, std::forward<Args>(args)...);
+            std::allocator_traits<A>::construct(al, p->p, std::forward<Args>(args)...);
           }
           BOOST_CATCH(...)
           {
-            using pointer_type = typename boost::allocator_pointer<A>::type;
-            using pointer_traits = boost::pointer_traits<pointer_type>;
+            using pointer_type = typename std::allocator_traits<A>::pointer;
+            using pointer_traits = std::pointer_traits<pointer_type>;
 
-            boost::allocator_deallocate(
+            std::allocator_traits<A>::deallocate(
               al, pointer_traits::pointer_to(*(p->p)), 1);
             BOOST_RETHROW
           }
@@ -118,22 +117,22 @@ namespace boost {
 
         template <class A> static void destroy(A& al, value_type* p) noexcept
         {
-          boost::allocator_destroy(al, p);
+          std::allocator_traits<A>::destroy(al, p);
         }
 
         template <class A> static void destroy(A& al, init_type* p) noexcept
         {
-          boost::allocator_destroy(al, p);
+          std::allocator_traits<A>::destroy(al, p);
         }
 
         template <class A> static void destroy(A& al, element_type* p) noexcept
         {
           if (p->p) {
-            using pointer_type = typename boost::allocator_pointer<A>::type;
-            using pointer_traits = boost::pointer_traits<pointer_type>;
+            using pointer_type = typename std::allocator_traits<A>::pointer;
+            using pointer_traits = std::pointer_traits<pointer_type>;
 
             destroy(al, p->p);
-            boost::allocator_deallocate(
+            std::allocator_traits<A>::deallocate(
               al, pointer_traits::pointer_to(*(p->p)), 1);
           }
         }
@@ -180,8 +179,8 @@ namespace boost {
       using map_types = detail::node_map_types<Key, T>;
 
       using table_type = detail::foa::table<map_types, Hash, KeyEqual,
-        typename boost::allocator_rebind<Allocator,
-          std::pair<Key const, T> >::type>;
+        typename std::allocator_traits<Allocator>::rebind_alloc<
+          std::pair<Key const, T> >>;
 
       table_type table_;
 
@@ -201,14 +200,14 @@ namespace boost {
       using allocator_type = typename std::type_identity<Allocator>::type;
       using reference = value_type&;
       using const_reference = value_type const&;
-      using pointer = typename boost::allocator_pointer<allocator_type>::type;
+      using pointer = typename std::allocator_traits<allocator_type>::pointer;
       using const_pointer =
-        typename boost::allocator_const_pointer<allocator_type>::type;
+        typename std::allocator_traits<allocator_type>::const_pointer;
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
       using node_type = detail::node_map_handle<map_types,
-        typename boost::allocator_rebind<Allocator,
-          typename map_types::value_type>::type>;
+        typename std::allocator_traits<Allocator>::rebind_alloc<
+          typename map_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;
 

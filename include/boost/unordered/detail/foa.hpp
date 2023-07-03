@@ -14,7 +14,6 @@
 
 #include <boost/assert.hpp>
 #include <boost/minconfig.hpp>
-#include <boost/core/allocator_traits.hpp>
 #include <boost/core/empty_value.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/unordered/detail/xmx.hpp>
@@ -947,8 +946,8 @@ struct table_arrays
   static table_arrays new_(Allocator& al,std::size_t n)
   {
     using storage_allocator=
-      typename boost::allocator_rebind<Allocator, Value>::type;
-    using storage_traits=boost::allocator_traits<storage_allocator>;
+      typename std::allocator_traits<Allocator>::rebind_alloc<Value>;
+    using storage_traits=std::allocator_traits<storage_allocator>;
 
     auto         groups_size_index=size_index_for<group_type,size_policy>(n);
     auto         groups_size=size_policy::size(groups_size_index);
@@ -959,7 +958,7 @@ struct table_arrays
     }
     else{
       auto sal=storage_allocator(al);
-      arrays.elements=boost::to_address(
+      arrays.elements=std::to_address(
         storage_traits::allocate(sal,buffer_size(groups_size)));
       
       /* Align arrays.groups to sizeof(group_type). table_iterator critically
@@ -984,10 +983,10 @@ struct table_arrays
   template<typename Allocator>
   static void delete_(Allocator& al,table_arrays& arrays)noexcept
   {
-    using storage_alloc=typename boost::allocator_rebind<Allocator,Value>::type;
-    using storage_traits=boost::allocator_traits<storage_alloc>;
+    using storage_alloc=typename std::allocator_traits<Allocator>::rebind_alloc<Value>;
+    using storage_traits=std::allocator_traits<storage_alloc>;
     using pointer=typename storage_traits::pointer;
-    using pointer_traits=boost::pointer_traits<pointer>;
+    using pointer_traits=std::pointer_traits<pointer>;
 
     auto sal=storage_alloc(al);
     if(arrays.elements){
@@ -1225,7 +1224,7 @@ table:empty_value<Hash,0>,empty_value<Pred,1>,empty_value<Allocator,2>
     no_mix,
     mulx_mix
   >::type;
-  using alloc_traits=boost::allocator_traits<Allocator>;
+  using alloc_traits=std::allocator_traits<Allocator>;
 
 public:
   using key_type=typename type_policy::key_type;

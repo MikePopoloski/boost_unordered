@@ -12,7 +12,6 @@
 #include <boost/unordered/detail/type_traits.hpp>
 #include <boost/unordered/unordered_flat_map_fwd.hpp>
 
-#include <boost/core/allocator_access.hpp>
 #include <boost/container_hash/hash.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -66,23 +65,23 @@ namespace boost {
         template <class A, class... Args>
         static void construct(A& al, init_type* p, Args&&... args)
         {
-          boost::allocator_construct(al, p, std::forward<Args>(args)...);
+          std::allocator_traits<A>::construct(al, p, std::forward<Args>(args)...);
         }
 
         template <class A, class... Args>
         static void construct(A& al, value_type* p, Args&&... args)
         {
-          boost::allocator_construct(al, p, std::forward<Args>(args)...);
+          std::allocator_traits<A>::construct(al, p, std::forward<Args>(args)...);
         }
 
         template <class A> static void destroy(A& al, init_type* p) noexcept
         {
-          boost::allocator_destroy(al, p);
+          std::allocator_traits<A>::destroy(al, p);
         }
 
         template <class A> static void destroy(A& al, value_type* p) noexcept
         {
-          boost::allocator_destroy(al, p);
+          std::allocator_traits<A>::destroy(al, p);
         }
       };
     } // namespace detail
@@ -93,8 +92,8 @@ namespace boost {
       using map_types = detail::flat_map_types<Key, T>;
 
       using table_type = detail::foa::table<map_types, Hash, KeyEqual,
-        typename boost::allocator_rebind<Allocator,
-          typename map_types::value_type>::type>;
+        typename std::allocator_traits<Allocator>::rebind_alloc<
+          typename map_types::value_type>>;
 
       table_type table_;
 
@@ -114,9 +113,9 @@ namespace boost {
       using allocator_type = typename std::type_identity<Allocator>::type;
       using reference = value_type&;
       using const_reference = value_type const&;
-      using pointer = typename boost::allocator_pointer<allocator_type>::type;
+      using pointer = typename std::allocator_traits<allocator_type>::pointer;
       using const_pointer =
-        typename boost::allocator_const_pointer<allocator_type>::type;
+        typename std::allocator_traits<allocator_type>::const_pointer;
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
 

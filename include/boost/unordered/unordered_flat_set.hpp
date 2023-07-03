@@ -12,7 +12,6 @@
 #include <boost/unordered/detail/type_traits.hpp>
 #include <boost/unordered/unordered_flat_set_fwd.hpp>
 
-#include <boost/core/allocator_access.hpp>
 #include <boost/container_hash/hash.hpp>
 
 #include <initializer_list>
@@ -46,12 +45,12 @@ namespace boost {
         template <class A, class... Args>
         static void construct(A& al, value_type* p, Args&&... args)
         {
-          boost::allocator_construct(al, p, std::forward<Args>(args)...);
+          std::allocator_traits<A>::construct(al, p, std::forward<Args>(args)...);
         }
 
         template <class A> static void destroy(A& al, value_type* p) noexcept
         {
-          boost::allocator_destroy(al, p);
+          std::allocator_traits<A>::destroy(al, p);
         }
       };
     } // namespace detail
@@ -62,8 +61,8 @@ namespace boost {
       using set_types = detail::flat_set_types<Key>;
 
       using table_type = detail::foa::table<set_types, Hash, KeyEqual,
-        typename boost::allocator_rebind<Allocator,
-          typename set_types::value_type>::type>;
+        typename std::allocator_traits<Allocator>::rebind_alloc<
+          typename set_types::value_type>>;
 
       table_type table_;
 
@@ -82,9 +81,9 @@ namespace boost {
       using allocator_type = Allocator;
       using reference = value_type&;
       using const_reference = value_type const&;
-      using pointer = typename boost::allocator_pointer<allocator_type>::type;
+      using pointer = typename std::allocator_traits<allocator_type>::pointer;
       using const_pointer =
-        typename boost::allocator_const_pointer<allocator_type>::type;
+        typename std::allocator_traits<allocator_type>::const_pointer;
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
 
