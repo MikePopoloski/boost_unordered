@@ -8,7 +8,6 @@
 
 #include "../helpers/test.hpp"
 #include <boost/assert.hpp>
-#include <boost/unordered/detail/implementation.hpp>
 #include <map>
 #include <memory>
 

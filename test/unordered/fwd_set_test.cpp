@@ -9,7 +9,6 @@
 #ifdef BOOST_UNORDERED_FOA_TESTS
 #include <boost/unordered/unordered_flat_set_fwd.hpp>
 #include <boost/unordered/unordered_node_set_fwd.hpp>
-#include <boost/unordered/detail/implementation.hpp>
 #else
 #include <boost/unordered/unordered_set_fwd.hpp>
 #endif
