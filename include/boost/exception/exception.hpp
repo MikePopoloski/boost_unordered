@@ -8,6 +8,7 @@
 
 #include <boost/assert/source_location.hpp>
 #include <exception>
+#include <boost/minconfig.hpp>
 
 #ifdef BOOST_EXCEPTION_MINI_BOOST
 #include  <memory>

@@ -15,13 +15,12 @@
 #include <boost/assert.hpp>
 #include <boost/minconfig.hpp>
 #include <boost/core/allocator_traits.hpp>
-#include <boost/core/bit.hpp>
 #include <boost/core/empty_value.hpp>
 #include <boost/core/no_exceptions_support.hpp>
-#include <boost/core/pointer_traits.hpp>
 #include <boost/unordered/detail/xmx.hpp>
 #include <boost/unordered/detail/mulx.hpp>
 #include <boost/unordered/hash_traits.hpp>
+#include <bit>
 #include <climits>
 #include <cmath>
 #include <cstddef>
@@ -696,7 +695,7 @@ struct pow2_size_policy
     // of performance
 
     return sizeof(std::size_t)*CHAR_BIT-
-      (n<=2?1:((std::size_t)(boost::core::bit_width(n-1))));
+      (n<=2?1:((std::size_t)(std::bit_width(n-1))));
   }
 
   static inline std::size_t size(std::size_t size_index_)
@@ -795,7 +794,7 @@ inline unsigned int unchecked_countr_zero(int x)
   return (unsigned int)r;
 #else
   BOOST_UNORDERED_ASSUME(x!=0);
-  return (unsigned int)boost::core::countr_zero((unsigned int)x);
+  return (unsigned int)std::countr_zero((unsigned int)x);
 #endif
 }
 

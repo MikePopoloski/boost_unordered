@@ -83,3 +83,26 @@
 #  define BOOST_NO_NORETURN
 #  define BOOST_NORETURN
 #endif
+
+#if BOOST_MSVC
+  #if !defined(_CPPUNWIND) && !defined(BOOST_NO_EXCEPTIONS)
+    #define BOOST_NO_EXCEPTIONS
+  #endif
+  #if !defined(_CPPRTTI) && !defined(BOOST_NO_RTTI)
+    #define BOOST_NO_RTTI
+  #endif
+#elif BOOST_GCC
+  #if !defined(__EXCEPTIONS) && !defined(BOOST_NO_EXCEPTIONS)
+    #define BOOST_NO_EXCEPTIONS
+  #endif
+  #if !defined(__GXX_RTTI) && !defined(BOOST_NO_RTTI)
+    #define BOOST_NO_RTTI
+  #endif
+#elif BOOST_CLANG
+  #if !__has_feature(cxx_exceptions) && !defined(BOOST_NO_EXCEPTIONS)
+    #define BOOST_NO_EXCEPTIONS
+  #endif
+  #if !__has_feature(cxx_rtti) && !defined(BOOST_NO_RTTI)
+    #define BOOST_NO_RTTI
+  #endif
+#endif
