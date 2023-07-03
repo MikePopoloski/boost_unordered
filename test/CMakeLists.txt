@@ -1,17 +1,16 @@
-# Copyright 2018, 2019 Peter Dimov
-# Distributed under the Boost Software License, Version 1.0.
-# See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt
+find_package(Boost CONFIG COMPONENTS unit_test_framework REQUIRED)
 
-include(BoostTestJamfile OPTIONAL RESULT_VARIABLE HAVE_BOOST_TEST)
+function(def_test SOURCE)
+  set(NAME ${SOURCE})
+  get_filename_component(NAME ${NAME} NAME_WE)
+  string(MAKE_C_IDENTIFIER ${NAME} NAME)
 
-if(HAVE_BOOST_TEST)
+  add_executable(${NAME} ${SOURCE})
+  target_link_libraries(${NAME} PRIVATE Boost::unit_test_framework)
+  target_compile_definitions(${NAME} PRIVATE BOOST_UNORDERED_FOA_TESTS)
+  target_include_directories(${NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
 
-boost_test_jamfile(
-  FILE Jamfile.v2 
-  LINK_LIBRARIES 
-    Boost::unordered 
-    Boost::core
-    Boost::concept_check
-)
+  add_test(NAME ${NAME} COMMAND ${NAME})
+endfunction()
 
-endif()
+def_test(unordered/fwd_set_test.cpp)
