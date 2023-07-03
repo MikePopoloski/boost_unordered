@@ -8,9 +8,8 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef BOOST_CORE_POINTER_TRAITS_HPP
 #define BOOST_CORE_POINTER_TRAITS_HPP
 
-#include <boost/config.hpp>
-#include <boost/core/addressof.hpp>
 #include <cstddef>
+#include <memory>
 
 namespace boost {
 namespace detail {
@@ -148,7 +147,7 @@ struct ptr_to<T, E, true> {
 template<class T>
 struct ptr_to<T*, T, true> {
     static T* pointer_to(T& v) BOOST_NOEXCEPT {
-        return boost::addressof(v);
+        return std::addressof(v);
     }
 };
 
