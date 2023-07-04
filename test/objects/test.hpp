@@ -92,7 +92,7 @@ namespace test {
       BOOST_TEST(x.tag1_ != -1);
     }
 
-    movable(BOOST_RV_REF(movable) x)
+    movable(movable&& x)
         : counted_object(x), tag1_(x.tag1_), tag2_(x.tag2_)
     {
       BOOST_TEST(x.tag1_ != -1);
@@ -100,7 +100,7 @@ namespace test {
       x.tag2_ = -1;
     }
 
-    movable& operator=(BOOST_COPY_ASSIGN_REF(movable) x) // Copy assignment
+    movable& operator=(const movable& x) // Copy assignment
     {
       BOOST_TEST(x.tag1_ != -1);
       tag1_ = x.tag1_;
@@ -108,7 +108,7 @@ namespace test {
       return *this;
     }
 
-    movable& operator=(BOOST_RV_REF(movable) x) // Move assignment
+    movable& operator=(movable&& x) // Move assignment
     {
       BOOST_TEST(x.tag1_ != -1);
       tag1_ = x.tag1_;
@@ -400,7 +400,7 @@ namespace test {
     template <typename U, typename... Args> void construct(U* p, Args&&... args)
     {
       detail::tracker.track_construct((void*)p, sizeof(U), tag_);
-      new (p) U(boost::forward<Args>(args)...);
+      new (p) U(std::forward<Args>(args)...);
     }
 
     template <typename U> void destroy(U* p)
@@ -663,10 +663,10 @@ namespace test {
     }
 #else
     template <class U, class... Args>
-    void construct(U* p, BOOST_FWD_REF(Args)... args)
+    void construct(U* p, Args&&... args)
     {
       detail::tracker.track_construct((void*)p, sizeof(U), tag_);
-      new (p) U(boost::forward<Args>(args)...);
+      new (p) U(std::forward<Args>(args)...);
     }
 #endif
 
@@ -709,7 +709,7 @@ namespace test {
   }
 }
 
-namespace boost {
+namespace std {
   template <> struct pointer_traits< ::test::void_ptr>
   {
     template <class U> struct rebind_to
@@ -717,6 +717,6 @@ namespace boost {
       typedef ::test::ptr<U> type;
     };
   };
-} // namespace boost
+} 
 
 #endif

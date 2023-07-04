@@ -223,10 +223,10 @@ namespace test
     }
 #else
     template <class U, typename... Args>
-    void construct(U* p, BOOST_FWD_REF(Args)... args)
+    void construct(U* p, Args&&... args)
     {
       detail::tracker.track_construct((void*)p, sizeof(U), tag_);
-      new (p) U(boost::forward<Args>(args)...);
+      new (p) U(std::forward<Args>(args)...);
     }
 #endif
 
@@ -248,7 +248,7 @@ namespace test
 
   template <typename T, typename Flags>
   struct cxx11_allocator<T, Flags,
-    typename boost::disable_if_c<Flags::is_select_on_copy>::type>
+    typename std::enable_if<!Flags::is_select_on_copy>::type>
     : public cxx11_allocator_base<T>,
       public swap_allocator_base<Flags>,
       public assign_allocator_base<Flags>,
@@ -282,7 +282,7 @@ namespace test
 
   template <typename T, typename Flags>
   struct cxx11_allocator<T, Flags,
-    typename boost::enable_if_c<Flags::is_select_on_copy>::type>
+    typename std::enable_if<Flags::is_select_on_copy>::type>
     : public cxx11_allocator_base<T>,
       public swap_allocator_base<Flags>,
       public assign_allocator_base<Flags>,

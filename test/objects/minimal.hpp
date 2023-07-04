@@ -167,8 +167,8 @@ namespace test {
       movable1(constructor_param const&) {}
       movable1() {}
       explicit movable1(movable_init) {}
-      movable1(BOOST_RV_REF(movable1)) {}
-      movable1& operator=(BOOST_RV_REF(movable1)) { return *this; }
+      movable1(movable1&&) {}
+      movable1& operator=(movable1&&) { return *this; }
       ~movable1() {}
       void dummy_member() const {}
     };
@@ -449,9 +449,9 @@ namespace test {
       }
 #else
       template <class U, class... Args>
-      void construct(U* p, BOOST_FWD_REF(Args)... args)
+      void construct(U* p, Args&&... args)
       {
-        new ((void*)p) U(boost::forward<Args>(args)...);
+        new ((void*)p) U(std::forward<Args>(args)...);
       }
 #endif
 
@@ -517,9 +517,9 @@ namespace test {
       }
 #else
       template <class U, class... Args>
-      void construct(U* p, BOOST_FWD_REF(Args)... args)
+      void construct(U* p, Args&&... args)
       {
-        new (p) U(boost::forward<Args>(args)...);
+        new (p) U(std::forward<Args>(args)...);
       }
 #endif
 
@@ -589,9 +589,9 @@ namespace test {
       }
 #else
       template <class U, class... Args>
-      void construct(U* p, BOOST_FWD_REF(Args)... args)
+      void construct(U* p, Args&&... args)
       {
-        new ((void*)p) U(boost::forward<Args>(args)...);
+        new ((void*)p) U(std::forward<Args>(args)...);
       }
 #endif
 

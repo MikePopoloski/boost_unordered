@@ -91,9 +91,9 @@ public:
   template <class U, class V> void construct(U* p, V const& v) { new (p) U(v); }
 #else
   template <class U, class... Args>
-  void construct(U* p, BOOST_FWD_REF(Args)... args)
+  void construct(U* p, Args&&... args)
   {
-    new (p) U(boost::forward<Args>(args)...);
+    new (p) U(std::forward<Args>(args)...);
   }
 #endif
 
@@ -175,9 +175,9 @@ public:
   template <class U, class V> void construct(U* p, V const& v) { new (p) U(v); }
 #else
   template <class U, class... Args>
-  void construct(U* p, BOOST_FWD_REF(Args)... args)
+  void construct(U* p, Args&&... args)
   {
-    new (p) U(boost::forward<Args>(args)...);
+    new (p) U(std::forward<Args>(args)...);
   }
 #endif
 

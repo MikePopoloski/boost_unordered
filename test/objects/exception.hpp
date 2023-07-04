@@ -513,12 +513,12 @@ namespace test {
         test::detail::tracker.track_construct((void*)p, sizeof(U), tag_);
       }
 #else
-      template <class U, class... Args> void construct(U* p, BOOST_FWD_REF(Args)... args)
+      template <class U, class... Args> void construct(U* p, Args&&... args)
       {
-        UNORDERED_SCOPE(allocator::construct(U*, BOOST_FWD_REF(Args)...))
+        UNORDERED_SCOPE(allocator::construct(U*, Args&&...))
         {
           UNORDERED_EPOINT("Mock allocator construct function.");
-          new (p) U(boost::forward<Args>(args)...);
+          new (p) U(std::forward<Args>(args)...);
         }
         test::detail::tracker.track_construct((void*)p, sizeof(U), tag_);
       }
@@ -695,12 +695,12 @@ namespace test {
       }
 #else
       template <class U, class... Args> 
-      void construct(U* p, BOOST_FWD_REF(Args)... args)
+      void construct(U* p, Args&&... args)
       {
-        UNORDERED_SCOPE(allocator2::construct(U*, BOOST_FWD_REF(Args)...))
+        UNORDERED_SCOPE(allocator2::construct(U*, Args&&...))
         {
           UNORDERED_EPOINT("Mock allocator2 construct function.");
-          new (p) U(boost::forward<Args>(args)...);
+          new (p) U(std::forward<Args>(args)...);
         }
         test::detail::tracker.track_construct((void*)p, sizeof(U), tag_);
       }
