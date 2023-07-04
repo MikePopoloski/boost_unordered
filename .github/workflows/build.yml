@@ -47,6 +47,9 @@ jobs:
       if: matrix.os == 'macos-13'
       with:
         xcode-version: '14.3'
+    - uses: MarkusJx/install-boost@v2.4.1
+      with:
+        boost_version: 1.80.0
     - name: Configure
       run: cmake --preset ${{ matrix.preset }}
     - name: Build
