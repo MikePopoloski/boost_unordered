@@ -187,13 +187,13 @@ namespace unnecessary_copy_tests {
     T x;
     typename T::value_type a;
     reset();
-    x.insert(boost::move(a));
+    x.insert(std::move(a));
     COPY_COUNT(0);
     MOVE_COUNT(1);
 
     typename T::value_type a2;
     reset();
-    x.insert(boost::move(a));
+    x.insert(std::move(a));
     COPY_COUNT(0);
     MOVE_COUNT((x.size() == 2 ? 1 : 0));
   }
@@ -207,7 +207,7 @@ namespace unnecessary_copy_tests {
     T x;
     typename T::value_type a;
     reset();
-    x.insert(boost::move(a));
+    x.insert(std::move(a));
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     COPY_COUNT(1);
     MOVE_COUNT(0);
@@ -218,7 +218,7 @@ namespace unnecessary_copy_tests {
 
     typename T::value_type a2;
     reset();
-    x.insert(boost::move(a));
+    x.insert(std::move(a));
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     COPY_COUNT((x.size() == 2 ? 1 : 0));
     MOVE_COUNT(0);
@@ -288,7 +288,7 @@ namespace unnecessary_copy_tests {
     typename T::value_type a;
     COPY_COUNT(1);
     MOVE_COUNT_EXTRA(0, 1);
-    x.emplace(boost::move(a));
+    x.emplace(std::move(a));
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     COPY_COUNT(1);
     MOVE_COUNT(1);
@@ -309,7 +309,7 @@ namespace unnecessary_copy_tests {
     typename T::value_type a;
     COPY_COUNT(1);
     MOVE_COUNT(0);
-    x.emplace(boost::move(a));
+    x.emplace(std::move(a));
     COPY_COUNT(1);
     MOVE_COUNT(1);
   }
@@ -326,7 +326,7 @@ namespace unnecessary_copy_tests {
     typename T::value_type a;
     COPY_COUNT(1);
     MOVE_COUNT_EXTRA(0, 1);
-    x.emplace(boost::move(a));
+    x.emplace(std::move(a));
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     COPY_COUNT(2);
     MOVE_COUNT_EXTRA(0, 1);
@@ -391,7 +391,7 @@ namespace unnecessary_copy_tests {
 
     // No move should take place.
     reset();
-    x.emplace(boost::move(a));
+    x.emplace(std::move(a));
     COPY_COUNT(0);
     MOVE_COUNT(0);
 
@@ -492,7 +492,7 @@ namespace unnecessary_copy_tests {
     // No move should take place.
     // (since a is already in the container)
     reset();
-    x.emplace(boost::move(a));
+    x.emplace(std::move(a));
     COPY_COUNT(0);
     MOVE_COUNT(0);
 

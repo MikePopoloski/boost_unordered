@@ -1861,7 +1861,7 @@ template <class UnorderedSet> void test_set_transparent_extract(UnorderedSet*)
   BOOST_TEST_EQ(nh.value(), 0);
   BOOST_TEST_EQ(count, set_size - 3);
 
-  set.insert(boost::move(nh));
+  set.insert(std::move(nh));
 
   nh = set.extract(1);
   count = set.count(1);
@@ -1869,7 +1869,7 @@ template <class UnorderedSet> void test_set_transparent_extract(UnorderedSet*)
   BOOST_TEST_EQ(nh.value(), 1);
   BOOST_TEST_EQ(count, 0u);
 
-  set.insert(boost::move(nh));
+  set.insert(std::move(nh));
 
   nh = set.extract(1337);
   BOOST_TEST(nh.empty());
@@ -1913,7 +1913,7 @@ void test_set_non_transparent_extract(UnorderedSet*)
   BOOST_TEST_EQ(nh.value(), 0);
   BOOST_TEST_EQ(count, set_size - 3);
 
-  set.insert(boost::move(nh));
+  set.insert(std::move(nh));
 
   nh = set.extract(1);
   ++key_count;
@@ -1925,7 +1925,7 @@ void test_set_non_transparent_extract(UnorderedSet*)
   BOOST_TEST_EQ(nh.value(), 1);
   BOOST_TEST_EQ(count, 0u);
 
-  set.insert(boost::move(nh));
+  set.insert(std::move(nh));
 
   nh = set.extract(1337);
   ++key_count;
