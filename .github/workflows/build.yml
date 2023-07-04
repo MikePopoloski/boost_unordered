@@ -1,0 +1,56 @@
+name: CI Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - preset: gcc-release
+            os: ubuntu-latest
+          - preset: clang-release
+            os: ubuntu-latest
+          - preset: gcc-10-release
+            os: ubuntu-latest
+          - preset: gcc-debug-noexcept
+            os: ubuntu-latest
+          - preset: macos-release
+            os: macos-13
+          - preset: win64-release
+            os: windows-latest
+          - preset: win32-release
+            os: windows-latest
+          - preset: win64-debug-noexcept
+            os: windows-latest
+
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Install dependencies
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main"
+        sudo apt-get update
+        sudo apt-get install -y g++-12 g++-10 clang-16
+    - uses: ilammy/msvc-dev-cmd@v1
+      if: matrix.os == 'windows-latest'
+    - uses: maxim-lobanov/setup-xcode@v1
+      if: matrix.os == 'macos-13'
+      with:
+        xcode-version: '14.3'
+    - name: Configure
+      run: cmake --preset ${{ matrix.preset }}
+    - name: Build
+      run: cmake --build build/${{ matrix.preset }} -j8
+    - name: Run tests
+      run: |
+        ctest --output-on-failure --no-tests=error --test-dir build/${{ matrix.preset }} -j8
