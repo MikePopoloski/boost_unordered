@@ -95,13 +95,13 @@ namespace move_tests {
 
   template <class Key, class T, class Hash, class KeyEqual, class Allocator>
   struct insert_or_assign_invoker<
-    boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> >
+    boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> >
   {
-    void operator()(boost::unordered_map<Key, T, Hash, KeyEqual, Allocator>& y,
+    void operator()(boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>& y,
       test::random_values<
-        boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
+        boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
     {
-      typedef typename boost::unordered_map<Key, T, Hash, KeyEqual,
+      typedef typename boost::unordered_flat_map<Key, T, Hash, KeyEqual,
         Allocator>::size_type size_type;
 
       y.insert_or_assign(get_key(*v.begin()), get_value(*v.begin()));
@@ -123,13 +123,13 @@ namespace move_tests {
 
   template <class Key, class T, class Hash, class KeyEqual, class Allocator>
   struct insert_or_assign_hint_invoker<
-    boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> >
+    boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> >
   {
-    void operator()(boost::unordered_map<Key, T, Hash, KeyEqual, Allocator>& y,
+    void operator()(boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>& y,
       test::random_values<
-        boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
+        boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
     {
-      typedef typename boost::unordered_map<Key, T, Hash, KeyEqual,
+      typedef typename boost::unordered_flat_map<Key, T, Hash, KeyEqual,
         Allocator>::size_type size_type;
       y.insert_or_assign(y.end(), get_key(*v.begin()), get_value(*v.begin()));
       BOOST_TEST_EQ(
@@ -150,13 +150,13 @@ namespace move_tests {
 
   template <class Key, class T, class Hash, class KeyEqual, class Allocator>
   struct try_emplace_invoker<
-    boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> >
+    boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> >
   {
-    void operator()(boost::unordered_map<Key, T, Hash, KeyEqual, Allocator>& y,
+    void operator()(boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>& y,
       test::random_values<
-        boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
+        boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
     {
-      typedef typename boost::unordered_map<Key, T, Hash, KeyEqual,
+      typedef typename boost::unordered_flat_map<Key, T, Hash, KeyEqual,
         Allocator>::size_type size_type;
       y.try_emplace(get_key(*v.begin()), get_value(*v.begin()));
       BOOST_TEST_EQ(
@@ -177,13 +177,13 @@ namespace move_tests {
 
   template <class Key, class T, class Hash, class KeyEqual, class Allocator>
   struct try_emplace_hint_invoker<
-    boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> >
+    boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> >
   {
-    void operator()(boost::unordered_map<Key, T, Hash, KeyEqual, Allocator>& y,
+    void operator()(boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>& y,
       test::random_values<
-        boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
+        boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
     {
-      typedef typename boost::unordered_map<Key, T, Hash, KeyEqual,
+      typedef typename boost::unordered_flat_map<Key, T, Hash, KeyEqual,
         Allocator>::size_type size_type;
       y.try_emplace(y.end(), get_key(*v.begin()), get_value(*v.begin()));
       BOOST_TEST_EQ(
@@ -203,11 +203,11 @@ namespace move_tests {
   };
 
   template <class Key, class T, class Hash, class KeyEqual, class Allocator>
-  struct at_invoker<boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> >
+  struct at_invoker<boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> >
   {
-    void operator()(boost::unordered_map<Key, T, Hash, KeyEqual, Allocator>& y,
+    void operator()(boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>& y,
       test::random_values<
-        boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
+        boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
     {
       BOOST_TRY { y.at(get_key(*v.begin())); }
       BOOST_CATCH(...) {}
@@ -227,13 +227,13 @@ namespace move_tests {
 
   template <class Key, class T, class Hash, class KeyEqual, class Allocator>
   struct index_operator_invoker<
-    boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> >
+    boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> >
   {
-    void operator()(boost::unordered_map<Key, T, Hash, KeyEqual, Allocator>& y,
+    void operator()(boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>& y,
       test::random_values<
-        boost::unordered_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
+        boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator> > const& v)
     {
-      typedef typename boost::unordered_map<Key, T, Hash, KeyEqual,
+      typedef typename boost::unordered_flat_map<Key, T, Hash, KeyEqual,
         Allocator>::size_type size_type;
       y[get_key(*v.begin())] = get_value(*v.begin());
       BOOST_TEST_EQ(
@@ -368,8 +368,7 @@ namespace move_tests {
   static void container_swap(T& y, test::random_values<T> const& v)
   {
     T x(v.begin(), v.end());
-    if (boost::allocator_propagate_on_container_swap<
-          typename T::allocator_type>::type::value ||
+    if (std::allocator_traits<typename T::allocator_type>::propagate_on_container_swap::value ||
         x.get_allocator() == y.get_allocator()) {
       y.swap(x);
     }
@@ -548,8 +547,7 @@ namespace move_tests {
       T x(al2);
       x = std::move(y);
 
-      bool b = boost::allocator_propagate_on_container_move_assignment<
-        typename T::allocator_type>::type::value;
+      bool b = std::allocator_traits<typename T::allocator_type>::propagate_on_container_move_assignment::value;
       if (b) {
 #if defined(BOOST_UNORDERED_USE_MOVE) ||                                       \
   !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
@@ -644,7 +642,7 @@ namespace move_tests {
       (default_generator)(generate_collisions)(limited_range)))
 // clang-format on
 #else
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     std::allocator<std::pair<test::object const, test::object> > >*
     test_map_std_alloc;
 
@@ -652,7 +650,7 @@ namespace move_tests {
     test::allocator2<test::object> >* test_set;
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::allocator1<test::object> >* test_multiset;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::allocator1<std::pair<test::object const, test::object> > >* test_map;
   boost::unordered_multimap<test::object, test::object, test::hash,
     test::equal_to,
@@ -665,7 +663,7 @@ namespace move_tests {
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::propagate_move> >*
     test_multiset_prop_move;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::cxx11_allocator<std::pair<test::object const, test::object>,
       test::propagate_move> >* test_map_prop_move;
   boost::unordered_multimap<test::object, test::object, test::hash,
@@ -679,7 +677,7 @@ namespace move_tests {
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::no_propagate_move> >*
     test_multiset_no_prop_move;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::cxx11_allocator<std::pair<test::object const, test::object>,
       test::no_propagate_move> >* test_map_no_prop_move;
   boost::unordered_multimap<test::object, test::object, test::hash,

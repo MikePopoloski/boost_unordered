@@ -6,6 +6,7 @@
 // (boost/container_hash/hash.hpp is an example doing that)
 
 #include <boost/type_traits/integral_constant.hpp>
+#include <type_traits>
 
 struct X3
 {

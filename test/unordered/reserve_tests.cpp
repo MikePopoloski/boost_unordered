@@ -210,7 +210,7 @@ UNORDERED_AUTO_TEST (allocator_check) {
   // other's resources, such as memory pools.)
   //
   //
-  typedef boost::allocator_rebind<A<int>, float>::type alloc_rebound;
+  typedef std::allocator_traits<A<int>>::rebind_alloc<float> alloc_rebound;
   alloc_rebound b;
   A<int> a(b);
   BOOST_ASSERT(alloc_rebound(a) == b);

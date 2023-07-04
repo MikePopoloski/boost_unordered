@@ -930,25 +930,6 @@ namespace insert_tests {
     test::check_equivalent_keys(x);
   }
 
-  template <class X>
-  void map_insert_range_test2(X*, test::random_generator generator)
-  {
-    test::check_instances check_;
-
-    typedef test::list<
-      std::pair<typename X::key_type const, test::implicitly_convertible> >
-      list;
-    test::random_values<
-      boost::unordered_map<typename X::key_type, test::implicitly_convertible> >
-      v(1000, generator);
-    list l(v.begin(), v.end());
-
-    X x;
-    x.insert(l.begin(), l.end());
-
-    test::check_equivalent_keys(x);
-  }
-
   using test::default_generator;
   using test::generate_collisions;
   using test::limited_range;
@@ -1003,9 +984,6 @@ namespace insert_tests {
     map_tests2, ((test_map)(test_node_map))((default_generator)(generate_collisions)))
 
   UNORDERED_TEST(map_insert_range_test1,
-    ((test_map)(test_node_map))((default_generator)(generate_collisions)(limited_range)))
-
-  UNORDERED_TEST(map_insert_range_test2,
     ((test_map)(test_node_map))((default_generator)(generate_collisions)(limited_range)))
 
   UNORDERED_TEST(
@@ -1066,10 +1044,6 @@ namespace insert_tests {
     map_tests2, ((test_map))((default_generator)(generate_collisions)))
 
   UNORDERED_TEST(map_insert_range_test1,
-    ((test_multimap_std_alloc)(test_map)(test_multimap))(
-      (default_generator)(generate_collisions)(limited_range)))
-
-  UNORDERED_TEST(map_insert_range_test2,
     ((test_multimap_std_alloc)(test_map)(test_multimap))(
       (default_generator)(generate_collisions)(limited_range)))
 
