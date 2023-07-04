@@ -23,11 +23,7 @@
 #pragma warning(disable : 4100) // unreferenced formal parameter
 #endif
 
-#if !BOOST_WORKAROUND(BOOST_MSVC, == 1500)
 #define BOOST_UNORDERED_CHECK_ADDR_OPERATOR_NOT_USED 1
-#else
-#define BOOST_UNORDERED_CHECK_ADDR_OPERATOR_NOT_USED 0
-#endif
 
 namespace test {
   namespace minimal {
@@ -463,14 +459,8 @@ namespace test {
 
       size_type max_size() const { return 1000; }
 
-#if defined(BOOST_NO_ARGUMENT_DEPENDENT_LOOKUP) ||                             \
-  BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
-    public:
-      allocator& operator=(allocator const&) { return *this; }
-#else
     private:
       allocator& operator=(allocator const&);
-#endif
 #if BOOST_UNORDERED_CHECK_ADDR_OPERATOR_NOT_USED
       ampersand_operator_used operator&() const
       {
@@ -537,14 +527,8 @@ namespace test {
 
       size_type max_size() const { return 1000; }
 
-#if defined(BOOST_NO_ARGUMENT_DEPENDENT_LOOKUP) ||                             \
-  BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
-    public:
-      allocator& operator=(allocator const&) { return *this; }
-#else
     private:
       allocator& operator=(allocator const&);
-#endif
 #if BOOST_UNORDERED_CHECK_ADDR_OPERATOR_NOT_USED
       ampersand_operator_used operator&() const
       {

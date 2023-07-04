@@ -1147,7 +1147,6 @@ namespace insert_tests {
   }
 
 #ifndef BOOST_UNORDERED_FOA_TESTS
-#if !BOOST_WORKAROUND(BOOST_MSVC, == 1800)
 
   UNORDERED_AUTO_TEST (insert_initializer_list_multiset) {
     boost::unordered_multiset<std::string> multiset;
@@ -1164,7 +1163,6 @@ namespace insert_tests {
     BOOST_TEST_EQ(multiset.count("c"), 0u);
   }
 
-#endif
 #endif
 
   template <class X> static void insert_initializer_list_map(X*)

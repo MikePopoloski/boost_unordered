@@ -14,11 +14,7 @@
 #include <boost/config/pragma_message.hpp>
 #include <boost/config/workaround.hpp>
 
-#if BOOST_CXX_VERSION <= 199711L ||                                            \
-  BOOST_WORKAROUND(BOOST_GCC_VERSION, < 40800) ||                              \
-  (defined(BOOST_LIBSTDCXX_VERSION) && BOOST_CXX_VERSION > 201703L) ||         \
-  (defined(BOOST_MSVC_FULL_VER) && BOOST_MSVC_FULL_VER >= 192000000 &&         \
-    BOOST_MSVC_FULL_VER < 193000000)
+#if BOOST_CXX_VERSION <= 199711L ||  (defined(BOOST_LIBSTDCXX_VERSION) && BOOST_CXX_VERSION > 201703L) ||  (defined(BOOST_MSVC_FULL_VER) && BOOST_MSVC_FULL_VER >= 192000000 &&  BOOST_MSVC_FULL_VER < 193000000)
 
 // automatically disable this test for C++03 builds so we can use the STL's
 // scoped_allocator_adaptor

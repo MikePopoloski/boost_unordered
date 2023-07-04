@@ -178,16 +178,12 @@ namespace noexcept_tests {
       boost::is_nothrow_swappable<hash_nothrow_swap>::value;
 
 // Check that the traits work when expected.
-#if !defined(BOOST_NO_CXX11_NOEXCEPT) && !defined(BOOST_NO_SFINAE_EXPR) &&     \
-  !BOOST_WORKAROUND(BOOST_GCC_VERSION, < 40800)
+#if !defined(BOOST_NO_CXX11_NOEXCEPT) && !defined(BOOST_NO_SFINAE_EXPR)
     BOOST_TEST(have_is_nothrow_move);
     BOOST_TEST(have_is_nothrow_move_assign);
 #endif
 
-#if !defined(BOOST_NO_SFINAE_EXPR) && !defined(BOOST_NO_CXX11_NOEXCEPT) &&     \
-  !defined(BOOST_NO_CXX11_DECLTYPE) &&                                         \
-  !defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS) &&                   \
-  !BOOST_WORKAROUND(BOOST_GCC_VERSION, < 40700)
+#if !defined(BOOST_NO_SFINAE_EXPR) && !defined(BOOST_NO_CXX11_NOEXCEPT) &&  !defined(BOOST_NO_CXX11_DECLTYPE) &&  !defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
     BOOST_TEST(have_is_nothrow_swap);
 #endif
 

@@ -14,10 +14,6 @@
 #include "../helpers/random_values.hpp"
 #include "../helpers/helpers.hpp"
 
-#if BOOST_WORKAROUND(BOOST_MSVC, < 1400)
-#pragma warning(disable : 4267) // conversion from 'size_t' to 'unsigned int',
-                                // possible loss of data.
-#endif
 
 namespace bucket_tests {
 

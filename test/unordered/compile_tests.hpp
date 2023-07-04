@@ -80,10 +80,10 @@ template <class X, class T> void container_test(X& r, T const&)
   typedef typename X::const_pointer const_pointer;
 
   BOOST_STATIC_ASSERT((boost::is_same<pointer,
-    typename boost::allocator_pointer<allocator_type>::type>::value));
+    typename std::allocator_traits<allocator_type>::pointer>::value));
 
   BOOST_STATIC_ASSERT((boost::is_same<const_pointer,
-    typename boost::allocator_const_pointer<allocator_type>::type>::value));
+    typename std::allocator_traits<allocator_type>::const_pointer>::value));
 
   // value_type
 
@@ -831,9 +831,7 @@ void unordered_copyable_test(X& x, Key& k, T& t, Hash& hf, Pred& eq)
   a.insert(list);
   a.insert({t, t, t});
 
-#if !BOOST_WORKAROUND(BOOST_MSVC, < 1900) &&                                   \
-  (!defined(__clang__) || __clang_major__ >= 4 ||                              \
-    (__clang_major__ == 3 && __clang_minor__ >= 4))
+#if  (!defined(__clang__) || __clang_major__ >= 4 ||  (__clang_major__ == 3 && __clang_minor__ >= 4))
   a.insert({});
   a.insert({t});
   a.insert({t, t});
