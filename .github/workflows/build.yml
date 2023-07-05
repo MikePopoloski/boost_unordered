@@ -47,11 +47,12 @@ jobs:
       if: matrix.os == 'macos-13'
       with:
         xcode-version: '14.3'
-    - uses: MarkusJx/install-boost@v2.4.1
+    - uses: MarkusJx/install-boost@v2.4.4
+      id: install-boost
       with:
         boost_version: 1.80.0
     - name: Configure
-      run: cmake --preset ${{ matrix.preset }}
+      run: cmake --preset ${{ matrix.preset }} -DCMAKE_PREFIX_PATH=${{ steps.install-boost.outputs.BOOST_ROOT }}
     - name: Build
       run: cmake --build build/${{ matrix.preset }} -j8
     - name: Run tests
