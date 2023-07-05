@@ -23,10 +23,22 @@ project(
   DESCRIPTION "standalone boost::unordered library")
 
 option(BUS_INCLUDE_TESTS "Include tests in the build" ${BUS_MASTER_PROJECT})
+option(BUS_SYSTEM_INCLUDE "Mark boost_unordered headers as system includes" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(BUS_SYSTEM_INCLUDE)
+  set(BUS_SYSTEM_TAG "SYSTEM")
+endif()
+
+add_library(boost_unordered INTERFACE)
+target_include_directories(
+  boost_unordered
+  ${BUS_SYSTEM_TAG} INTERFACE
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/>
+  $<INSTALL_INTERFACE:include>)
 
 if(BUS_INCLUDE_TESTS)
   include(CTest)
