@@ -1,7 +1,7 @@
 find_package(Boost CONFIG COMPONENTS unit_test_framework REQUIRED)
 
 function(def_test SOURCE)
-  set(NAME ${SOURCE})
+  list(GET SOURCE 0 NAME)
   get_filename_component(NAME ${NAME} NAME_WE)
   string(MAKE_C_IDENTIFIER ${NAME} NAME)
 
@@ -47,7 +47,7 @@ def_test(unordered/max_load_tests.cpp)
 def_test(unordered/extract_tests.cpp)
 def_test(unordered/node_handle_tests.cpp)
 def_test(unordered/uses_allocator.cpp)
-#def_test(unordered/link_test_1.cpp unordered/link_test_2.cpp )
+def_test("unordered/link_test_1.cpp;unordered/link_test_2.cpp")
 def_test(unordered/scoped_allocator.cpp)
 def_test(unordered/hash_is_avalanching_test.cpp)
 def_test(exception/constructor_exception_tests.cpp)
