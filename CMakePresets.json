@@ -86,16 +86,6 @@
       }
     },
     {
-      "name": "win64-debug-noexcept",
-      "displayName": "Win64 Debug No Exceptions",
-      "inherits": [
-        "win64-debug"
-      ],
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "/nologo /MP /GR- /volatile:iso /Zc:inline /Zc:preprocessor /Zc:__cplusplus /Zc:externConstexpr /Zc:throwingNew /D_HAS_EXCEPTIONS=0"
-      }
-    },
-    {
       "name": "linux-base",
       "hidden": true,
       "generator": "Unix Makefiles",
@@ -139,18 +129,6 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "g++-12",
         "BUILD_SHARED_LIBS": "ON"
-      }
-    },
-    {
-      "name": "gcc-debug-noexcept",
-      "displayName": "GCC Debug No Exceptions",
-      "inherits": [
-        "linux-base"
-      ],
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_FLAGS": "-fno-exceptions -fno-rtti",
-        "CMAKE_CXX_COMPILER": "g++-12"
       }
     },
     {

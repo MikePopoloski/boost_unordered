@@ -18,15 +18,11 @@ jobs:
             os: ubuntu-latest
           - preset: gcc-10-release
             os: ubuntu-latest
-          - preset: gcc-debug-noexcept
-            os: ubuntu-latest
           - preset: macos-release
             os: macos-13
           - preset: win64-release
             os: windows-latest
           - preset: win32-release
-            os: windows-latest
-          - preset: win64-debug-noexcept
             os: windows-latest
 
     runs-on: ${{ matrix.os }}
