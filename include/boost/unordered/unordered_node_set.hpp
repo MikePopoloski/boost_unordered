@@ -134,7 +134,7 @@ namespace boost {
       using set_types = detail::node_set_types<Key>;
 
       using table_type = detail::foa::table<set_types, Hash, KeyEqual,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename set_types::value_type>>;
 
       table_type table_;
@@ -160,7 +160,7 @@ namespace boost {
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
       using node_type = detail::node_set_handle<set_types,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename set_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;

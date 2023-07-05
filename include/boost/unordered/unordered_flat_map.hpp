@@ -92,7 +92,7 @@ namespace boost {
       using map_types = detail::flat_map_types<Key, T>;
 
       using table_type = detail::foa::table<map_types, Hash, KeyEqual,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename map_types::value_type>>;
 
       table_type table_;

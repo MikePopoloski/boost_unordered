@@ -946,7 +946,7 @@ struct table_arrays
   static table_arrays new_(Allocator& al,std::size_t n)
   {
     using storage_allocator=
-      typename std::allocator_traits<Allocator>::rebind_alloc<Value>;
+      typename std::allocator_traits<Allocator>::template rebind_alloc<Value>;
     using storage_traits=std::allocator_traits<storage_allocator>;
 
     auto         groups_size_index=size_index_for<group_type,size_policy>(n);
@@ -983,7 +983,7 @@ struct table_arrays
   template<typename Allocator>
   static void delete_(Allocator& al,table_arrays& arrays)noexcept
   {
-    using storage_alloc=typename std::allocator_traits<Allocator>::rebind_alloc<Value>;
+    using storage_alloc=typename std::allocator_traits<Allocator>::template rebind_alloc<Value>;
     using storage_traits=std::allocator_traits<storage_alloc>;
     using pointer=typename storage_traits::pointer;
     using pointer_traits=std::pointer_traits<pointer>;
