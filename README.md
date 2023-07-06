@@ -38,7 +38,9 @@ So we've chopped out 234 files and 7680 lines of code from each translation unit
 ### Tradeoffs
 The standalone library requires a modern C++20 capable compiler and standard library. Assuming you have that then you don't really give up anything. All of the tests still pass. A lot of the stuff cut out is to support old or esoteric compilers -- if that's something you use then stick with the full boost installation.
 
-Only one piece of functionality was actually removed: containerHash in boost has the ability to automatically compute hash values for structures that are annotated via boost::describe. If you are looking to avoid a boost dependency then you probably aren't annotating your types via boost::describe so this doesn't seem so bad, and it lets us get rid of all of the boost::describe headers.
+This library does remove the older unordered_{map,set} implementations. unordered_flat_{map,set} and unordered_node_{map,set} are superior containers in almost all cases, and if you have a case that really needs the old-style non-flat containers then you can use the ones included in std or just fall back to the full boost installation.
+
+One other piece of functionality was removed: containerHash in boost has the ability to automatically compute hash values for structures that are annotated via boost::describe. If you are looking to avoid a boost dependency then you probably aren't annotating your types via boost::describe so this doesn't seem so bad, and it lets us get rid of all of the boost::describe headers.
 
 ### Methodology
 The sources in this repository were produced as follows:
