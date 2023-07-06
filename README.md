@@ -2,7 +2,7 @@
 ![](https://github.com/MikePopoloski/boost_unordered/actions/workflows/build.yml/badge.svg)
 ![GitHub](https://img.shields.io/github/license/MikePopoloski/boost_unordered)
 
-This project is a standalone version of the [boost::unordered](https://github.com/boostorg/unordered) library. boost::unordered_flat{map,set} are some of the fastest and highest quality C++ hashmap implementations out there, but unfortunately they come with the entire rest of boost as baggage if you want to use them. This repository extracts them and snips out the links to the rest of boost so that you can use just the hashmaps.
+This project is a standalone version of the [boost::unordered](https://github.com/boostorg/unordered) library. boost::unordered_flat{map,set} are some of the fastest and highest quality C++ hashmap implementations out there (major props to the authors), but unfortunately they come with the entire rest of boost as baggage if you want to use them. This repository extracts them and snips out the links to the rest of boost so that you can use just the hashmaps.
 
 ### Benefits
 First and foremost, if you don't otherwise need boost in your project then this will let you avoid taking a dependency on all of boost, which is absolutely gigantic (something like 750MB of sources alone). This may not matter to you if you already have boost installed on your system, but you do need a relatively recent version to get the flat hashmaps and if you are a library you may not want to introduce a transitive dependency on boost to all of your users.
@@ -48,6 +48,6 @@ The sources in this repository were produced as follows:
 - Extract the unordered library via the `bcp` utility
 - Delete a bunch of obvious stuff that `bcp` pulls in by accident (like the whole regex library)
 - Use the [coan](https://coan2.sourceforge.net/) tool to flatten out a bunch of macros for pre-C++11 cases or workarounds for various compilers
-- Create a [minconfig.hpp]() file that can replace the whole tree of `config` and `predef` headers that were being pulled in
+- Create a [minconfig.hpp](https://github.com/MikePopoloski/boost_unordered/blob/master/include/boost/minconfig.hpp) file that can replace the whole tree of `config` and `predef` headers that were being pulled in
 - Find + replace a bunch of boost utilities that have std counterparts (mostly allocator traits)
 - Profit
