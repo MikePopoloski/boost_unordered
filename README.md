@@ -23,7 +23,7 @@ which are 31424 lines in total:
 ```
 > g++-12 -std=c++20 -O2 main.cpp -M | sed 's/\\$//' | awk '{ for (i=1; i<=NF; i++) print $i }' | grep boost | xargs wc -l
 ...
-  37420 total
+  31424 total
 ```
 
 Using the standalone version:
@@ -35,7 +35,7 @@ Using the standalone version:
   6322 total
 ```
 
-So we've chopped out 249 files and 31088 lines of code from each translation unit that includes unordered_flat_map. The compilation speedup on my machine for this toy example is about 10%, though your mileage may vary.
+So we've chopped out 249 files and 25102 lines of code from each translation unit that includes unordered_flat_map. The compilation speedup on my machine for this toy example is about 10%, though your mileage may vary.
 
 ### Tradeoffs
 The standalone library requires a modern C++20 capable compiler and standard library. Assuming you have that then you don't really give up anything. All of the tests still pass. A lot of the stuff cut out is to support old or esoteric compilers -- if that's something you use then stick with the full boost installation.
