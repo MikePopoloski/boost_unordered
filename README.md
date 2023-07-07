@@ -46,6 +46,22 @@ This library does remove the older unordered_{map,set} implementations. unordere
 
 One other piece of functionality was removed: containerHash in boost has the ability to automatically compute hash values for structures that are annotated via boost::describe. If you are looking to avoid a boost dependency then you probably aren't annotating your types via boost::describe so this doesn't seem so bad, and it lets us get rid of all of the boost::describe headers.
 
+### How to Use
+Two ways:
+1. Download the boost_unordered.hpp file and include it in your project.
+2. Use as a proper CMake target, by downloading the source or by using something like CMake's FetchContent:
+```
+FetchContent_Declare(
+  boost_unordered
+  GIT_REPOSITORY https://github.com/MikePopoloski/boost_unordered
+  GIT_TAG v1.0
+  GIT_SHALLOW ON)
+
+FetchContent_MakeAvailable(boost_unordered)
+
+target_link_libraries(my_executable PRIVATE boost_unordered)
+```
+
 ### Methodology
 The sources in this repository were produced as follows:
 - Download boost (version 1.82)
