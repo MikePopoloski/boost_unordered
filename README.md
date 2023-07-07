@@ -37,6 +37,8 @@ Using the standalone version:
 
 So we've chopped out 249 files and 25102 lines of code from each translation unit that includes unordered_flat_map. The compilation speedup on my machine for this toy example is about 10%, though your mileage may vary.
 
+There is also an amalgamated single header, [boost_unordered.hpp](https://github.com/MikePopoloski/boost_unordered/blob/master/boost_unordered.hpp), which includes all four of the unordered_* containers in a single header, weighing in at just under 9k lines.
+
 ### Tradeoffs
 The standalone library requires a modern C++20 capable compiler and standard library. Assuming you have that then you don't really give up anything. All of the tests still pass. A lot of the stuff cut out is to support old or esoteric compilers -- if that's something you use then stick with the full boost installation.
 
