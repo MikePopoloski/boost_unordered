@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 #
 #   This file is part of Corrade.
@@ -210,8 +210,10 @@ include_rx = re.compile(r'^(?P<include>#include (?P<quote>["<])(?P<file>[^">]+)[
 preprocessor_rx = re.compile(r'^(?P<indent>\s*)#(?P<what>ifdef|ifndef|if|else|elif|endif)\s*(?P<value>[^\n]*?[^\s]?)(?P<comment>\s*/[/*].*)?$')
 define_rx = re.compile(r'\s*#(?P<what>define|undef) (?P<name>[^\s]+)\s*$')
 cmakedefine_rx = re.compile(r'\s*#cmakedefine(01)?.*$')
-linecomment_rx = re.compile(r'^\s*(/\*.*\*/|//.*)?\s*$')
-copyright_rc = re.compile(r'^\s+Copyright \d{4}.+$')
+# The ?! is to match the /* comment only until the first */, not until the
+# final */ if a line has both a comment at the start and at the end.
+linecomment_rx = re.compile(r'^\s*(/\*(\*(?!\/)|[^*])*\*/|//.*)?\s*$')
+copyright_rc = re.compile(r'^\s+Copyright © \d{4}.+$')
 blockcomment_start_rx = re.compile(r'^\s*/\*.*\s*$')
 blockcomment_end_rx = re.compile(r'^\s*.*\*/\s*$')
 acme_pragma_rx = re.compile(r'^#pragma\s+ACME\s+(?P<what>[^\s]+)\s*(?P<value>[^\s]?.*)\s*$')
@@ -297,12 +299,11 @@ def acme(toplevel_file, output) -> List[str]:
                             comment_buffer = []
 
                             # Add a complete copyright line to the global list
-                            #if line.rstrip().endswith('>'): copyrights.add(line)
+                            if line.rstrip().endswith('>'): copyrights.add(line)
 
                             # If a multi-line copyright (ending either with a
                             # `,` or a year), wait for next time
-                            #else: multiline_copyright = line
-                            copyrights.add(line)
+                            else: multiline_copyright = line
 
                         # Otherwise add to the buffer. The buffer is always at least
                         # one line (added when comment start matches), if not then it
@@ -537,6 +538,28 @@ def acme(toplevel_file, output) -> List[str]:
                         forced_defines[value] = True
                     elif what == 'disable':
                         forced_defines[value] = False
+                    elif what == 'forget':
+                        if value.startswith('"') and value.endswith('"'):
+                            for path in paths:
+                                absolute_file = os.path.join(path, value[1:-1])
+                                if absolute_file in parsed_files:
+                                    parsed_files.remove(absolute_file)
+                                    break
+                            else:
+                                logging.fatal("File to forget not found: %s", value)
+                        elif value.startswith('<') and value.endswith('>'):
+                            value = "#include {}\n".format(value)
+                            if value in new_includes[-1]:
+                                logging.warning("Include to forget in current {{includes}} already, will not be forgotten: %s", value)
+                            if value in all_includes:
+                                all_includes.remove(value)
+                            else:
+                                logging.fatal("Include to forget not found: %s", value)
+                        else:
+                            if value in forced_defines:
+                                del forced_defines[value]
+                            else:
+                                logging.fatal("Define to forget not found: %s", value)
                     elif what == 'path':
                         paths += [os.path.join(base_directory, value)]
                     elif what == 'local':
@@ -638,7 +661,7 @@ def acme(toplevel_file, output) -> List[str]:
 
     # Create the output directory
     output_dir = os.path.dirname(output)
-    if not output_dir and os.path.exists(output_dir): os.makedirs(output_dir)
+    if not os.path.exists(output_dir): os.makedirs(output_dir)
 
     # Perform some stats on file contents, passing them to stdin, running in
     # the (freshly created) output directory
@@ -675,5 +698,9 @@ if __name__ == '__main__': # pragma: no cover
     # If a directory, save the file inside
     if os.path.exists(output) and os.path.isdir(output):
         output = os.path.join(output, os.path.basename(args.file))
+
+    # Otherwise assume it's a filename, create all directories above it if they
+    # don't exist
+    else: os.makedirs(os.path.dirname(output), exist_ok=True)
 
     acme(args.file, output)
