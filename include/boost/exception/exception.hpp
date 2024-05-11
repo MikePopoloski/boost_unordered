@@ -7,8 +7,8 @@
 #define BOOST_EXCEPTION_274DA366004E11DCB1DDFE2E56D89593
 
 #include <boost/assert/source_location.hpp>
-#include <exception>
 #include <boost/minconfig.hpp>
+#include <exception>
 
 #ifdef BOOST_EXCEPTION_MINI_BOOST
 #include  <memory>
@@ -19,7 +19,7 @@ namespace boost { namespace exception_detail { using boost::shared_ptr; } }
 #endif
 
 #if !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
-#if __GNUC__*100+__GNUC_MINOR__>301
+#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__>301
 #pragma GCC system_header
 #endif
 #ifdef __clang__
@@ -370,6 +370,7 @@ boost
             return x;
             }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 
         template <>
         struct
@@ -385,6 +386,7 @@ boost
                 }
             };
 
+#endif
 
         inline boost::source_location get_exception_throw_location( exception const & x )
             {

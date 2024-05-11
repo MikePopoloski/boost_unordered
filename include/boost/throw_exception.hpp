@@ -20,10 +20,13 @@
 
 #include <boost/exception/exception.hpp>
 #include <boost/assert/source_location.hpp>
+#include <boost/minconfig.hpp>
 #include <exception>
 #include <utility>
 #include <cstddef>
+#if !defined(BOOST_NO_CXX11_HDR_TYPE_TRAITS)
 #include <type_traits>
+#endif
 
 
 namespace boost
@@ -97,9 +100,9 @@ public:
         copy_from( &e );
 
         set_info( *this, throw_file( loc.file_name() ) );
-        set_info( *this, throw_line( loc.line() ) );
+        set_info( *this, throw_line( static_cast<int>( loc.line() ) ) );
         set_info( *this, throw_function( loc.function_name() ) );
-        set_info( *this, throw_column( loc.column() ) );
+        set_info( *this, throw_column( static_cast<int>( loc.column() ) ) );
     }
 
     virtual boost::exception_detail::clone_base const * clone() const override
@@ -199,17 +202,20 @@ public:
     {
     }
 
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
     with_throw_location( E && e, boost::source_location const & loc ): E( std::move( e ) ), throw_location( loc )
     {
     }
 
+#endif
 };
 
 } // namespace detail
 
 #if !defined(BOOST_NO_EXCEPTIONS)
 
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_HDR_TYPE_TRAITS)
 
 template<class E> BOOST_NORETURN void throw_with_location( E && e, boost::source_location const & loc = BOOST_CURRENT_LOCATION )
 {
@@ -217,6 +223,15 @@ template<class E> BOOST_NORETURN void throw_with_location( E && e, boost::source
     throw detail::with_throw_location<typename std::decay<E>::type>( std::forward<E>( e ), loc );
 }
 
+#else
+
+template<class E> BOOST_NORETURN void throw_with_location( E const & e, boost::source_location const & loc = BOOST_CURRENT_LOCATION )
+{
+    throw_exception_assert_compatibility( e );
+    throw detail::with_throw_location<E>( e, loc );
+}
+
+#endif
 
 #else
 
