@@ -72,33 +72,34 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, init_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, key_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, element_type* p, Args&&... args)
           {
-            p->p = boost::allocator_allocate(al, 1);
+            p->p = std::allocator_traits<std::remove_cvref_t<decltype(al)>>::allocate(al, 1);
             BOOST_TRY
             {
-              boost::allocator_construct(
-                al, std::to_address(p->p), std::forward<Args>(args)...);
+              std::allocator_traits<std::remove_cvref_t<decltype(
+                al)>>::construct(
+                al,  std::to_address(p->p), std::forward<Args>(args)...);
             }
             BOOST_CATCH(...)
             {
-              boost::allocator_deallocate(al, p->p, 1);
+              std::allocator_traits<std::remove_cvref_t<decltype(al)>>::deallocate(al, p->p, 1);
               BOOST_RETHROW
             }
             BOOST_CATCH_END
@@ -124,7 +125,7 @@ namespace boost {
           {
             if (p->p) {
               destroy(al, std::to_address(p->p));
-              boost::allocator_deallocate(al, p->p, 1);
+              std::allocator_traits<std::remove_cvref_t<decltype(al)>>::deallocate(al, p->p, 1);
             }
           }
         };

@@ -47,19 +47,19 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, init_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, key_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A> static void destroy(A& al, init_type* p) noexcept

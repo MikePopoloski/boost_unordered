@@ -119,8 +119,8 @@ struct node_handle_base
             reset();
           }else{                               /* !empty(), !nh.empty() */
             bool const pocma=
-              boost::allocator_propagate_on_container_move_assignment<
-                Allocator>::type::value;
+              std::allocator_traits<
+                Allocator>::propagate_on_container_move_assignment::value;
 
             BOOST_ASSERT(pocma||al()==nh.al());
 
@@ -157,8 +157,8 @@ struct node_handle_base
     [[nodiscard]] bool empty()const noexcept{return p_.p==nullptr;}
 
     void swap(node_handle_base& nh) noexcept(
-      boost::allocator_is_always_equal<Allocator>::type::value||
-      boost::allocator_propagate_on_container_swap<Allocator>::type::value)
+      std::allocator_traits<Allocator>::is_always_equal::value||
+      std::allocator_traits<Allocator>::propagate_on_container_swap::value)
     {
       if(this!=&nh){
         if(empty()){
@@ -174,8 +174,8 @@ struct node_handle_base
             reset();
           }else{
             bool const pocs=
-              boost::allocator_propagate_on_container_swap<
-                Allocator>::type::value;
+              std::allocator_traits<
+                Allocator>::propagate_on_container_swap::value;
 
             BOOST_ASSERT(pocs || al()==nh.al());
 

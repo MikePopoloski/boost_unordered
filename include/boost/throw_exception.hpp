@@ -202,20 +202,18 @@ public:
     {
     }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
     with_throw_location( E && e, boost::source_location const & loc ): E( std::move( e ) ), throw_location( loc )
     {
     }
 
-#endif
 };
 
 } // namespace detail
 
 #if !defined(BOOST_NO_EXCEPTIONS)
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_HDR_TYPE_TRAITS)
+#if !defined(BOOST_NO_CXX11_HDR_TYPE_TRAITS)
 
 template<class E> BOOST_NORETURN void throw_with_location( E && e, boost::source_location const & loc = BOOST_CURRENT_LOCATION )
 {

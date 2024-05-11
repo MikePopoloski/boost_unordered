@@ -20,7 +20,7 @@ namespace boost {
         template <class Allocator, class T, class... Args>
         static void construct(Allocator& a, T* p, Args&&... args)
         {
-          std::allocator_traits<std::remove_cvref_t<decltype(a)>>::construct(a, p, std::forward<Args>(args)...);
+          std::allocator_traits<std::remove_cvref_t<decltype(a)>>::construct(a,  p, std::forward<Args>(args)...);
         }
 
         template <class Allocator, class T>

@@ -72,7 +72,7 @@ namespace boost {
     class unordered_node_map
     {
       using map_types = detail::foa::node_map_types<Key, T,
-        typename boost::allocator_void_pointer<Allocator>::type>;
+        typename std::allocator_traits<Allocator>::void_pointer>;
 
       using table_type = detail::foa::table<map_types, Hash, KeyEqual,
         typename std::allocator_traits<Allocator>::rebind_alloc<
@@ -106,8 +106,8 @@ namespace boost {
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
       using node_type = detail::node_map_handle<map_types,
-        typename boost::allocator_rebind<Allocator,
-          typename map_types::value_type>::type>;
+        typename std::allocator_traits<Allocator>::rebind_alloc<
+          typename map_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;
 

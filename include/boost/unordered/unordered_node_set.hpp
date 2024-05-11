@@ -63,7 +63,7 @@ namespace boost {
     class unordered_node_set
     {
       using set_types = detail::foa::node_set_types<Key,
-        typename boost::allocator_void_pointer<Allocator>::type>;
+        typename std::allocator_traits<Allocator>::void_pointer>;
 
       using table_type = detail::foa::table<set_types, Hash, KeyEqual,
         typename std::allocator_traits<Allocator>::rebind_alloc<
@@ -96,8 +96,8 @@ namespace boost {
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
       using node_type = detail::node_set_handle<set_types,
-        typename boost::allocator_rebind<Allocator,
-          typename set_types::value_type>::type>;
+        typename std::allocator_traits<Allocator>::rebind_alloc<
+          typename set_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;
 

@@ -370,7 +370,6 @@ boost
             return x;
             }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 
         template <>
         struct
@@ -386,7 +385,6 @@ boost
                 }
             };
 
-#endif
 
         inline boost::source_location get_exception_throw_location( exception const & x )
             {

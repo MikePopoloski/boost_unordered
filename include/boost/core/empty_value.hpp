@@ -9,9 +9,7 @@ Distributed under the Boost Software License, Version 1.0.
 #define BOOST_CORE_EMPTY_VALUE_HPP
 
 #include <boost/minconfig.hpp>
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #include <utility>
-#endif
 
 #if defined(BOOST_GCC_VERSION) && (BOOST_GCC_VERSION >= 40700)
 #define BOOST_DETAIL_EMPTY_VALUE_BASE
@@ -53,34 +51,14 @@ class empty_value {
 public:
     typedef T type;
 
-#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
     empty_value() = default;
-#else
-    constexpr empty_value() { }
-#endif
 
     constexpr empty_value(boost::empty_init_t)
         : value_() { }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
     template<class U, class... Args>
     constexpr empty_value(boost::empty_init_t, U&& value, Args&&... args)
         : value_(std::forward<U>(value), std::forward<Args>(args)...) { }
-#else
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, U&& value)
-        : value_(std::forward<U>(value)) { }
-#endif
-#else
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, const U& value)
-        : value_(value) { }
-
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, U& value)
-        : value_(value) { }
-#endif
 
     constexpr const T& get() const noexcept {
         return value_;
@@ -94,41 +72,20 @@ private:
     T value_;
 };
 
-#if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 template<class T, unsigned N>
 class empty_value<T, N, true>
     : T {
 public:
     typedef T type;
 
-#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
     empty_value() = default;
-#else
-    constexpr empty_value() { }
-#endif
 
     constexpr empty_value(boost::empty_init_t)
         : T() { }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
     template<class U, class... Args>
     constexpr empty_value(boost::empty_init_t, U&& value, Args&&... args)
         : T(std::forward<U>(value), std::forward<Args>(args)...) { }
-#else
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, U&& value)
-        : T(std::forward<U>(value)) { }
-#endif
-#else
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, const U& value)
-        : T(value) { }
-
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, U& value)
-        : T(value) { }
-#endif
 
     constexpr const T& get() const noexcept {
         return *this;
@@ -138,7 +95,6 @@ public:
         return *this;
     }
 };
-#endif
 
 } /* empty_ */
 

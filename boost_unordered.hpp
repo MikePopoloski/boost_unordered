@@ -272,7 +272,7 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A> static void destroy(A& al, value_type* p) noexcept
@@ -493,34 +493,14 @@ class empty_value {
 public:
     typedef T type;
 
-#ifndef BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
     empty_value() = default;
-#else
-    constexpr empty_value() { }
-#endif
 
     constexpr empty_value(boost::empty_init_t)
         : value_() { }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-#ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
     template<class U, class... Args>
     constexpr empty_value(boost::empty_init_t, U&& value, Args&&... args)
         : value_(std::forward<U>(value), std::forward<Args>(args)...) { }
-#else
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, U&& value)
-        : value_(std::forward<U>(value)) { }
-#endif
-#else
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, const U& value)
-        : value_(value) { }
-
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, U& value)
-        : value_(value) { }
-#endif
 
     constexpr const T& get() const noexcept {
         return value_;
@@ -534,41 +514,20 @@ private:
     T value_;
 };
 
-#ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
 template<class T, unsigned N>
 class empty_value<T, N, true>
     : T {
 public:
     typedef T type;
 
-#ifndef BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
     empty_value() = default;
-#else
-    constexpr empty_value() { }
-#endif
 
     constexpr empty_value(boost::empty_init_t)
         : T() { }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-#ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
     template<class U, class... Args>
     constexpr empty_value(boost::empty_init_t, U&& value, Args&&... args)
         : T(std::forward<U>(value), std::forward<Args>(args)...) { }
-#else
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, U&& value)
-        : T(std::forward<U>(value)) { }
-#endif
-#else
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, const U& value)
-        : T(value) { }
-
-    template<class U>
-    constexpr empty_value(boost::empty_init_t, U& value)
-        : T(value) { }
-#endif
 
     constexpr const T& get() const noexcept {
         return *this;
@@ -578,7 +537,6 @@ public:
         return *this;
     }
 };
-#endif
 
 }
 
@@ -688,7 +646,7 @@ namespace boost {
         template <class Allocator, class T, class... Args>
         static void construct(Allocator& a, T* p, Args&&... args)
         {
-          std::allocator_traits<std::remove_cvref_t<decltype(a)>>::construct(a, p, std::forward<Args>(args)...);
+          std::allocator_traits<std::remove_cvref_t<decltype(a)>>::construct(a,  p, std::forward<Args>(args)...);
         }
 
         template <class Allocator, class T>
@@ -5249,9 +5207,7 @@ namespace boost
         return boost::hash_unordered_range( v.begin(), v.end() );
     }
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && ( \
-    ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) || \
-    ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
+#if (  ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) ||  ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
 
     // resolve ambiguity with unconstrained stdext::hash_value in <xhash> :-/
 
@@ -5519,9 +5475,7 @@ namespace boost
         }
     };
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && ( \
-    ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) || \
-    ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
+#if (  ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) ||  ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
 
     // Dinkumware has stdext::hash_value for basic_string in <xhash> :-/
 
@@ -6240,19 +6194,19 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, init_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, key_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A> static void destroy(A& al, init_type* p) noexcept
@@ -6831,8 +6785,6 @@ boost
             return x;
             }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-
         template <>
         struct
         set_info_rv<throw_column>
@@ -6846,8 +6798,6 @@ boost
                 return x;
                 }
             };
-
-#endif
 
         inline boost::source_location get_exception_throw_location( exception const & x )
             {
@@ -7221,20 +7171,17 @@ public:
     {
     }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-
     with_throw_location( E && e, boost::source_location const & loc ): E( std::move( e ) ), throw_location( loc )
     {
     }
 
-#endif
 };
 
 } // namespace detail
 
 #ifndef BOOST_NO_EXCEPTIONS
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_HDR_TYPE_TRAITS)
+#ifndef BOOST_NO_CXX11_HDR_TYPE_TRAITS
 
 template<class E> BOOST_NORETURN void throw_with_location( E && e, boost::source_location const & loc = BOOST_CURRENT_LOCATION )
 {
@@ -8309,8 +8256,8 @@ struct node_handle_base
             reset();
           }else{
             bool const pocma=
-              boost::allocator_propagate_on_container_move_assignment<
-                Allocator>::type::value;
+              std::allocator_traits<
+                Allocator>::propagate_on_container_move_assignment::value;
 
             BOOST_ASSERT(pocma||al()==nh.al());
 
@@ -8347,8 +8294,8 @@ struct node_handle_base
     [[nodiscard]] bool empty()const noexcept{return p_.p==nullptr;}
 
     void swap(node_handle_base& nh) noexcept(
-      boost::allocator_is_always_equal<Allocator>::type::value||
-      boost::allocator_propagate_on_container_swap<Allocator>::type::value)
+      std::allocator_traits<Allocator>::is_always_equal::value||
+      std::allocator_traits<Allocator>::propagate_on_container_swap::value)
     {
       if(this!=&nh){
         if(empty()){
@@ -8364,8 +8311,8 @@ struct node_handle_base
             reset();
           }else{
             bool const pocs=
-              boost::allocator_propagate_on_container_swap<
-                Allocator>::type::value;
+              std::allocator_traits<
+                Allocator>::propagate_on_container_swap::value;
 
             BOOST_ASSERT(pocs || al()==nh.al());
 
@@ -8436,21 +8383,22 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, element_type* p, Args&&... args)
           {
-            p->p = boost::allocator_allocate(al, 1);
+            p->p = std::allocator_traits<std::remove_cvref_t<decltype(al)>>::allocate(al, 1);
             BOOST_TRY
             {
-              boost::allocator_construct(
-                al, std::to_address(p->p), std::forward<Args>(args)...);
+              std::allocator_traits<std::remove_cvref_t<decltype(
+                al)>>::construct(
+                al,  std::to_address(p->p), std::forward<Args>(args)...);
             }
             BOOST_CATCH(...)
             {
-              boost::allocator_deallocate(al, p->p, 1);
+              std::allocator_traits<std::remove_cvref_t<decltype(al)>>::deallocate(al, p->p, 1);
               BOOST_RETHROW
             }
             BOOST_CATCH_END
@@ -8466,7 +8414,7 @@ namespace boost {
           {
             if (p->p) {
               destroy(al, std::to_address(p->p));
-              boost::allocator_deallocate(al, p->p, 1);
+              std::allocator_traits<std::remove_cvref_t<decltype(al)>>::deallocate(al, p->p, 1);
             }
           }
         };
@@ -8562,7 +8510,7 @@ namespace boost {
     class unordered_node_set
     {
       using set_types = detail::foa::node_set_types<Key,
-        typename boost::allocator_void_pointer<Allocator>::type>;
+        typename std::allocator_traits<Allocator>::void_pointer>;
 
       using table_type = detail::foa::table<set_types, Hash, KeyEqual,
         typename std::allocator_traits<Allocator>::rebind_alloc<
@@ -8595,8 +8543,8 @@ namespace boost {
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
       using node_type = detail::node_set_handle<set_types,
-        typename boost::allocator_rebind<Allocator,
-          typename set_types::value_type>::type>;
+        typename std::allocator_traits<Allocator>::rebind_alloc<
+          typename set_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;
 
@@ -9261,33 +9209,34 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, init_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, key_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, element_type* p, Args&&... args)
           {
-            p->p = boost::allocator_allocate(al, 1);
+            p->p = std::allocator_traits<std::remove_cvref_t<decltype(al)>>::allocate(al, 1);
             BOOST_TRY
             {
-              boost::allocator_construct(
-                al, std::to_address(p->p), std::forward<Args>(args)...);
+              std::allocator_traits<std::remove_cvref_t<decltype(
+                al)>>::construct(
+                al,  std::to_address(p->p), std::forward<Args>(args)...);
             }
             BOOST_CATCH(...)
             {
-              boost::allocator_deallocate(al, p->p, 1);
+              std::allocator_traits<std::remove_cvref_t<decltype(al)>>::deallocate(al, p->p, 1);
               BOOST_RETHROW
             }
             BOOST_CATCH_END
@@ -9313,7 +9262,7 @@ namespace boost {
           {
             if (p->p) {
               destroy(al, std::to_address(p->p));
-              boost::allocator_deallocate(al, p->p, 1);
+              std::allocator_traits<std::remove_cvref_t<decltype(al)>>::deallocate(al, p->p, 1);
             }
           }
         };
@@ -9417,7 +9366,7 @@ namespace boost {
     class unordered_node_map
     {
       using map_types = detail::foa::node_map_types<Key, T,
-        typename boost::allocator_void_pointer<Allocator>::type>;
+        typename std::allocator_traits<Allocator>::void_pointer>;
 
       using table_type = detail::foa::table<map_types, Hash, KeyEqual,
         typename std::allocator_traits<Allocator>::rebind_alloc<
@@ -9451,8 +9400,8 @@ namespace boost {
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
       using node_type = detail::node_map_handle<map_types,
-        typename boost::allocator_rebind<Allocator,
-          typename map_types::value_type>::type>;
+        typename std::allocator_traits<Allocator>::rebind_alloc<
+          typename map_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;
 

@@ -266,9 +266,7 @@ namespace boost
         return boost::hash_unordered_range( v.begin(), v.end() );
     }
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && ( \
-    ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) || \
-    ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
+#if (  ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) ||  ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
 
     // resolve ambiguity with unconstrained stdext::hash_value in <xhash> :-/
 
@@ -536,9 +534,7 @@ namespace boost
         }
     };
 
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && ( \
-    ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) || \
-    ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
+#if (  ( defined(_MSVC_STL_VERSION) && _MSVC_STL_VERSION < 142 ) ||  ( !defined(_MSVC_STL_VERSION) && defined(_CPPLIB_VER) && _CPPLIB_VER >= 520 ) )
 
     // Dinkumware has stdext::hash_value for basic_string in <xhash> :-/
 
