@@ -38,7 +38,7 @@ namespace boost {
       using set_types = detail::foa::flat_set_types<Key>;
 
       using table_type = detail::foa::table<set_types, Hash, KeyEqual,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename set_types::value_type>>;
 
       table_type table_;

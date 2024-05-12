@@ -25,7 +25,6 @@ int main() {}
 
 #include "../helpers/test.hpp"
 
-#include <boost/cstdint.hpp>
 
 #include <boost/core/ignore_unused.hpp>
 

@@ -290,7 +290,7 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A> static void destroy(A& al, value_type* p) noexcept
@@ -664,7 +664,7 @@ namespace boost {
         template <class Allocator, class T, class... Args>
         static void construct(Allocator& a, T* p, Args&&... args)
         {
-          std::allocator_traits<std::remove_cvref_t<decltype(a)>>::construct(a,  p, std::forward<Args>(args)...);
+          std::allocator_traits<std::remove_cvref_t<decltype(a)>>::construct(a, p, std::forward<Args>(args)...);
         }
 
         template <class Allocator, class T>
@@ -2119,7 +2119,7 @@ private:
 template<typename Value,typename Group,typename SizePolicy,typename Allocator>
 struct table_arrays
 {
-  using allocator_type=typename std::allocator_traits<Allocator>::rebind_alloc<Value>;
+  using allocator_type=typename std::allocator_traits<Allocator>::template rebind_alloc<Value>;
 
   using value_type=Value;
   using group_type=Group;
@@ -5553,7 +5553,7 @@ namespace boost {
       using set_types = detail::foa::flat_set_types<Key>;
 
       using table_type = detail::foa::table<set_types, Hash, KeyEqual,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename set_types::value_type>>;
 
       table_type table_;
@@ -6212,19 +6212,19 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, init_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, key_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A> static void destroy(A& al, init_type* p) noexcept
@@ -7343,7 +7343,7 @@ namespace boost {
       using map_types = detail::foa::flat_map_types<Key, T>;
 
       using table_type = detail::foa::table<map_types, Hash, KeyEqual,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename map_types::value_type>>;
 
       table_type table_;
@@ -8401,7 +8401,7 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
@@ -8412,7 +8412,7 @@ namespace boost {
             {
               std::allocator_traits<std::remove_cvref_t<decltype(
                 al)>>::construct(
-                al,  std::to_address(p->p), std::forward<Args>(args)...);
+                al, std::to_address(p->p), std::forward<Args>(args)...);
             }
             BOOST_CATCH(...)
             {
@@ -8531,7 +8531,7 @@ namespace boost {
         typename std::allocator_traits<Allocator>::void_pointer>;
 
       using table_type = detail::foa::table<set_types, Hash, KeyEqual,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename set_types::value_type>>;
 
       table_type table_;
@@ -8561,7 +8561,7 @@ namespace boost {
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
       using node_type = detail::node_set_handle<set_types,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename set_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;
@@ -9227,19 +9227,19 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, init_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, key_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
@@ -9250,7 +9250,7 @@ namespace boost {
             {
               std::allocator_traits<std::remove_cvref_t<decltype(
                 al)>>::construct(
-                al,  std::to_address(p->p), std::forward<Args>(args)...);
+                al, std::to_address(p->p), std::forward<Args>(args)...);
             }
             BOOST_CATCH(...)
             {
@@ -9387,7 +9387,7 @@ namespace boost {
         typename std::allocator_traits<Allocator>::void_pointer>;
 
       using table_type = detail::foa::table<map_types, Hash, KeyEqual,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           std::pair<Key const, T> >>;
 
       table_type table_;
@@ -9418,7 +9418,7 @@ namespace boost {
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
       using node_type = detail::node_map_handle<map_types,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename map_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;

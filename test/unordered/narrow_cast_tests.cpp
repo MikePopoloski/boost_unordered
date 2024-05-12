@@ -5,7 +5,6 @@
 #include <boost/unordered/detail/narrow_cast.hpp>
 
 #include <boost/core/lightweight_test.hpp>
-#include <boost/cstdint.hpp>
 
 // want to prove that for the wider type, the higher bits of the value
 // represenation don't affect the results of the narrowing, which in this case

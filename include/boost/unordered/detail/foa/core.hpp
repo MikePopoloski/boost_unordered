@@ -993,7 +993,7 @@ private:
 template<typename Value,typename Group,typename SizePolicy,typename Allocator>
 struct table_arrays
 {
-  using allocator_type=typename std::allocator_traits<Allocator>::rebind_alloc<Value>;
+  using allocator_type=typename std::allocator_traits<Allocator>::template rebind_alloc<Value>;
 
   using value_type=Value;
   using group_type=Group;

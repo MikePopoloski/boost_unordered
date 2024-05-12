@@ -75,7 +75,7 @@ namespace boost {
         typename std::allocator_traits<Allocator>::void_pointer>;
 
       using table_type = detail::foa::table<map_types, Hash, KeyEqual,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           std::pair<Key const, T> >>;
 
       table_type table_;
@@ -106,7 +106,7 @@ namespace boost {
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
       using node_type = detail::node_map_handle<map_types,
-        typename std::allocator_traits<Allocator>::rebind_alloc<
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename map_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;

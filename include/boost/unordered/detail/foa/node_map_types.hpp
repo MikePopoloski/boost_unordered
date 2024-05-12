@@ -72,19 +72,19 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, init_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, key_type* p, Args&&... args)
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al,  p, std::forward<Args>(args)...);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
@@ -95,7 +95,7 @@ namespace boost {
             {
               std::allocator_traits<std::remove_cvref_t<decltype(
                 al)>>::construct(
-                al,  std::to_address(p->p), std::forward<Args>(args)...);
+                al, std::to_address(p->p), std::forward<Args>(args)...);
             }
             BOOST_CATCH(...)
             {

@@ -10,6 +10,7 @@
 #include <boost/minconfig.hpp>
 #include <iosfwd>
 #include <string>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 

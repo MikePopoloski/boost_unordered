@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <bit>
+
 // This is a minimal header that contains only the small set
 // config entries needed to use boost::unordered, so that the
 // whole boost config lib doesn't need to be pulled in.
