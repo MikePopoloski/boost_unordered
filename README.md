@@ -54,7 +54,7 @@ Two ways:
 FetchContent_Declare(
   boost_unordered
   GIT_REPOSITORY https://github.com/MikePopoloski/boost_unordered
-  GIT_TAG v1.0
+  GIT_TAG v1.85.0
   GIT_SHALLOW ON)
 
 FetchContent_MakeAvailable(boost_unordered)
