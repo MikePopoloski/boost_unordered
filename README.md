@@ -63,11 +63,4 @@ target_link_libraries(my_executable PRIVATE boost_unordered)
 ```
 
 ### Methodology
-The sources in this repository were produced as follows:
-- Download boost (version 1.82)
-- Extract the unordered library via the `bcp` utility
-- Delete a bunch of obvious stuff that `bcp` pulls in by accident (like the whole regex library)
-- Use the [coan](https://coan2.sourceforge.net/) tool to flatten out a bunch of macros for pre-C++11 cases or workarounds for various compilers
-- Create a [minconfig.hpp](https://github.com/MikePopoloski/boost_unordered/blob/master/include/boost/minconfig.hpp) file that can replace the whole tree of `config` and `predef` headers that were being pulled in
-- Find + replace a bunch of boost utilities that have std counterparts (mostly allocator traits)
-- Profit
+The sources in this repository were produced by executing the [make_unordered.sh](https://github.com/MikePopoloski/boost_unordered/blob/master/make_unordered.sh) script.
