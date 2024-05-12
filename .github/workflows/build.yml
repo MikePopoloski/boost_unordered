@@ -27,7 +27,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Install dependencies
@@ -42,11 +42,11 @@ jobs:
     - uses: maxim-lobanov/setup-xcode@v1
       if: matrix.os == 'macos-13'
       with:
-        xcode-version: '14.3'
-    - uses: MarkusJx/install-boost@v2.4.4
+        xcode-version: 'latest'
+    - uses: MarkusJx/install-boost@v2.4.5
       id: install-boost
       with:
-        boost_version: 1.80.0
+        boost_version: 1.84.0
     - name: Configure
       run: cmake --preset ${{ matrix.preset }} -DCMAKE_PREFIX_PATH=${{ steps.install-boost.outputs.BOOST_ROOT }}
     - name: Build
