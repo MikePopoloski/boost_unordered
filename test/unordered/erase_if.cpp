@@ -9,11 +9,7 @@
 #include <boost/config.hpp>
 #include <string>
 
-#if !defined(BOOST_NO_CXX11_REF_QUALIFIERS)
 #define UNORDERED_LVALUE_QUAL &
-#else
-#define UNORDERED_LVALUE_QUAL
-#endif
 
 namespace test {
   struct is_even
@@ -113,7 +109,7 @@ UNORDERED_AUTO_TEST (unordered_erase_if) {
   test_map_erase_if<boost::unordered_node_map<std::string, int> >();
   test_set_erase_if<boost::unordered_node_set<int> >();
 #else
-  test_map_erase_if<boost::unordered_map<std::string, int> >();
+  test_map_erase_if<boost::unordered_flat_map<std::string, int> >();
   test_map_erase_if<boost::unordered_multimap<std::string, int> >();
 
   test_set_erase_if<boost::unordered_set<int> >();

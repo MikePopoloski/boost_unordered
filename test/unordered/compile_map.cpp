@@ -105,7 +105,7 @@ UNORDERED_AUTO_TEST (test0) {
   test0_impl<boost::unordered_flat_map>();
   test0_impl<boost::unordered_node_map>();
 #else
-  test0_impl<boost::unordered_map>();
+  test0_impl<boost::unordered_flat_map>();
   test0_impl<boost::unordered_multimap>();
 #endif
 }
@@ -144,7 +144,7 @@ UNORDERED_AUTO_TEST (equality_tests) {
   equality_tests_impl<boost::unordered_flat_map>();
   equality_tests_impl<boost::unordered_node_map>();
 #else
-  equality_tests_impl<boost::unordered_map>();
+  equality_tests_impl<boost::unordered_flat_map>();
   equality_tests_impl<boost::unordered_multimap>();
 #endif
 }
@@ -212,7 +212,7 @@ UNORDERED_AUTO_TEST (test1) {
   test1_unique_impl<boost::unordered_flat_map>();
   test1_unique_impl<boost::unordered_node_map>();
 #else
-  test1_unique_impl<boost::unordered_map>();
+  test1_unique_impl<boost::unordered_flat_map>();
   test1_equivalent_impl<boost::unordered_multimap>();
 #endif
 }
@@ -292,7 +292,7 @@ UNORDERED_AUTO_TEST (test2) {
   test2_unique_impl<boost::unordered_flat_map>();
   test2_unique_impl<boost::unordered_node_map>();
 #else
-  test2_unique_impl<boost::unordered_map>();
+  test2_unique_impl<boost::unordered_flat_map>();
   test2_equivalent_impl<boost::unordered_multimap>();
 #endif
 }
@@ -329,7 +329,7 @@ UNORDERED_AUTO_TEST (lwg2059) {
   }
 #else
   {
-    boost::unordered_map<lwg2059_key, int> x;
+    boost::unordered_flat_map<lwg2059_key, int> x;
     x.emplace(lwg2059_key(10), 5);
     x.erase(x.begin());
   }

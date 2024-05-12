@@ -385,7 +385,7 @@ UNORDERED_TEST(merge_into_unique_keys_test,
   boost::unordered_multiset<test::movable, test::hash, test::equal_to,
     std::allocator<test::movable> >* test_multiset_std_alloc;
 
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     std::allocator<test::object> >* test_map_std_alloc;
   boost::unordered_multimap<test::object, test::object, test::hash,
     test::equal_to, std::allocator<test::object> >* test_multimap_std_alloc;
@@ -395,7 +395,7 @@ UNORDERED_TEST(merge_into_unique_keys_test,
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::allocator1<test::object> >* test_multiset;
 
-  boost::unordered_map<test::movable, test::movable, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::movable, test::movable, test::hash, test::equal_to,
     test::allocator2<test::movable> >* test_map;
   boost::unordered_multimap<test::movable, test::movable, test::hash,
     test::equal_to, test::allocator2<test::movable> >* test_multimap;

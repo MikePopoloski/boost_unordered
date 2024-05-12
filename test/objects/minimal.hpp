@@ -14,7 +14,6 @@
 #include <boost/core/addressof.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include <boost/core/pointer_traits.hpp>
-#include <boost/move/move.hpp>
 #include <cstddef>
 #include <utility>
 
@@ -23,7 +22,11 @@
 #pragma warning(disable : 4100) // unreferenced formal parameter
 #endif
 
+#if !BOOST_WORKAROUND(BOOST_MSVC, == 1500)
 #define BOOST_UNORDERED_CHECK_ADDR_OPERATOR_NOT_USED 1
+#else
+#define BOOST_UNORDERED_CHECK_ADDR_OPERATOR_NOT_USED 0
+#endif
 
 namespace test {
   namespace minimal {
@@ -161,19 +164,18 @@ namespace test {
 
     class movable1
     {
-      BOOST_MOVABLE_BUT_NOT_COPYABLE(movable1)
-
     public:
       movable1(constructor_param const&) {}
       movable1() {}
       explicit movable1(movable_init) {}
+      movable1(movable1 const&) = delete;
+      movable1& operator=(movable1 const&) = delete;
       movable1(movable1&&) {}
       movable1& operator=(movable1&&) { return *this; }
       ~movable1() {}
       void dummy_member() const {}
     };
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     class movable2
     {
     public:
@@ -189,9 +191,6 @@ namespace test {
       movable2(movable2 const&);
       movable2& operator=(movable2 const&);
     };
-#else
-    typedef movable1 movable2;
-#endif
 
     template <class T> class hash
     {
@@ -303,6 +302,7 @@ namespace test {
 
     public:
       ptr() : ptr_(0) {}
+      ptr(std::nullptr_t) : ptr_(0) {}
       explicit ptr(void_ptr const& x) : ptr_((T*)x.ptr_) {}
 
       T& operator*() const { return *ptr_; }
@@ -321,6 +321,18 @@ namespace test {
       ptr operator+(std::ptrdiff_t s) const { return ptr<T>(ptr_ + s); }
       friend ptr operator+(std::ptrdiff_t s, ptr p) { return ptr<T>(s + p.ptr_); }
 
+      ptr& operator+=(std::ptrdiff_t s)
+      {
+        ptr_ += s;
+        return *this;
+      }
+
+      ptr& operator-=(std::ptrdiff_t s)
+      {
+        ptr_ -= s;
+        return *this;
+      }
+
       std::ptrdiff_t operator-(ptr p) const { return ptr_ - p.ptr_; }
       ptr operator-(std::ptrdiff_t s) const { return ptr(ptr_ - s); }
       T& operator[](std::ptrdiff_t s) const { return ptr_[s]; }
@@ -336,6 +348,8 @@ namespace test {
 
       bool operator==(ptr const& x) const { return ptr_ == x.ptr_; }
       bool operator!=(ptr const& x) const { return ptr_ != x.ptr_; }
+      bool operator==(std::nullptr_t) const { return ptr_ == nullptr; }
+      bool operator!=(std::nullptr_t) const { return ptr_ != nullptr; }
       bool operator<(ptr const& x) const { return ptr_ < x.ptr_; }
       bool operator>(ptr const& x) const { return ptr_ > x.ptr_; }
       bool operator<=(ptr const& x) const { return ptr_ <= x.ptr_; }
@@ -442,25 +456,24 @@ namespace test {
         ::operator delete((void*)p.ptr_);
       }
 
-#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-      template <class U, class V> void construct(U* p, V const& v)
-      {
-        new ((void*)p) U(v);
-      }
-#else
       template <class U, class... Args>
       void construct(U* p, Args&&... args)
       {
         new ((void*)p) U(std::forward<Args>(args)...);
       }
-#endif
 
       template <class U> void destroy(U* p) { p->~U(); }
 
       size_type max_size() const { return 1000; }
 
+#if defined(BOOST_NO_ARGUMENT_DEPENDENT_LOOKUP) ||                             \
+  BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
+    public:
+      allocator& operator=(allocator const&) { return *this; }
+#else
     private:
       allocator& operator=(allocator const&);
+#endif
 #if BOOST_UNORDERED_CHECK_ADDR_OPERATOR_NOT_USED
       ampersand_operator_used operator&() const
       {
@@ -510,25 +523,24 @@ namespace test {
         ::operator delete((void*)p.ptr_);
       }
 
-#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-      template <class U> void construct(U* p, U const& t)
-      {
-        new (p) U(t);
-      }
-#else
       template <class U, class... Args>
       void construct(U* p, Args&&... args)
       {
         new (p) U(std::forward<Args>(args)...);
       }
-#endif
 
       template <class U> void destroy(U* p) { p->~U(); }
 
       size_type max_size() const { return 1000; }
 
+#if defined(BOOST_NO_ARGUMENT_DEPENDENT_LOOKUP) ||                             \
+  BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
+    public:
+      allocator& operator=(allocator const&) { return *this; }
+#else
     private:
       allocator& operator=(allocator const&);
+#endif
 #if BOOST_UNORDERED_CHECK_ADDR_OPERATOR_NOT_USED
       ampersand_operator_used operator&() const
       {
@@ -582,18 +594,11 @@ namespace test {
 
       void deallocate(T* p, std::size_t) { ::operator delete((void*)p); }
 
-#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-      template <class U, class V> void construct(U* p, V const& v)
-      {
-        new ((void*)p) U(v);
-      }
-#else
       template <class U, class... Args>
       void construct(U* p, Args&&... args)
       {
         new ((void*)p) U(std::forward<Args>(args)...);
       }
-#endif
 
       template <class U> void destroy(U* p) { p->~U(); }
 
@@ -637,13 +642,16 @@ namespace test {
 #pragma warning(pop)
 #endif
 
-namespace boost {
+namespace std {
   template <> struct pointer_traits< ::test::minimal::void_ptr>
   {
     template <class U> struct rebind_to
     {
       typedef ::test::minimal::ptr<U> type;
     };
+
+    template<class U>
+    using rebind=typename rebind_to<U>::type;
   };
 }
 

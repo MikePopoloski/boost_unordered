@@ -11,6 +11,7 @@
 
 #include <boost/unordered/unordered_flat_map.hpp>
 #include <boost/unordered/unordered_flat_set.hpp>
+#include <boost/unordered/concurrent_flat_map.hpp>
 
 struct hash_equals
 {
@@ -32,8 +33,8 @@ template <typename T> struct test_allocator
   typedef T value_type;
   test_allocator() = default;
   template <typename T2> test_allocator(test_allocator<T2> const&) {}
-  T* allocate(std::size_t n) const { return (T*)malloc(sizeof(T) * n); }
-  void deallocate(T* ptr, std::size_t) const { free(ptr); }
+  T* allocate(std::size_t n) const { return (T*)(::operator new(sizeof(T) * n)); }
+  void deallocate(T* ptr, std::size_t) const { ::operator delete(ptr); }
   bool operator==(test_allocator const&) const { return true; }
   bool operator!=(test_allocator const&) const { return false; }
 };
@@ -427,9 +428,10 @@ int main()
             << BOOST_UNORDERED_TEMPLATE_DEDUCTION_GUIDES << std::endl;
 
 #if BOOST_UNORDERED_TEMPLATE_DEDUCTION_GUIDES
-  map_tests<boost::unordered_map>();
+  map_tests<boost::unordered_flat_map>();
   map_tests<boost::unordered_multimap>();
   map_tests<boost::unordered_flat_map>();
+  map_tests<boost::concurrent_flat_map>();
   set_tests<boost::unordered_set>();
   set_tests<boost::unordered_multiset>();
   set_tests<boost::unordered_flat_set>();

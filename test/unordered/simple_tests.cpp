@@ -148,7 +148,7 @@ UNORDERED_TEST(simple_map_tests, ((flat_map)(node_map)))
 UNORDERED_TEST(simple_set_tests, ((flat_set)(node_set)))
 #else
 static boost::unordered_set<int>* set;
-static boost::unordered_map<int, int>* map;
+static boost::unordered_flat_map<int, int>* map;
 static boost::unordered_multiset<int>* multiset;
 static boost::unordered_multimap<int, int>* multimap;
 

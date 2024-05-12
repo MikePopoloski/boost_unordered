@@ -15,7 +15,7 @@ namespace x {
     boost::unordered_flat_map<D, D> x;
     boost::unordered_node_map<D, D> y;
 #else
-    boost::unordered_map<D, D> x;
+    boost::unordered_flat_map<D, D> x;
 #endif
   };
 } // namespace x
@@ -41,7 +41,7 @@ namespace incomplete_test {
   typedef boost::unordered_node_set<value, hash, equals, allocator<value> >
     multiset;
 #else
-  typedef boost::unordered_map<value, value, hash, equals,
+  typedef boost::unordered_flat_map<value, value, hash, equals,
     allocator<std::pair<value const, value> > >
     map;
   typedef boost::unordered_multimap<value, value, hash, equals,
@@ -113,7 +113,7 @@ namespace incomplete_test {
 #else
   struct struct1
   {
-    boost::unordered_map<struct1, struct1, hash, equals,
+    boost::unordered_flat_map<struct1, struct1, hash, equals,
       allocator<std::pair<struct1 const, struct1> > >
       x;
   };

@@ -675,7 +675,7 @@ namespace rehash_tests {
   boost::unordered_set<int>* int_set_ptr;
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::allocator2<test::object> >* test_multiset_ptr;
-  boost::unordered_map<test::movable, test::movable, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::movable, test::movable, test::hash, test::equal_to,
     test::allocator2<test::movable> >* test_map_ptr;
   boost::unordered_multimap<int, int>* int_multimap_ptr;
 
@@ -683,7 +683,7 @@ namespace rehash_tests {
     test::allocator1<test::object> >* test_set_tracking;
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::allocator1<test::object> >* test_multiset_tracking;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::allocator1<std::pair<test::object const, test::object> > >*
     test_map_tracking;
   boost::unordered_multimap<test::object, test::object, test::hash,
@@ -695,7 +695,7 @@ namespace rehash_tests {
     monotonic_allocator<test::object> >* test_set_monotonic;
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     monotonic_allocator<test::object> >* test_multiset_monotonic;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     monotonic_allocator<std::pair<test::object const, test::object> > >*
     test_map_monotonic;
   boost::unordered_multimap<test::object, test::object, test::hash,

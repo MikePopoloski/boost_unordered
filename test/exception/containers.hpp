@@ -52,7 +52,7 @@ typedef boost::unordered_multiset<test::exception::object,
   test::exception::hash, test::exception::equal_to,
   test::exception::allocator2<test::exception::object> >
   test_multiset;
-typedef boost::unordered_map<test::exception::object, test::exception::object,
+typedef boost::unordered_flat_map<test::exception::object, test::exception::object,
   test::exception::hash, test::exception::equal_to,
   test::exception::allocator2<test::exception::object> >
   test_map;

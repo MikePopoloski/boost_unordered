@@ -6,7 +6,6 @@
 // (boost/container_hash/hash.hpp is an example doing that)
 
 #include <boost/type_traits/integral_constant.hpp>
-#include <type_traits>
 
 struct X3
 {
@@ -18,7 +17,7 @@ namespace unordered
 {
 
     template<class T> struct hash_is_avalanching;
-    template<> struct hash_is_avalanching< ::X3 >: std::true_type {};
+    template<> struct hash_is_avalanching< ::X3 >: boost::true_type {};
 
 } // namespace unordered
 } // namespace boost

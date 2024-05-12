@@ -69,7 +69,7 @@ namespace at_tests {
   UNORDERED_TEST(at_tests, ((test_map)(test_node_map)))
   // clang-format on
 #else
-  static boost::unordered_map<std::string, int>* test_map;
+  static boost::unordered_flat_map<std::string, int>* test_map;
 
   // clang-format off
   UNORDERED_TEST(at_tests, ((test_map)))

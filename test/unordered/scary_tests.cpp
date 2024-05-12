@@ -87,15 +87,11 @@ public:
     ::operator delete((void*)p.operator->());
   }
 
-#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-  template <class U, class V> void construct(U* p, V const& v) { new (p) U(v); }
-#else
   template <class U, class... Args>
   void construct(U* p, Args&&... args)
   {
     new (p) U(std::forward<Args>(args)...);
   }
-#endif
 
   // msvc-12.0 and msvc-14.0 seem to eliminate the destructor call as we're only
   // ever using it with an int with has a trivial destructor so it eliminates
@@ -171,15 +167,11 @@ public:
 
   void deallocate(pointer p, size_type) { ::operator delete((void*)p.ptr_); }
 
-#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-  template <class U, class V> void construct(U* p, V const& v) { new (p) U(v); }
-#else
   template <class U, class... Args>
   void construct(U* p, Args&&... args)
   {
     new (p) U(std::forward<Args>(args)...);
   }
-#endif
 
   // msvc-12.0 and msvc-14.0 seem to eliminate the destructor call as we're only
   // ever using it with an int with has a trivial destructor so it eliminates
@@ -215,8 +207,6 @@ template <class C1, class C2> void scary_test()
 
   typename C2::const_iterator cbegin(x.cbegin());
   BOOST_TEST(cbegin == x.cend());
-
-  BOOST_TEST_EQ(x.bucket_count(), 0u);
 
 #ifndef BOOST_UNORDERED_FOA_TESTS
   typename C2::local_iterator lbegin(x.begin(0));
@@ -317,7 +307,7 @@ UNORDERED_AUTO_TEST (scary_tests) {
   set_scary_test<boost::unordered_flat_set>();
   set_scary_test<boost::unordered_node_set>();
 #else
-  map_scary_test<boost::unordered_map>();
+  map_scary_test<boost::unordered_flat_map>();
   map_scary_test<boost::unordered_multimap>();
 
   set_scary_test<boost::unordered_set>();

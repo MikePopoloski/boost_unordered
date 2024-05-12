@@ -9,6 +9,7 @@
 #ifdef BOOST_UNORDERED_FOA_TESTS
 #include <boost/unordered/unordered_flat_map_fwd.hpp>
 #include <boost/unordered/unordered_node_map_fwd.hpp>
+#include <boost/unordered/detail/implementation.hpp>
 #else
 #include <boost/unordered/unordered_map_fwd.hpp>
 #endif
@@ -62,20 +63,20 @@ bool call_not_equals(
 #include <boost/unordered/unordered_node_map.hpp>
 #else
 template <typename T>
-void call_swap(boost::unordered_map<T, T>& x, boost::unordered_map<T, T>& y)
+void call_swap(boost::unordered_flat_map<T, T>& x, boost::unordered_flat_map<T, T>& y)
 {
   swap(x, y);
 }
 
 template <typename T>
-bool call_equals(boost::unordered_map<T, T>& x, boost::unordered_map<T, T>& y)
+bool call_equals(boost::unordered_flat_map<T, T>& x, boost::unordered_flat_map<T, T>& y)
 {
   return x == y;
 }
 
 template <typename T>
 bool call_not_equals(
-  boost::unordered_map<T, T>& x, boost::unordered_map<T, T>& y)
+  boost::unordered_flat_map<T, T>& x, boost::unordered_flat_map<T, T>& y)
 {
   return x != y;
 }
@@ -108,7 +109,7 @@ bool call_not_equals(
 typedef boost::unordered_flat_map<int, int> int_map;
 typedef boost::unordered_node_map<int, int> int_node_map;
 #else
-typedef boost::unordered_map<int, int> int_map;
+typedef boost::unordered_flat_map<int, int> int_map;
 typedef boost::unordered_multimap<int, int> int_multimap;
 #endif
 

@@ -6,13 +6,13 @@
 
 #include "../helpers/unordered.hpp"
 
-#include "../helpers/test.hpp"
-#include "../objects/test.hpp"
-#include "../objects/cxx11_allocator.hpp"
-#include "../helpers/random_values.hpp"
-#include "../helpers/tracker.hpp"
 #include "../helpers/equivalent.hpp"
 #include "../helpers/invariants.hpp"
+#include "../helpers/random_values.hpp"
+#include "../helpers/test.hpp"
+#include "../helpers/tracker.hpp"
+#include "../objects/cxx11_allocator.hpp"
+#include "../objects/test.hpp"
 
 #include <boost/core/ignore_unused.hpp>
 #include <iterator>
@@ -23,12 +23,7 @@
 
 namespace move_tests {
   test::seed_t initialize_seed(98624);
-#if defined(BOOST_UNORDERED_USE_MOVE) ||                                       \
-  !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #define BOOST_UNORDERED_TEST_MOVING 1
-#else
-#define BOOST_UNORDERED_TEST_MOVING 0
-#endif
 
   template <class T> T empty(T*) { return T(); }
 
@@ -73,8 +68,16 @@ namespace move_tests {
       BOOST_TEST(y.max_load_factor() == 1.0);
 #endif
       test::check_equivalent_keys(y);
-#if defined(BOOST_UNORDERED_USE_MOVE) ||                                       \
-  !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
+#ifdef BOOST_UNORDERED_FOA_TESTS
+      using allocator_type = typename T::allocator_type;
+      using value_type =
+        typename boost::allocator_value_type<allocator_type>::type;
+      using pointer = typename boost::allocator_pointer<allocator_type>::type;
+      if (std::is_same<pointer, value_type*>::value) {
+        BOOST_TEST_EQ(test::detail::tracker.count_allocations, 0u);
+      }
+#else
       BOOST_TEST_EQ(test::detail::tracker.count_allocations, 0u);
 #endif
     }
@@ -115,8 +118,16 @@ namespace move_tests {
 
       T y;
       y = empty(p);
-#if defined(BOOST_UNORDERED_USE_MOVE) ||                                       \
-  !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
+#ifdef BOOST_UNORDERED_FOA_TESTS
+      using allocator_type = typename T::allocator_type;
+      using value_type =
+        typename boost::allocator_value_type<allocator_type>::type;
+      using pointer = typename boost::allocator_pointer<allocator_type>::type;
+      if (std::is_same<pointer, value_type*>::value) {
+        BOOST_TEST_EQ(test::detail::tracker.count_allocations, 0u);
+      }
+#else
       BOOST_TEST_EQ(test::detail::tracker.count_allocations, 0u);
 #endif
       test::check_container(y, v);
@@ -179,23 +190,8 @@ namespace move_tests {
 
       test::random_values<T> v(25, generator);
       T y(create(v, count, hf, eq, al, 1.0), al);
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       BOOST_TEST(count == test::global_object_count);
-#elif defined(BOOST_HAS_NRVO)
-      BOOST_TEST(
-        static_cast<std::size_t>(
-          test::global_object_count.constructions - count.constructions) <=
-        (test::is_set<T>::value ? 1 : 2) *
-          (test::has_unique_keys<T>::value ? 25 : v.size()));
-      BOOST_TEST(count.instances == test::global_object_count.instances);
-#else
-      BOOST_TEST(
-        static_cast<std::size_t>(
-          test::global_object_count.constructions - count.constructions) <=
-        (test::is_set<T>::value ? 2 : 4) *
-          (test::has_unique_keys<T>::value ? 25 : v.size()));
-      BOOST_TEST(count.instances == test::global_object_count.instances);
-#endif
+
       test::check_container(y, v);
       BOOST_TEST(test::equivalent(y.hash_function(), hf));
       BOOST_TEST(test::equivalent(y.key_eq(), eq));
@@ -279,11 +275,31 @@ namespace move_tests {
       T x(0, hf, eq, al2);
       x.max_load_factor(0.25);
 
+#ifdef BOOST_UNORDERED_FOA_TESTS
+      {
+        using value_type =
+          typename boost::allocator_value_type<allocator_type>::type;
+        using pointer = typename boost::allocator_pointer<allocator_type>::type;
+        if (std::is_same<pointer, value_type*>::value) {
+          BOOST_TEST_EQ(test::detail::tracker.count_allocations, 0u);
+        }
+      }
+#else
       BOOST_TEST_EQ(test::detail::tracker.count_allocations, 0u);
+#endif
 
       y = std::move(x);
-#if defined(BOOST_UNORDERED_USE_MOVE) ||                                       \
-  !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
+#ifdef BOOST_UNORDERED_FOA_TESTS
+      {
+        using value_type =
+          typename boost::allocator_value_type<allocator_type>::type;
+        using pointer = typename boost::allocator_pointer<allocator_type>::type;
+        if (std::is_same<pointer, value_type*>::value) {
+          BOOST_TEST_EQ(test::detail::tracker.count_allocations, 0u);
+        }
+      }
+#else
       BOOST_TEST_EQ(test::detail::tracker.count_allocations, 0u);
 #endif
       test::check_container(y, v);
@@ -471,7 +487,7 @@ namespace move_tests {
       (default_generator)(generate_collisions)(limited_range)))
   // clang-format on
 #else
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     std::allocator<std::pair<test::object const, test::object> > >*
     test_map_std_alloc;
 
@@ -479,7 +495,7 @@ namespace move_tests {
     test::allocator2<test::object> >* test_set;
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::allocator1<test::object> >* test_multiset;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::allocator1<std::pair<test::object const, test::object> > >* test_map;
   boost::unordered_multimap<test::object, test::object, test::hash,
     test::equal_to,
@@ -492,7 +508,7 @@ namespace move_tests {
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::propagate_move> >*
     test_multiset_prop_move;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::cxx11_allocator<std::pair<test::object const, test::object>,
       test::propagate_move> >* test_map_prop_move;
   boost::unordered_multimap<test::object, test::object, test::hash,
@@ -506,7 +522,7 @@ namespace move_tests {
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::no_propagate_move> >*
     test_multiset_no_prop_move;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::cxx11_allocator<std::pair<test::object const, test::object>,
       test::no_propagate_move> >* test_map_no_prop_move;
   boost::unordered_multimap<test::object, test::object, test::hash,
@@ -515,32 +531,18 @@ namespace move_tests {
       test::no_propagate_move> >* test_multimap_no_prop_move;
 
   UNORDERED_TEST(move_construct_tests1,
-    ((test_map_std_alloc)(test_set)(test_multiset)(test_map)(test_multimap)(
-      test_set_prop_move)(test_multiset_prop_move)(test_map_prop_move)(
-      test_multimap_prop_move)(test_set_no_prop_move)(
-      test_multiset_no_prop_move)(test_map_no_prop_move)(
-      test_multimap_no_prop_move))(
+    ((test_map_std_alloc)(test_set)(test_multiset)(test_map)(test_multimap)(test_set_prop_move)(test_multiset_prop_move)(test_map_prop_move)(test_multimap_prop_move)(test_set_no_prop_move)(test_multiset_no_prop_move)(test_map_no_prop_move)(test_multimap_no_prop_move))(
       (default_generator)(generate_collisions)(limited_range)))
   UNORDERED_TEST(move_assign_tests1,
-    ((test_map_std_alloc)(test_set)(test_multiset)(test_map)(test_multimap)(
-      test_set_prop_move)(test_multiset_prop_move)(test_map_prop_move)(
-      test_multimap_prop_move)(test_set_no_prop_move)(
-      test_multiset_no_prop_move)(test_map_no_prop_move)(
-      test_multimap_no_prop_move))(
+    ((test_map_std_alloc)(test_set)(test_multiset)(test_map)(test_multimap)(test_set_prop_move)(test_multiset_prop_move)(test_map_prop_move)(test_multimap_prop_move)(test_set_no_prop_move)(test_multiset_no_prop_move)(test_map_no_prop_move)(test_multimap_no_prop_move))(
       (default_generator)(generate_collisions)(limited_range)))
   UNORDERED_TEST(move_construct_tests2,
-    ((test_set)(test_multiset)(test_map)(test_multimap)(test_set_prop_move)(
-      test_multiset_prop_move)(test_map_prop_move)(test_multimap_prop_move)(
-      test_set_no_prop_move)(test_multiset_no_prop_move)(test_map_no_prop_move)(
-      test_multimap_no_prop_move))(
+    ((test_set)(test_multiset)(test_map)(test_multimap)(test_set_prop_move)(test_multiset_prop_move)(test_map_prop_move)(test_multimap_prop_move)(test_set_no_prop_move)(test_multiset_no_prop_move)(test_map_no_prop_move)(test_multimap_no_prop_move))(
       (default_generator)(generate_collisions)(limited_range)))
   UNORDERED_TEST(move_assign_tests2,
-    ((test_set)(test_multiset)(test_map)(test_multimap)(test_set_prop_move)(
-      test_multiset_prop_move)(test_map_prop_move)(test_multimap_prop_move)(
-      test_set_no_prop_move)(test_multiset_no_prop_move)(test_map_no_prop_move)(
-      test_multimap_no_prop_move))(
+    ((test_set)(test_multiset)(test_map)(test_multimap)(test_set_prop_move)(test_multiset_prop_move)(test_map_prop_move)(test_multimap_prop_move)(test_set_no_prop_move)(test_multiset_no_prop_move)(test_map_no_prop_move)(test_multimap_no_prop_move))(
       (default_generator)(generate_collisions)(limited_range)))
 #endif
-}
+} // namespace move_tests
 
 RUN_TESTS()

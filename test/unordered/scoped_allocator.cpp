@@ -7,7 +7,9 @@
 #include <boost/config/pragma_message.hpp>
 #include <boost/config/workaround.hpp>
 
-#if BOOST_CXX_VERSION <= 199711L
+#if BOOST_CXX_VERSION <= 199711L ||                                            \
+  BOOST_WORKAROUND(BOOST_GCC_VERSION, < 40800) ||                              \
+  BOOST_WORKAROUND(BOOST_MSVC, == 1900)
 
 BOOST_PRAGMA_MESSAGE(
   "scoped allocator adaptor tests only work under C++11 and above")
@@ -90,7 +92,7 @@ static boost::unordered_node_map<const boost::uint64_t, vector_type,
 
 UNORDERED_TEST(scoped_allocator, ((test_map)(test_node_map)))
 #else
-static boost::unordered_map<const boost::uint64_t, vector_type,
+static boost::unordered_flat_map<const boost::uint64_t, vector_type,
   boost::hash<boost::uint64_t>, std::equal_to<boost::uint64_t>, allocator_type>*
   test_map;
 

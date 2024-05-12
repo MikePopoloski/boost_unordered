@@ -1,6 +1,7 @@
 
 // Copyright 2006-2009 Daniel James.
 // Copyright 2022 Christian Mazakas
+// Copyright 2023 Joaquin M Lopez Munoz
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -11,8 +12,12 @@
 #include "../helpers/fwd.hpp"
 #include "../helpers/memory.hpp"
 #include <boost/config.hpp>
+#include <boost/core/serialization.hpp>
 #include <boost/limits.hpp>
 #include <cstddef>
+
+template <class T> struct allocator1;
+template <class T> struct allocator2;
 
 namespace test {
   // Note that the default hash function will work for any equal_to (but not
@@ -74,6 +79,14 @@ namespace test {
     {
       return out << "(" << o.tag1_ << "," << o.tag2_ << ")";
     }
+
+
+    template<typename Archive>
+    void serialize(Archive& ar,unsigned int)
+    {
+      ar & boost::core::make_nvp("tag1", tag1_);
+      ar & boost::core::make_nvp("tag2", tag2_);
+    }
   };
 
   class movable : private counted_object
@@ -100,7 +113,7 @@ namespace test {
       x.tag2_ = -1;
     }
 
-    movable& operator=(const movable& x) // Copy assignment
+    movable& operator=(movable const& x) // Copy assignment
     {
       BOOST_TEST(x.tag1_ != -1);
       tag1_ = x.tag1_;
@@ -396,7 +409,6 @@ namespace test {
       ::operator delete((void*)p);
     }
 
-#if BOOST_UNORDERED_CXX11_CONSTRUCTION
     template <typename U, typename... Args> void construct(U* p, Args&&... args)
     {
       detail::tracker.track_construct((void*)p, sizeof(U), tag_);
@@ -411,22 +423,6 @@ namespace test {
       // Work around MSVC buggy unused parameter warning.
       ignore_variable(&p);
     }
-#else
-  private:
-    // I'm going to claim in the documentation that construct/destroy
-    // is never used when C++11 support isn't available, so might as
-    // well check that in the text.
-    // TODO: Or maybe just disallow them for values?
-    template <typename U> void construct(U* p);
-    template <typename U, typename A0> void construct(U* p, A0 const&);
-    template <typename U, typename A0, typename A1>
-    void construct(U* p, A0 const&, A1 const&);
-    template <typename U, typename A0, typename A1, typename A2>
-    void construct(U* p, A0 const&, A1 const&, A2 const&);
-    template <typename U> void destroy(U* p);
-
-  public:
-#endif
 
     bool operator==(allocator1 const& x) const { return tag_ == x.tag_; }
 
@@ -495,14 +491,18 @@ namespace test {
 
   template <class T> class ptr
   {
+    friend struct ::allocator1<T>;
+    friend struct ::allocator2<T>;
     friend class allocator2<T>;
     friend class const_ptr<T>;
     friend struct void_ptr;
 
-  public:
     T* ptr_;
     ptr(T* x) : ptr_(x) {}
+
+  public:
     ptr() : ptr_(0) {}
+    ptr(std::nullptr_t) : ptr_(nullptr) {}
     explicit ptr(void_ptr const& x) : ptr_((T*)x.ptr_) {}
 
     T& operator*() const { return *ptr_; }
@@ -526,6 +526,7 @@ namespace test {
     ptr operator-(std::ptrdiff_t s) const { return ptr(ptr_ - s); }
 
     ptr& operator+=(std::ptrdiff_t s) { ptr_ += s; return *this; }
+    ptr& operator-=(std::ptrdiff_t s) { ptr_ -= s; return *this; }
 
     T& operator[](std::ptrdiff_t s) const { return ptr_[s]; }
     bool operator!() const { return !ptr_; }
@@ -655,20 +656,12 @@ namespace test {
       ::operator delete((void*)p.ptr_);
     }
 
-#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-    template <class U, class V> void construct(U* p, V const& v)
-    {
-      detail::tracker.track_construct((void*)p, sizeof(U), tag_);
-      new (p) U(v);
-    }
-#else
     template <class U, class... Args>
     void construct(U* p, Args&&... args)
     {
       detail::tracker.track_construct((void*)p, sizeof(U), tag_);
       new (p) U(std::forward<Args>(args)...);
     }
-#endif
 
     template <class U> void destroy(U* p)
     {
@@ -716,7 +709,10 @@ namespace std {
     {
       typedef ::test::ptr<U> type;
     };
+
+    template<class U>
+    using rebind=typename rebind_to<U>::type;
   };
-} 
+} // namespace std
 
 #endif

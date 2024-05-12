@@ -54,7 +54,7 @@ namespace equality_tests {
   typedef boost::unordered_set<int, mod_compare, mod_compare>
     boost_unordered_set;
 
-  typedef boost::unordered_map<int, int, mod_compare, mod_compare>
+  typedef boost::unordered_flat_map<int, int, mod_compare, mod_compare>
     boost_unordered_map;
 
 #define UNORDERED_EQUALITY_MULTISET_TEST(seq1, op, seq2)                       \

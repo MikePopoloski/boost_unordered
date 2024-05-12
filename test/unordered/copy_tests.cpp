@@ -565,7 +565,7 @@ namespace copy_tests {
     test::allocator1<test::object> >* test_set;
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::allocator2<test::object> >* test_multiset;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::allocator1<test::object> >* test_map;
   boost::unordered_multimap<test::object, test::object, test::hash,
     test::equal_to, test::allocator2<test::object> >* test_multimap;
@@ -576,7 +576,7 @@ namespace copy_tests {
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::select_copy> >*
     test_multiset_select_copy;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::select_copy> >*
     test_map_select_copy;
   boost::unordered_multimap<test::object, test::object, test::hash,
@@ -589,7 +589,7 @@ namespace copy_tests {
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::no_select_copy> >*
     test_multiset_no_select_copy;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::no_select_copy> >*
     test_map_no_select_copy;
   boost::unordered_multimap<test::object, test::object, test::hash,

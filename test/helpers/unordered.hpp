@@ -13,9 +13,16 @@
 #include <boost/unordered/unordered_flat_map.hpp>
 #include <boost/unordered/unordered_node_map.hpp>
 #include <boost/unordered/unordered_node_set.hpp>
+#include <boost/unordered/detail/implementation.hpp>
 #else
 #endif
 #include "postfix.hpp"
 // clang-format on
+
+#if defined(BOOST_LIBSTDCXX_VERSION)
+#if BOOST_LIBSTDCXX_VERSION < 60000
+#define BOOST_UNORDERED_NO_INIT_TYPE_TESTS
+#endif
+#endif
 
 #endif

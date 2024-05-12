@@ -100,7 +100,7 @@ namespace load_factor_tests {
 #else
   boost::unordered_set<int>* int_set_ptr;
   boost::unordered_multiset<int>* int_multiset_ptr;
-  boost::unordered_map<int, int>* int_map_ptr;
+  boost::unordered_flat_map<int, int>* int_map_ptr;
   boost::unordered_multimap<int, int>* int_multimap_ptr;
 
   UNORDERED_TEST(set_load_factor_tests,

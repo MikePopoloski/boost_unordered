@@ -182,9 +182,7 @@ namespace test
 
     ~cxx11_allocator_base() { detail::tracker.allocator_unref(); }
 
-#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
     cxx11_allocator_base& operator=(cxx11_allocator_base const& x) = default;
-#endif
 
     pointer address(reference r) { return pointer(&r); }
 
@@ -214,21 +212,12 @@ namespace test
       ::operator delete((void*)p);
     }
 
-#if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-    template <class U, class V>
-    void construct(U* p, V const& v)
-    {
-      detail::tracker.track_construct((void*)p, sizeof(U), tag_);
-      new (p) U(v);
-    }
-#else
     template <class U, typename... Args>
     void construct(U* p, Args&&... args)
     {
       detail::tracker.track_construct((void*)p, sizeof(U), tag_);
       new (p) U(std::forward<Args>(args)...);
     }
-#endif
 
     template <class U>
     void destroy(U* p)
@@ -248,13 +237,19 @@ namespace test
 
   template <typename T, typename Flags>
   struct cxx11_allocator<T, Flags,
-    typename std::enable_if<!Flags::is_select_on_copy>::type>
+    typename boost::disable_if_c<Flags::is_select_on_copy>::type>
     : public cxx11_allocator_base<T>,
       public swap_allocator_base<Flags>,
       public assign_allocator_base<Flags>,
       public move_allocator_base<Flags>,
       Flags
   {
+#if BOOST_WORKAROUND(BOOST_GCC_VERSION, < 402000)
+    template <typename U> struct rebind
+    {
+      typedef cxx11_allocator<U, Flags> other;
+    };
+#endif
 
     explicit cxx11_allocator(int t = 0) : cxx11_allocator_base<T>(t) {}
 
@@ -266,9 +261,7 @@ namespace test
 
     cxx11_allocator(cxx11_allocator const& x) : cxx11_allocator_base<T>(x) {}
 
-#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
     cxx11_allocator& operator=(cxx11_allocator const& x) = default;
-#endif 
 
     // When not propagating swap, allocators are always equal
     // to avoid undefined behaviour.
@@ -282,7 +275,7 @@ namespace test
 
   template <typename T, typename Flags>
   struct cxx11_allocator<T, Flags,
-    typename std::enable_if<Flags::is_select_on_copy>::type>
+    typename boost::enable_if_c<Flags::is_select_on_copy>::type>
     : public cxx11_allocator_base<T>,
       public swap_allocator_base<Flags>,
       public assign_allocator_base<Flags>,
@@ -296,6 +289,12 @@ namespace test
       return tmp;
     }
 
+#if BOOST_WORKAROUND(BOOST_GCC_VERSION, < 402000)
+    template <typename U> struct rebind
+    {
+      typedef cxx11_allocator<U, Flags> other;
+    };
+#endif
 
     explicit cxx11_allocator(int t = 0) : cxx11_allocator_base<T>(t) {}
 
@@ -307,9 +306,7 @@ namespace test
 
     cxx11_allocator(cxx11_allocator const& x) : cxx11_allocator_base<T>(x) {}
 
-#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
     cxx11_allocator& operator=(cxx11_allocator const& x) = default;
-#endif
 
     // When not propagating swap, allocators are always equal
     // to avoid undefined behaviour.

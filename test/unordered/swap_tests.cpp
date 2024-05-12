@@ -221,14 +221,14 @@ namespace swap_tests {
       (default_generator)(generate_collisions)(limited_range)))
 // clang-format on
 #else
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     std::allocator<test::object> >* test_map_std_alloc;
 
   boost::unordered_set<test::object, test::hash, test::equal_to,
     test::allocator1<test::object> >* test_set;
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::allocator2<test::object> >* test_multiset;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::allocator1<test::object> >* test_map;
   boost::unordered_multimap<test::object, test::object, test::hash,
     test::equal_to, test::allocator2<test::object> >* test_multimap;
@@ -239,7 +239,7 @@ namespace swap_tests {
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::propagate_swap> >*
     test_multiset_prop_swap;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::propagate_swap> >*
     test_map_prop_swap;
   boost::unordered_multimap<test::object, test::object, test::hash,
@@ -252,7 +252,7 @@ namespace swap_tests {
   boost::unordered_multiset<test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::no_propagate_swap> >*
     test_multiset_no_prop_swap;
-  boost::unordered_map<test::object, test::object, test::hash, test::equal_to,
+  boost::unordered_flat_map<test::object, test::object, test::hash, test::equal_to,
     test::cxx11_allocator<test::object, test::no_propagate_swap> >*
     test_map_no_prop_swap;
   boost::unordered_multimap<test::object, test::object, test::hash,

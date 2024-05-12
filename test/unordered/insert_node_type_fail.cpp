@@ -7,7 +7,7 @@
 int main()
 {
 #if defined(UNORDERED_TEST_MAP)
-  typedef boost::unordered_map<int, int> container;
+  typedef boost::unordered_flat_map<int, int> container;
   container x;
   x.emplace(1, 1);
 #elif defined(UNORDERED_TEST_MULTIMAP)

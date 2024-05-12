@@ -156,17 +156,17 @@ void test_map()
   test_map_non_transparent_contains<non_transparent_node_map2>();
   test_map_non_transparent_contains<non_transparent_node_map3>();
 #else
-  typedef boost::unordered_map<key, int, transparent_hasher,
+  typedef boost::unordered_flat_map<key, int, transparent_hasher,
     transparent_key_equal>
     transparent_map;
 
-  typedef boost::unordered_map<key, int, transparent_hasher, key_equal>
+  typedef boost::unordered_flat_map<key, int, transparent_hasher, key_equal>
     non_transparent_map1;
 
-  typedef boost::unordered_map<key, int, hasher, transparent_key_equal>
+  typedef boost::unordered_flat_map<key, int, hasher, transparent_key_equal>
     non_transparent_map2;
 
-  typedef boost::unordered_map<key, int, hasher, key_equal>
+  typedef boost::unordered_flat_map<key, int, hasher, key_equal>
     non_transparent_map3;
 #endif
 

@@ -7,6 +7,7 @@
 #include <boost/limits.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/unordered/detail/implementation.hpp>
 
 // Boilerplate
 
@@ -110,12 +111,8 @@ void test_empty_allocator()
 {
   typedef empty_allocator<int> allocator;
   typedef boost::unordered::detail::allocator_traits<allocator> traits;
-#if !defined(BOOST_NO_CXX11_ALLOCATOR)
   BOOST_STATIC_ASSERT((boost::is_same<traits::size_type,
     std::make_unsigned<std::ptrdiff_t>::type>::value));
-#else
-  BOOST_STATIC_ASSERT((boost::is_same<traits::size_type, std::size_t>::value));
-#endif
   BOOST_STATIC_ASSERT(
     (boost::is_same<traits::difference_type, std::ptrdiff_t>::value));
   BOOST_STATIC_ASSERT((boost::is_same<traits::pointer, int*>::value));
@@ -152,12 +149,8 @@ void test_allocator1()
 {
   typedef allocator1<int> allocator;
   typedef boost::unordered::detail::allocator_traits<allocator> traits;
-#if !defined(BOOST_NO_CXX11_ALLOCATOR)
   BOOST_STATIC_ASSERT((boost::is_same<traits::size_type,
     std::make_unsigned<std::ptrdiff_t>::type>::value));
-#else
-  BOOST_STATIC_ASSERT((boost::is_same<traits::size_type, std::size_t>::value));
-#endif
   BOOST_STATIC_ASSERT(
     (boost::is_same<traits::difference_type, std::ptrdiff_t>::value));
   BOOST_STATIC_ASSERT((boost::is_same<traits::pointer, int*>::value));
@@ -212,15 +205,7 @@ void test_allocator2()
   BOOST_TEST(!traits::propagate_on_container_move_assignment::value);
   BOOST_TEST(!traits::propagate_on_container_swap::value);
   BOOST_TEST(!traits::is_always_equal::value);
-
-#if !defined(BOOST_NO_CXX11_ALLOCATOR)
-  // conditionally compile this assertion as all C++03 emulations of expression
-  // SFINAE are broken one way or another and the benefits of using Core's
-  // `allocator_traits` outweigh the costs of breaking this kind of code (i.e.
-  // inheriting SOCCC via a base)
-  //
   BOOST_TEST(call_select<allocator>() == 1);
-#endif
 }
 
 // allocator 3

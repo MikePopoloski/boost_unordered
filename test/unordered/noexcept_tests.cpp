@@ -60,8 +60,7 @@ namespace noexcept_tests {
     typedef boost::hash<int> base;
 
   public:
-    hash_nothrow(hash_nothrow&&)
-      BOOST_NOEXCEPT_IF(nothrow_move_construct)
+    hash_nothrow(hash_nothrow&&) noexcept(nothrow_move_construct)
     {
       if (!nothrow_move_construct) {
         test_throw("Move Constructor");
@@ -70,7 +69,7 @@ namespace noexcept_tests {
 
     hash_nothrow() { test_throw("Constructor"); }
     hash_nothrow(hash_nothrow const&) { test_throw("Copy"); }
-    hash_nothrow& operator=(const hash_nothrow&)
+    hash_nothrow& operator=(hash_nothrow const&)
     {
       test_throw("Assign");
       return *this;
@@ -88,8 +87,7 @@ namespace noexcept_tests {
       test_throw("Operator");
       return static_cast<base const&>(*this)(x);
     }
-    friend void swap(hash_nothrow&, hash_nothrow&)
-      BOOST_NOEXCEPT_IF(nothrow_swap)
+    friend void swap(hash_nothrow&, hash_nothrow&) noexcept(nothrow_swap)
     {
       if (!nothrow_swap) {
         test_throw("Swap");
@@ -109,7 +107,7 @@ namespace noexcept_tests {
 
   public:
     equal_to_nothrow(equal_to_nothrow&&)
-      BOOST_NOEXCEPT_IF(nothrow_move_construct)
+      noexcept(nothrow_move_construct)
     {
       if (!nothrow_move_construct) {
         test_throw("Move Constructor");
@@ -118,13 +116,13 @@ namespace noexcept_tests {
 
     equal_to_nothrow() { test_throw("Constructor"); }
     equal_to_nothrow(equal_to_nothrow const&) { test_throw("Copy"); }
-    equal_to_nothrow& operator=(const equal_to_nothrow&)
+    equal_to_nothrow& operator=(equal_to_nothrow const&)
     {
       test_throw("Assign");
       return *this;
     }
     equal_to_nothrow& operator=(equal_to_nothrow&&)
-      BOOST_NOEXCEPT_IF(nothrow_move_assign)
+      noexcept(nothrow_move_assign)
     {
       if (!nothrow_move_assign) {
         test_throw("Move Assign");
@@ -137,7 +135,7 @@ namespace noexcept_tests {
       return x == y;
     }
     friend void swap(equal_to_nothrow&, equal_to_nothrow&)
-      BOOST_NOEXCEPT_IF(nothrow_swap)
+      noexcept(nothrow_swap)
     {
       if (!nothrow_swap) {
         test_throw("Swap");
@@ -155,33 +153,28 @@ namespace noexcept_tests {
 
   UNORDERED_AUTO_TEST (check_is_nothrow_move) {
     BOOST_TEST(
-      !std::is_nothrow_move_constructible<hash_possible_exception>::value);
+      !boost::is_nothrow_move_constructible<hash_possible_exception>::value);
     BOOST_TEST(
-      !std::is_nothrow_move_assignable<hash_possible_exception>::value);
-    BOOST_TEST(!std::is_nothrow_swappable<hash_possible_exception>::value);
-    BOOST_TEST((!std::is_nothrow_move_constructible<
+      !boost::is_nothrow_move_assignable<hash_possible_exception>::value);
+    BOOST_TEST(!boost::is_nothrow_swappable<hash_possible_exception>::value);
+    BOOST_TEST((!boost::is_nothrow_move_constructible<
                 equal_to_nothrow<false, false, false> >::value));
-    BOOST_TEST((!std::is_nothrow_move_assignable<
+    BOOST_TEST((!boost::is_nothrow_move_assignable<
                 equal_to_nothrow<false, false, false> >::value));
-    BOOST_TEST((!std::is_nothrow_swappable<
+    BOOST_TEST((!boost::is_nothrow_swappable<
                 equal_to_nothrow<false, false, false> >::value));
 
     have_is_nothrow_move =
-      std::is_nothrow_move_constructible<hash_nothrow_move_construct>::value;
+      boost::is_nothrow_move_constructible<hash_nothrow_move_construct>::value;
     have_is_nothrow_move_assign =
-      std::is_nothrow_move_assignable<hash_nothrow_move_assign>::value;
+      boost::is_nothrow_move_assignable<hash_nothrow_move_assign>::value;
     have_is_nothrow_swap =
-      std::is_nothrow_swappable<hash_nothrow_swap>::value;
+      boost::is_nothrow_swappable<hash_nothrow_swap>::value;
 
 // Check that the traits work when expected.
-#if !defined(BOOST_NO_CXX11_NOEXCEPT) && !defined(BOOST_NO_SFINAE_EXPR)
     BOOST_TEST(have_is_nothrow_move);
     BOOST_TEST(have_is_nothrow_move_assign);
-#endif
-
-#if !defined(BOOST_NO_SFINAE_EXPR) && !defined(BOOST_NO_CXX11_NOEXCEPT) &&  !defined(BOOST_NO_CXX11_DECLTYPE) &&  !defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
     BOOST_TEST(have_is_nothrow_swap);
-#endif
 
     BOOST_LIGHTWEIGHT_TEST_OSTREAM
       << "have_is_nothrow_move: " << have_is_nothrow_move << std::endl
@@ -191,45 +184,45 @@ namespace noexcept_tests {
   UNORDERED_AUTO_TEST (test_noexcept) {
     if (have_is_nothrow_move) {
 #ifdef BOOST_UNORDERED_FOA_TESTS
-      BOOST_TEST((std::is_nothrow_move_constructible<
+      BOOST_TEST((boost::is_nothrow_move_constructible<
         boost::unordered_flat_set<int> >::value));
-      BOOST_TEST((std::is_nothrow_move_constructible<
+      BOOST_TEST((boost::is_nothrow_move_constructible<
         boost::unordered_flat_map<int, int> >::value));
-      BOOST_TEST((std::is_nothrow_move_constructible<
+      BOOST_TEST((boost::is_nothrow_move_constructible<
         boost::unordered_node_set<int> >::value));
-      BOOST_TEST((std::is_nothrow_move_constructible<
+      BOOST_TEST((boost::is_nothrow_move_constructible<
         boost::unordered_node_map<int, int> >::value));
 #else
-      BOOST_TEST((std::is_nothrow_move_constructible<
+      BOOST_TEST((boost::is_nothrow_move_constructible<
         boost::unordered_set<int> >::value));
-      BOOST_TEST((std::is_nothrow_move_constructible<
+      BOOST_TEST((boost::is_nothrow_move_constructible<
         boost::unordered_multiset<int> >::value));
-      BOOST_TEST((std::is_nothrow_move_constructible<
-        boost::unordered_map<int, int> >::value));
-      BOOST_TEST((std::is_nothrow_move_constructible<
+      BOOST_TEST((boost::is_nothrow_move_constructible<
+        boost::unordered_flat_map<int, int> >::value));
+      BOOST_TEST((boost::is_nothrow_move_constructible<
         boost::unordered_multimap<int, int> >::value));
 #endif
     }
 
 #ifdef BOOST_UNORDERED_FOA_TESTS
     BOOST_TEST(
-      (!std::is_nothrow_move_constructible<
+      (!boost::is_nothrow_move_constructible<
         boost::unordered_flat_set<int, hash_possible_exception> >::value));
     BOOST_TEST(
-      (!std::is_nothrow_move_constructible<boost::unordered_flat_set<int,
+      (!boost::is_nothrow_move_constructible<boost::unordered_flat_set<int,
           boost::hash<int>, equal_to_possible_exception> >::value));
 
     BOOST_TEST(
-      (!std::is_nothrow_move_constructible<
+      (!boost::is_nothrow_move_constructible<
         boost::unordered_node_set<int, hash_possible_exception> >::value));
     BOOST_TEST(
-      (!std::is_nothrow_move_constructible<boost::unordered_node_set<int,
+      (!boost::is_nothrow_move_constructible<boost::unordered_node_set<int,
           boost::hash<int>, equal_to_possible_exception> >::value));
 #else
-    BOOST_TEST((!std::is_nothrow_move_constructible<
+    BOOST_TEST((!boost::is_nothrow_move_constructible<
                 boost::unordered_set<int, hash_possible_exception> >::value));
     BOOST_TEST(
-      (!std::is_nothrow_move_constructible<boost::unordered_multiset<int,
+      (!boost::is_nothrow_move_constructible<boost::unordered_multiset<int,
           boost::hash<int>, equal_to_possible_exception> >::value));
 #endif
   }
@@ -237,7 +230,7 @@ namespace noexcept_tests {
   template <class X> static void test_nothrow_move_when_noexcept(X*)
   {
     if (have_is_nothrow_move) {
-      BOOST_TEST(std::is_nothrow_move_constructible<X>::value);
+      BOOST_TEST(boost::is_nothrow_move_constructible<X>::value);
     }
 
     throwing_test_exception = false;
@@ -265,7 +258,7 @@ namespace noexcept_tests {
   {
     {
       if (have_is_nothrow_move_assign) {
-        BOOST_TEST(std::is_nothrow_move_assignable<T>::value);
+        BOOST_TEST(boost::is_nothrow_move_assignable<T>::value);
       }
 
       throwing_test_exception = false;
@@ -294,7 +287,7 @@ namespace noexcept_tests {
 
     {
       if (have_is_nothrow_move_assign) {
-        BOOST_TEST(std::is_nothrow_move_assignable<T>::value);
+        BOOST_TEST(boost::is_nothrow_move_assignable<T>::value);
       }
 
       throwing_test_exception = false;
@@ -324,7 +317,7 @@ namespace noexcept_tests {
   template <class X> static void test_nothrow_swap_when_noexcept(X*)
   {
     if (have_is_nothrow_swap) {
-      BOOST_TEST(std::is_nothrow_swappable<X>::value);
+      BOOST_TEST(boost::is_nothrow_swappable<X>::value);
     }
 
     throwing_test_exception = false;
@@ -359,7 +352,7 @@ namespace noexcept_tests {
 
 template <class T> class allocator1
 {
-  allocator1 operator=(const allocator1&);
+  allocator1 operator=(allocator1 const&);
   allocator1 operator=(allocator1&&);
 
 public:
@@ -384,11 +377,11 @@ public:
 
 template <class T> class allocator2
 {
-  allocator2 operator=(const allocator2&);
+  allocator2 operator=(allocator2 const&);
 
 public:
   typedef T value_type;
-  typedef std::true_type propagate_on_container_move_assignment;
+  typedef boost::true_type propagate_on_container_move_assignment;
 
   allocator2() {}
   allocator2(allocator2 const&) {}
@@ -410,11 +403,13 @@ public:
 };
 
 UNORDERED_AUTO_TEST (prelim_allocator_checks) {
-  BOOST_TEST(std::allocator_traits<allocator1<int>>::is_always_equal::value);
-  BOOST_TEST(!std::allocator_traits<allocator1<int>>::propagate_on_container_move_assignment::value);
+  BOOST_TEST(boost::allocator_is_always_equal<allocator1<int> >::type::value);
+  BOOST_TEST(!boost::allocator_propagate_on_container_move_assignment<
+             allocator1<int> >::type::value);
 
-  BOOST_TEST(std::allocator_traits<allocator2<int> >::is_always_equal::value);
-  BOOST_TEST(std::allocator_traits<allocator2<int> >::propagate_on_container_move_assignment::value);
+  BOOST_TEST(boost::allocator_is_always_equal<allocator2<int> >::type::value);
+  BOOST_TEST(boost::allocator_propagate_on_container_move_assignment<
+    allocator2<int> >::type::value);
 }
 
 using test::default_generator;

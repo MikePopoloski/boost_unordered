@@ -89,7 +89,7 @@ UNORDERED_AUTO_TEST (map_tests) {
       v[i2].begin(), v[i2].end());
 #else
   for (int i = 0; i < 5; ++i)
-    test_equal_insertion<boost::unordered_map<int, int> >(
+    test_equal_insertion<boost::unordered_flat_map<int, int> >(
       v[i].begin(), v[i].end());
 
   for (int i2 = 0; i2 < 5; ++i2)

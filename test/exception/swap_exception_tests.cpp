@@ -261,7 +261,7 @@ using unordered_node_map = boost::unordered_node_map<int, int, boost::hash<int>,
 typedef boost::unordered_set<int, boost::hash<int>, std::equal_to<int>,
   test::allocator1<int> >
   unordered_set;
-typedef boost::unordered_map<int, int, boost::hash<int>, std::equal_to<int>,
+typedef boost::unordered_flat_map<int, int, boost::hash<int>, std::equal_to<int>,
   test::allocator1<std::pair<int const, int> > >
   unordered_map;
 typedef boost::unordered_multiset<int, boost::hash<int>, std::equal_to<int>,

@@ -146,7 +146,7 @@ boost::unordered_set<test::exception::object, test::exception::hash,
 boost::unordered_multiset<test::exception::object, test::exception::hash,
   test::exception::equal_to,
   test::exception::allocator<test::exception::object> >* test_multiset_;
-boost::unordered_map<test::exception::object, test::exception::object,
+boost::unordered_flat_map<test::exception::object, test::exception::object,
   test::exception::hash, test::exception::equal_to,
   test::exception::allocator2<test::exception::object> >* test_map_;
 boost::unordered_multimap<test::exception::object, test::exception::object,

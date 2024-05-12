@@ -7,7 +7,7 @@
 
 int main()
 {
-    boost::unordered_map<std::string, int> map;
+    boost::unordered_flat_map<std::string, int> map;
 
     map[ "2" ] = 2;
 

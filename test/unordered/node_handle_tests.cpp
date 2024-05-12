@@ -4,6 +4,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/config.hpp>
+
 #include "../helpers/postfix.hpp"
 #include "../helpers/prefix.hpp"
 #include "../helpers/unordered.hpp"
@@ -16,6 +18,11 @@
 #include <boost/type_traits/is_same.hpp>
 #include <set>
 #include <string>
+
+#if defined(BOOST_GCC) && BOOST_GCC >= 130000
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wself-move"
+#endif
 
 template <template <class Key, class T, class Hash = boost::hash<Key>,
   class Pred = std::equal_to<Key>,
@@ -284,11 +291,11 @@ template <class X> typename X::iterator insert_empty_node(X& x)
 #else
 
 template <class Key, class T, class Hash, class KeyEqual, class Allocator>
-typename boost::unordered_map<Key, T, Hash, KeyEqual, Allocator>::iterator
-insert_empty_node(boost::unordered_map<Key, T, Hash, KeyEqual, Allocator>& c)
+typename boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>::iterator
+insert_empty_node(boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>& c)
 {
   typedef
-    typename boost::unordered_map<Key, T, Hash, KeyEqual, Allocator>::node_type
+    typename boost::unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>::node_type
       node_type;
 
   return c.insert(node_type()).position;
@@ -541,11 +548,11 @@ UNORDERED_AUTO_TEST (insert_node_handle_unique_tests2) {
 
 #else
 UNORDERED_AUTO_TEST (examples) {
-  example1<boost::unordered_map>();
+  example1<boost::unordered_flat_map>();
   example2<boost::unordered_set>();
   example3<boost::unordered_set>();
-  failed_insertion_with_hint<boost::unordered_map, boost::unordered_set>();
-  node_handle_tests<boost::unordered_map, boost::unordered_set>();
+  failed_insertion_with_hint<boost::unordered_flat_map, boost::unordered_set>();
+  node_handle_tests<boost::unordered_flat_map, boost::unordered_set>();
 }
 
 template <typename Container1, typename Container2>
@@ -599,8 +606,8 @@ UNORDERED_AUTO_TEST (insert_node_handle_unique_tests) {
   }
 
   {
-    boost::unordered_map<int, int, hash_thing> x1;
-    boost::unordered_map<int, int> x2;
+    boost::unordered_flat_map<int, int, hash_thing> x1;
+    boost::unordered_flat_map<int, int> x2;
     x1.emplace(67, 50);
     x1.emplace(23, 45);
     x1.emplace(18, 19);
@@ -612,7 +619,7 @@ UNORDERED_AUTO_TEST (insert_node_handle_unique_tests) {
 
   {
     boost::unordered_multimap<int, int, hash_thing> x1;
-    boost::unordered_map<int, int> x2;
+    boost::unordered_flat_map<int, int> x2;
     x1.emplace(67, 50);
     x1.emplace(23, 45);
     x1.emplace(18, 19);
@@ -638,7 +645,7 @@ UNORDERED_AUTO_TEST (insert_node_handle_equiv_tests) {
   }
 
   {
-    boost::unordered_map<int, int, hash_thing> x1;
+    boost::unordered_flat_map<int, int, hash_thing> x1;
     boost::unordered_multimap<int, int> x2;
     x1.emplace(67, 50);
     x1.emplace(67, 100);
@@ -701,8 +708,8 @@ UNORDERED_AUTO_TEST (insert_node_handle_unique_tests2) {
   }
 
   {
-    boost::unordered_map<int, int, hash_thing> x1;
-    boost::unordered_map<int, int> x2;
+    boost::unordered_flat_map<int, int, hash_thing> x1;
+    boost::unordered_flat_map<int, int> x2;
     x1.emplace(67, 50);
     x1.emplace(23, 45);
     x1.emplace(18, 19);
@@ -714,7 +721,7 @@ UNORDERED_AUTO_TEST (insert_node_handle_unique_tests2) {
 
   {
     boost::unordered_multimap<int, int, hash_thing> x1;
-    boost::unordered_map<int, int> x2;
+    boost::unordered_flat_map<int, int> x2;
     x1.emplace(67, 50);
     x1.emplace(23, 45);
     x1.emplace(18, 19);
