@@ -162,6 +162,24 @@
     #define BOOST_NO_RTTI
   #endif
 #endif
+
+// This is the only predef define needed for boost::unordered, so pull it
+// out here so we don't need to include all of predef.
+#if \
+    defined(__ARM_ARCH) || defined(__TARGET_ARCH_ARM) || \
+    defined(__TARGET_ARCH_THUMB) || defined(_M_ARM) || \
+    defined(__arm__) || defined(__arm64) || defined(__thumb__) || \
+    defined(_M_ARM64) || defined(__aarch64__) || defined(__AARCH64EL__) || \
+    defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) || \
+    defined(__ARM_ARCH_7R__) || defined(__ARM_ARCH_7M__) || \
+    defined(__ARM_ARCH_6K__) || defined(__ARM_ARCH_6Z__) || \
+    defined(__ARM_ARCH_6KZ__) || defined(__ARM_ARCH_6T2__) || \
+    defined(__ARM_ARCH_5TE__) || defined(__ARM_ARCH_5TEJ__) || \
+    defined(__ARM_ARCH_4T__) || defined(__ARM_ARCH_4__)
+#define BOOST_ARCH_ARM 1
+#else
+#define BOOST_ARCH_ARM 0
+#endif
 // Copyright 2005-2009 Daniel James.
 // Copyright 2021, 2022 Peter Dimov.
 // Distributed under the Boost Software License, Version 1.0.
