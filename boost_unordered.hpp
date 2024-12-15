@@ -29,7 +29,6 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #pragma once
 
-#include <atomic>
 #include <bit>
 #include <climits>
 #include <cmath>
@@ -1763,692 +1762,6 @@ __asm__(".pushsection \".debug_gdb_scripts\", \"MS\",@progbits,1\n"
 #endif // !defined(BOOST_ALL_NO_EMBEDDED_GDB_SCRIPTS)
 
 #endif // !defined(BOOST_UNORDERED_UNORDERED_PRINTERS_HPP)
-#ifndef BOOST_CORE_DETAIL_SP_THREAD_PAUSE_HPP_INCLUDED
-#define BOOST_CORE_DETAIL_SP_THREAD_PAUSE_HPP_INCLUDED
-
-// MS compatible compilers support #pragma once
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
-# pragma once
-#endif
-
-// boost/core/detail/sp_thread_pause.hpp
-//
-// inline void bost::core::sp_thread_pause();
-//
-//   Emits a "pause" instruction.
-//
-// Copyright 2008, 2020, 2023 Peter Dimov
-// Distributed under the Boost Software License, Version 1.0
-// https://www.boost.org/LICENSE_1_0.txt
-
-#ifdef __has_builtin
-# if __has_builtin(__builtin_ia32_pause) && !defined(__INTEL_COMPILER)
-#  define BOOST_CORE_HAS_BUILTIN_IA32_PAUSE
-# endif
-#endif
-
-#ifdef BOOST_CORE_HAS_BUILTIN_IA32_PAUSE
-
-# define BOOST_CORE_SP_PAUSE() __builtin_ia32_pause()
-
-#elif defined(_MSC_VER) && ( defined(_M_IX86) || defined(_M_X64) )
-
-# include <intrin.h>
-# define BOOST_CORE_SP_PAUSE() _mm_pause()
-
-#elif defined(_MSC_VER) && ( defined(_M_ARM) || defined(_M_ARM64) )
-
-# include <intrin.h>
-# define BOOST_CORE_SP_PAUSE() __yield()
-
-#elif defined(__GNUC__) && ( defined(__i386__) || defined(__x86_64__) )
-
-# define BOOST_CORE_SP_PAUSE() __asm__ __volatile__( "rep; nop" : : : "memory" )
-
-#elif defined(__GNUC__) && ( (defined(__ARM_ARCH) && __ARM_ARCH >= 8) || defined(__ARM_ARCH_8A__) || defined(__aarch64__) )
-
-# define BOOST_CORE_SP_PAUSE() __asm__ __volatile__( "yield" : : : "memory" )
-
-#else
-
-# define BOOST_CORE_SP_PAUSE() ((void)0)
-
-#endif
-
-namespace boost
-{
-namespace core
-{
-
-BOOST_FORCEINLINE void sp_thread_pause() noexcept
-{
-    BOOST_CORE_SP_PAUSE();
-}
-
-} // namespace core
-} // namespace boost
-
-#undef BOOST_CORE_SP_PAUSE
-
-#endif // #ifndef BOOST_CORE_DETAIL_SP_THREAD_PAUSE_HPP_INCLUDED
-#ifndef BOOST_CORE_DETAIL_SP_WIN32_SLEEP_HPP_INCLUDED
-#define BOOST_CORE_DETAIL_SP_WIN32_SLEEP_HPP_INCLUDED
-
-// MS compatible compilers support #pragma once
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
-# pragma once
-#endif
-
-// boost/core/detail/sp_win32_sleep.hpp
-//
-// Declares the Win32 Sleep() function.
-//
-// Copyright 2008, 2020 Peter Dimov
-// Distributed under the Boost Software License, Version 1.0
-// https://www.boost.org/LICENSE_1_0.txt
-
-#ifdef  BOOST_USE_WINDOWS_H 
-# include <windows.h>
-#endif
-
-namespace boost
-{
-namespace core
-{
-namespace detail
-{
-
-#ifndef  BOOST_USE_WINDOWS_H 
-
-#if defined(__clang__) && defined(__x86_64__)
-// clang x64 warns that __stdcall is ignored
-# define BOOST_CORE_SP_STDCALL
-#else
-# define BOOST_CORE_SP_STDCALL __stdcall
-#endif
-
-#ifdef __LP64__ // Cygwin 64
-  extern "C" __declspec(dllimport) void BOOST_CORE_SP_STDCALL Sleep( unsigned int ms );
-#else
-  extern "C" __declspec(dllimport) void BOOST_CORE_SP_STDCALL Sleep( unsigned long ms );
-#endif
-
-extern "C" __declspec(dllimport) int BOOST_CORE_SP_STDCALL SwitchToThread();
-
-#undef BOOST_CORE_SP_STDCALL
-
-#endif // !defined( BOOST_USE_WINDOWS_H )
-
-} // namespace detail
-} // namespace core
-} // namespace boost
-
-#endif // #ifndef BOOST_CORE_DETAIL_SP_WIN32_SLEEP_HPP_INCLUDED
-#ifndef BOOST_CORE_DETAIL_SP_THREAD_YIELD_HPP_INCLUDED
-#define BOOST_CORE_DETAIL_SP_THREAD_YIELD_HPP_INCLUDED
-
-// MS compatible compilers support #pragma once
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
-# pragma once
-#endif
-
-// boost/core/detail/sp_thread_yield.hpp
-//
-// inline void bost::core::sp_thread_yield();
-//
-//   Gives up the remainder of the time slice,
-//   as if by calling sched_yield().
-//
-// Copyright 2008, 2020 Peter Dimov
-// Distributed under the Boost Software License, Version 1.0
-// https://www.boost.org/LICENSE_1_0.txt
-
-#if defined( _WIN32 ) || defined( __WIN32__ ) || defined( __CYGWIN__ )
-
-#ifdef BOOST_SP_REPORT_IMPLEMENTATION
-  BOOST_PRAGMA_MESSAGE("Using SwitchToThread() in sp_thread_yield")
-#endif
-
-namespace boost
-{
-namespace core
-{
-namespace detail
-{
-
-inline void sp_thread_yield() noexcept
-{
-    SwitchToThread();
-}
-
-} // namespace detail
-
-using boost::core::detail::sp_thread_yield;
-
-} // namespace core
-} // namespace boost
-
-#elif defined(BOOST_HAS_SCHED_YIELD)
-
-#ifdef BOOST_SP_REPORT_IMPLEMENTATION
-  BOOST_PRAGMA_MESSAGE("Using sched_yield() in sp_thread_yield")
-#endif
-
-#ifndef _AIX
-# include <sched.h>
-#else
-  // AIX's sched.h defines ::var which sometimes conflicts with Lambda's var
-  extern "C" int sched_yield(void);
-#endif
-
-namespace boost
-{
-namespace core
-{
-
-inline void sp_thread_yield() noexcept
-{
-    sched_yield();
-}
-
-} // namespace core
-} // namespace boost
-
-#else
-
-#ifdef BOOST_SP_REPORT_IMPLEMENTATION
-  BOOST_PRAGMA_MESSAGE("Using sp_thread_pause() in sp_thread_yield")
-#endif
-
-namespace boost
-{
-namespace core
-{
-
-inline void sp_thread_yield() noexcept
-{
-    sp_thread_pause();
-}
-
-} // namespace core
-} // namespace boost
-
-#endif
-
-#endif // #ifndef BOOST_CORE_DETAIL_SP_THREAD_YIELD_HPP_INCLUDED
-#ifndef BOOST_CORE_DETAIL_SP_THREAD_SLEEP_HPP_INCLUDED
-#define BOOST_CORE_DETAIL_SP_THREAD_SLEEP_HPP_INCLUDED
-
-// MS compatible compilers support #pragma once
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
-# pragma once
-#endif
-
-// boost/core/detail/sp_thread_sleep.hpp
-//
-// inline void bost::core::sp_thread_sleep();
-//
-//   Cease execution for a while to yield to other threads,
-//   as if by calling nanosleep() with an appropriate interval.
-//
-// Copyright 2008, 2020, 2023 Peter Dimov
-// Distributed under the Boost Software License, Version 1.0
-// https://www.boost.org/LICENSE_1_0.txt
-
-#if defined( _WIN32 ) || defined( __WIN32__ ) || defined( __CYGWIN__ )
-
-#ifdef BOOST_SP_REPORT_IMPLEMENTATION
-  BOOST_PRAGMA_MESSAGE("Using Sleep(1) in sp_thread_sleep")
-#endif
-
-namespace boost
-{
-namespace core
-{
-namespace detail
-{
-
-inline void sp_thread_sleep() noexcept
-{
-    Sleep( 1 );
-}
-
-} // namespace detail
-
-using boost::core::detail::sp_thread_sleep;
-
-} // namespace core
-} // namespace boost
-
-#elif defined(BOOST_HAS_NANOSLEEP)
-
-#ifdef BOOST_SP_REPORT_IMPLEMENTATION
-  BOOST_PRAGMA_MESSAGE("Using nanosleep() in sp_thread_sleep")
-#endif
-
-#include <time.h>
-
-#if defined(BOOST_HAS_PTHREADS) && !defined(__ANDROID__)
-# include <pthread.h>
-#endif
-
-namespace boost
-{
-namespace core
-{
-
-inline void sp_thread_sleep() noexcept
-{
-#if defined(BOOST_HAS_PTHREADS) && !defined(__ANDROID__)
-
-    int oldst;
-    pthread_setcancelstate( PTHREAD_CANCEL_DISABLE, &oldst );
-
-#endif
-
-    // g++ -Wextra warns on {} or {0}
-    struct timespec rqtp = { 0, 0 };
-
-    // POSIX says that timespec has tv_sec and tv_nsec
-    // But it doesn't guarantee order or placement
-
-    rqtp.tv_sec = 0;
-    rqtp.tv_nsec = 1000;
-
-    nanosleep( &rqtp, 0 );
-
-#if defined(BOOST_HAS_PTHREADS) && !defined(__ANDROID__)
-
-    pthread_setcancelstate( oldst, &oldst );
-
-#endif
-
-}
-
-} // namespace core
-} // namespace boost
-
-#else
-
-#ifdef BOOST_SP_REPORT_IMPLEMENTATION
-  BOOST_PRAGMA_MESSAGE("Using sp_thread_yield() in sp_thread_sleep")
-#endif
-
-namespace boost
-{
-namespace core
-{
-
-inline void sp_thread_sleep() noexcept
-{
-    sp_thread_yield();
-}
-
-} // namespace core
-} // namespace boost
-
-#endif
-
-#endif // #ifndef BOOST_CORE_DETAIL_SP_THREAD_SLEEP_HPP_INCLUDED
-#ifndef BOOST_CORE_YIELD_PRIMITIVES_HPP_INCLUDED
-#define BOOST_CORE_YIELD_PRIMITIVES_HPP_INCLUDED
-
-// Copyright 2023 Peter Dimov
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
-
-#endif // #ifndef BOOST_CORE_YIELD_PRIMITIVES_HPP_INCLUDED
-#ifndef BOOST_UNORDERED_DETAIL_FOA_RW_SPINLOCK_HPP_INCLUDED
-#define BOOST_UNORDERED_DETAIL_FOA_RW_SPINLOCK_HPP_INCLUDED
-
-// Copyright 2023 Peter Dimov
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
-
-namespace boost{
-namespace unordered{
-namespace detail{
-namespace foa{
-
-class rw_spinlock
-{
-private:
-
-    // bit 31: locked exclusive
-    // bit 30: writer pending
-    // bit 29..0: reader lock count
-
-    static constexpr std::uint32_t locked_exclusive_mask = 1u << 31; // 0x8000'0000
-    static constexpr std::uint32_t writer_pending_mask = 1u << 30; // 0x4000'0000
-    static constexpr std::uint32_t reader_lock_count_mask = writer_pending_mask - 1; // 0x3FFF'FFFF
-
-    std::atomic<std::uint32_t> state_ = {};
-
-private:
-
-    // Effects: Provides a hint to the implementation that the current thread
-    //          has been unable to make progress for k+1 iterations.
-
-    static void yield( unsigned k ) noexcept
-    {
-        unsigned const sleep_every = 1024; // see below
-
-        k %= sleep_every;
-
-        if( k < 5 )
-        {
-            // Intel recommendation from the Optimization Reference Manual
-            // Exponentially increase number of PAUSE instructions each
-            // iteration until reaching a maximum which is approximately
-            // one timeslice long (2^4 == 16 in our case)
-
-            unsigned const pause_count = 1u << k;
-
-            for( unsigned i = 0; i < pause_count; ++i )
-            {
-                boost::core::sp_thread_pause();
-            }
-        }
-        else if( k < sleep_every - 1 )
-        {
-            // Once the maximum number of PAUSE instructions is reached,
-            // we switch to yielding the timeslice immediately
-
-            boost::core::sp_thread_yield();
-        }
-        else
-        {
-            // After `sleep_every` iterations of no progress, we sleep,
-            // to avoid a deadlock if a lower priority thread has the lock
-
-            boost::core::sp_thread_sleep();
-        }
-    }
-
-public:
-
-    bool try_lock_shared() noexcept
-    {
-        std::uint32_t st = state_.load( std::memory_order_relaxed );
-
-        if( st >= reader_lock_count_mask )
-        {
-            // either bit 31 set, bit 30 set, or reader count is max
-            return false;
-        }
-
-        std::uint32_t newst = st + 1;
-        return state_.compare_exchange_strong( st, newst, std::memory_order_acquire, std::memory_order_relaxed );
-    }
-
-    void lock_shared() noexcept
-    {
-        for( unsigned k = 0; ; ++k )
-        {
-            std::uint32_t st = state_.load( std::memory_order_relaxed );
-
-            if( st < reader_lock_count_mask )
-            {
-                std::uint32_t newst = st + 1;
-                if( state_.compare_exchange_weak( st, newst, std::memory_order_acquire, std::memory_order_relaxed ) ) return;
-            }
-
-            yield( k );
-        }
-    }
-
-    void unlock_shared() noexcept
-    {
-        // pre: locked shared, not locked exclusive
-
-        state_.fetch_sub( 1, std::memory_order_release );
-
-        // if the writer pending bit is set, there's a writer waiting
-        // let it acquire the lock; it will clear the bit on unlock
-    }
-
-    bool try_lock() noexcept
-    {
-        std::uint32_t st = state_.load( std::memory_order_relaxed );
-
-        if( st & locked_exclusive_mask )
-        {
-            // locked exclusive
-            return false;
-        }
-
-        if( st & reader_lock_count_mask )
-        {
-            // locked shared
-            return false;
-        }
-
-        std::uint32_t newst = locked_exclusive_mask;
-        return state_.compare_exchange_strong( st, newst, std::memory_order_acquire, std::memory_order_relaxed );
-    }
-
-    void lock() noexcept
-    {
-        for( unsigned k = 0; ; ++k )
-        {
-            std::uint32_t st = state_.load( std::memory_order_relaxed );
-
-            if( st & locked_exclusive_mask )
-            {
-                // locked exclusive, spin
-            }
-            else if( ( st & reader_lock_count_mask ) == 0 )
-            {
-                // not locked exclusive, not locked shared, try to lock
-
-                std::uint32_t newst = locked_exclusive_mask;
-                if( state_.compare_exchange_weak( st, newst, std::memory_order_acquire, std::memory_order_relaxed ) ) return;
-            }
-            else if( st & writer_pending_mask )
-            {
-                // writer pending bit already set, nothing to do
-            }
-            else
-            {
-                // locked shared, set writer pending bit
-
-                std::uint32_t newst = st | writer_pending_mask;
-                state_.compare_exchange_weak( st, newst, std::memory_order_relaxed, std::memory_order_relaxed );
-            }
-
-            yield( k );
-        }
-    }
-
-    void unlock() noexcept
-    {
-        // pre: locked exclusive, not locked shared
-        state_.store( 0, std::memory_order_release );
-    }
-};
-
-}
-}
-}
-}
-
-#endif // BOOST_UNORDERED_DETAIL_FOA_RW_SPINLOCK_HPP_INCLUDED
-/* Copyright 2024 Joaquin M Lopez Munoz.
- * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
- *
- * See https://www.boost.org/libs/unordered for library home page.
- */
-
-#ifndef BOOST_UNORDERED_DETAIL_FOA_CUMULATIVE_STATS_HPP
-#define BOOST_UNORDERED_DETAIL_FOA_CUMULATIVE_STATS_HPP
-
-#include <array>
-
-#ifdef BOOST_HAS_THREADS
-#include <mutex>
-#endif
-
-namespace boost{
-namespace unordered{
-namespace detail{
-namespace foa{
-
-/* Cumulative one-pass calculation of the average, variance and deviation of
- * running sequences.
- */
-
-struct sequence_stats_data
-{
-  double m=0.0;
-  double m_prior=0.0;
-  double s=0.0;
-};
-
-struct welfords_algorithm
-{
-  template<typename T>
-  int operator()(T&& x,sequence_stats_data& d)const noexcept
-  {
-    static_assert(
-      noexcept(static_cast<double>(x)),
-      "Argument conversion to double must not throw.");
-
-    d.m_prior=d.m;
-    d.m+=(static_cast<double>(x)-d.m)/static_cast<double>(n);
-    d.s+=(n!=1)*
-      (static_cast<double>(x)-d.m_prior)*(static_cast<double>(x)-d.m);
-
-    return 0;
-  }
-
-  std::size_t n;
-};
-
-struct sequence_stats_summary
-{
-  double average;
-  double variance;
-  double deviation;
-};
-
-/* Stats calculated jointly for N same-sized sequences to save the space
- * for count.
- */
-
-template<std::size_t N>
-class cumulative_stats
-{
-public:
-  struct summary
-  {
-    std::size_t                          count;
-    std::array<sequence_stats_summary,N> sequence_summary;
-  };
-
-  void reset()noexcept{*this=cumulative_stats();}
-  
-  template<typename... Ts>
-  void add(Ts&&... xs)noexcept
-  {
-    static_assert(
-      sizeof...(Ts)==N,"A sample must be provided for each sequence.");
-
-    if(BOOST_UNLIKELY(++n==0)){
-      reset();
-      n=1;
-    }
-    mp11::tuple_transform(
-      welfords_algorithm{n},
-      std::forward_as_tuple(std::forward<Ts>(xs)...),
-      data);
-  }
-  
-  summary get_summary()const noexcept
-  {
-    summary res;
-    res.count=n;
-    for(std::size_t i=0;i<N;++i){
-      double average=data[i].m,
-             variance=n!=0?data[i].s/static_cast<double>(n):0.0,
-             deviation=std::sqrt(variance);
-      res.sequence_summary[i]={average,variance,deviation};
-    }
-    return res;
-  }
-
-private:
-  std::size_t                       n=0;
-  std::array<sequence_stats_data,N> data;
-};
-
-#ifdef BOOST_HAS_THREADS
-
-template<std::size_t N>
-class concurrent_cumulative_stats:cumulative_stats<N>
-{
-  using super=cumulative_stats<N>;
-  using lock_guard=std::lock_guard<rw_spinlock>;
-
-public:
-  using summary=typename super::summary;
-
-  concurrent_cumulative_stats()noexcept:super{}{}
-  concurrent_cumulative_stats(const concurrent_cumulative_stats& x)noexcept:
-    concurrent_cumulative_stats{x,lock_guard{x.mut}}{}
-
-  concurrent_cumulative_stats&
-  operator=(const concurrent_cumulative_stats& x)noexcept
-  {
-    auto x1=x;
-    lock_guard lck{mut};
-    static_cast<super&>(*this)=x1;
-    return *this;
-  }
-
-  void reset()noexcept
-  {
-    lock_guard lck{mut};
-    super::reset();
-  }
-  
-  template<typename... Ts>
-  void add(Ts&&... xs)noexcept
-  {
-    lock_guard lck{mut};
-    super::add(std::forward<Ts>(xs)...);
-  }
-  
-  summary get_summary()const noexcept
-  {
-    lock_guard lck{mut};
-    return super::get_summary();
-  }
-
-private:
-  concurrent_cumulative_stats(const super& x,lock_guard&&):super{x}{}
-
-  mutable rw_spinlock mut;
-};
-
-#else
-
-template<std::size_t N>
-using concurrent_cumulative_stats=cumulative_stats<N>;
-
-#endif
-
-}
-}
-}
-}
-
-#endif
 /* Copyright 2023 Joaquin M Lopez Munoz.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
@@ -3600,53 +2913,12 @@ struct table_arrays
   value_type_pointer elements_;
 };
 
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-/* stats support */
-
-struct table_core_cumulative_stats
-{
-  concurrent_cumulative_stats<1> insertion;
-  concurrent_cumulative_stats<2> successful_lookup,
-                                 unsuccessful_lookup;
-};
-
-struct table_core_insertion_stats
-{
-  std::size_t            count;
-  sequence_stats_summary probe_length;
-};
-
-struct table_core_lookup_stats
-{
-  std::size_t            count;
-  sequence_stats_summary probe_length;
-  sequence_stats_summary num_comparisons;
-};
-
-struct table_core_stats
-{
-  table_core_insertion_stats insertion;
-  table_core_lookup_stats    successful_lookup,
-                             unsuccessful_lookup;
-};
-
-#define BOOST_UNORDERED_ADD_STATS(stats,args) stats.add args
-#define BOOST_UNORDERED_SWAP_STATS(stats1,stats2) std::swap(stats1,stats2)
-#define BOOST_UNORDERED_COPY_STATS(stats1,stats2) stats1=stats2
-#define BOOST_UNORDERED_RESET_STATS_OF(x) x.reset_stats()
-#define BOOST_UNORDERED_STATS_COUNTER(name) std::size_t name=0
-#define BOOST_UNORDERED_INCREMENT_STATS_COUNTER(name) ++name
-
-#else
-
 #define BOOST_UNORDERED_ADD_STATS(stats,args) ((void)0)
 #define BOOST_UNORDERED_SWAP_STATS(stats1,stats2) ((void)0)
 #define BOOST_UNORDERED_COPY_STATS(stats1,stats2) ((void)0)
 #define BOOST_UNORDERED_RESET_STATS_OF(x) ((void)0)
 #define BOOST_UNORDERED_STATS_COUNTER(name) ((void)0)
 #define BOOST_UNORDERED_INCREMENT_STATS_COUNTER(name) ((void)0)
-
-#endif
 
 struct if_constexpr_void_else{void operator()()const{}};
 
@@ -3907,11 +3179,6 @@ public:
   using difference_type=std::ptrdiff_t;
   using locator=table_locator<group_type,element_type>;
   using arrays_holder_type=arrays_holder<arrays_type,Allocator>;
-
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-  using cumulative_stats=table_core_cumulative_stats;
-  using stats=table_core_stats;
-#endif
 
 #ifdef BOOST_GCC
 #pragma GCC diagnostic push
@@ -4287,38 +3554,6 @@ public:
     rehash(std::size_t(std::ceil(float(n)/mlf)));
   }
 
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-  stats get_stats()const
-  {
-    auto insertion=cstats.insertion.get_summary();
-    auto successful_lookup=cstats.successful_lookup.get_summary();
-    auto unsuccessful_lookup=cstats.unsuccessful_lookup.get_summary();
-    return{
-      {
-        insertion.count,
-        insertion.sequence_summary[0]
-      },
-      {
-        successful_lookup.count,
-        successful_lookup.sequence_summary[0],
-        successful_lookup.sequence_summary[1]
-      },
-      {
-        unsuccessful_lookup.count,
-        unsuccessful_lookup.sequence_summary[0],
-        unsuccessful_lookup.sequence_summary[1]
-      },
-    };
-  }
-
-  void reset_stats()noexcept
-  {
-    cstats.insertion.reset();
-    cstats.successful_lookup.reset();
-    cstats.unsuccessful_lookup.reset();
-  }
-#endif
-
   friend bool operator==(const table_core& x,const table_core& y)
   {
     return
@@ -4528,10 +3763,6 @@ public:
 
   arrays_type              arrays;
   size_ctrl_type           size_ctrl;
-
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-  mutable cumulative_stats cstats;
-#endif
 
 private:
   template<
@@ -5191,10 +4422,6 @@ public:
     const_iterator>::type;
   using erase_return_type=table_erase_return_type<iterator>;
 
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-  using stats=typename super::stats;
-#endif
-
   table(
     std::size_t n=default_bucket_count,const Hash& h_=Hash(),
     const Pred& pred_=Pred(),const Allocator& al_=Allocator()):
@@ -5375,11 +4602,6 @@ public:
   using super::max_load;
   using super::rehash;
   using super::reserve;
-
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-  using super::get_stats;
-  using super::reset_stats;
-#endif
 
   template<typename Predicate>
   friend std::size_t erase_if(table& x,Predicate& pr)
@@ -7081,10 +6303,6 @@ namespace boost {
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
 
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-      using stats = typename table_type::stats;
-#endif
-
       unordered_flat_set() : unordered_flat_set(0) {}
 
       explicit unordered_flat_set(size_type n, hasher const& h = hasher(),
@@ -7494,14 +6712,6 @@ namespace boost {
       void rehash(size_type n) { table_.rehash(n); }
 
       void reserve(size_type n) { table_.reserve(n); }
-
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-      /// Stats
-      ///
-      stats get_stats() const { return table_.get_stats(); }
-
-      void reset_stats() noexcept { table_.reset_stats(); }
-#endif
 
       /// Observers
       ///
@@ -8923,10 +8133,6 @@ namespace boost {
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
 
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-      using stats = typename table_type::stats;
-#endif
-
       unordered_flat_map() : unordered_flat_map(0) {}
 
       explicit unordered_flat_map(size_type n, hasher const& h = hasher(),
@@ -9512,14 +8718,6 @@ namespace boost {
       void rehash(size_type n) { table_.rehash(n); }
 
       void reserve(size_type n) { table_.reserve(n); }
-
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-      /// Stats
-      ///
-      stats get_stats() const { return table_.get_stats(); }
-
-      void reset_stats() noexcept { table_.reset_stats(); }
-#endif
 
       /// Observers
       ///
@@ -10343,10 +9541,6 @@ namespace boost {
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;
 
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-      using stats = typename table_type::stats;
-#endif
-
       unordered_node_set() : unordered_node_set(0) {}
 
       explicit unordered_node_set(size_type n, hasher const& h = hasher(),
@@ -10823,14 +10017,6 @@ namespace boost {
       void rehash(size_type n) { table_.rehash(n); }
 
       void reserve(size_type n) { table_.reserve(n); }
-
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-      /// Stats
-      ///
-      stats get_stats() const { return table_.get_stats(); }
-
-      void reset_stats() noexcept { table_.reset_stats(); }
-#endif
 
       /// Observers
       ///
@@ -11330,10 +10516,6 @@ namespace boost {
           typename map_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;
-
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-      using stats = typename table_type::stats;
-#endif
 
       unordered_node_map() : unordered_node_map(0) {}
 
@@ -11987,14 +11169,6 @@ namespace boost {
       void rehash(size_type n) { table_.rehash(n); }
 
       void reserve(size_type n) { table_.reserve(n); }
-
-#ifdef BOOST_UNORDERED_ENABLE_STATS
-      /// Stats
-      ///
-      stats get_stats() const { return table_.get_stats(); }
-
-      void reset_stats() noexcept { table_.reset_stats(); }
-#endif
 
       /// Observers
       ///

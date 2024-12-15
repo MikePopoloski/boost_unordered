@@ -1,7 +1,7 @@
 #wget https://boostorg.jfrog.io/artifactory/main/release/1.85.0/source/boost_1_87_0.tar.gz
 #tar -xvf boost_1_87_0.tar.gz
 mkdir temp_boost
-bcp --boost=boost_1_87_0 boost/unordered/unordered_flat_map.hpp boost/unordered/unordered_flat_set.hpp boost/unordered/unordered_node_map.hpp boost/unordered/unordered_node_set.hpp temp_boost
+bcp --boost=../boost_1_87_0 boost/unordered/unordered_flat_map.hpp boost/unordered/unordered_flat_set.hpp boost/unordered/unordered_node_map.hpp boost/unordered/unordered_node_set.hpp temp_boost
 
 cd temp_boost/boost
 rm version.hpp
@@ -31,7 +31,7 @@ rm -rf mp11
 
 cp ../../include/boost/minconfig.hpp .
 
-coan source -R '-DBOOST_WORKAROUND(a,b)=0' -DBOOST_HAS_PRAGMA_ONCE -UBOOST_NO_CXX11_DEFAULTED_FUNCTIONS -UBOOST_NO_CXX11_RVALUE_REFERENCES -UBOOST_NO_CXX11_VARIADIC_TEMPLATES -UBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION .
+coan source -R '-DBOOST_WORKAROUND(a,b)=0' -DBOOST_HAS_PRAGMA_ONCE -UBOOST_NO_CXX11_DEFAULTED_FUNCTIONS -UBOOST_NO_CXX11_RVALUE_REFERENCES -UBOOST_NO_CXX11_VARIADIC_TEMPLATES -UBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION -UBOOST_UNORDERED_ENABLE_STATS .
 
 find . -name '*.hpp' -exec gsed -i 's/<boost\/config.hpp>/<boost\/minconfig.hpp>/g' {} \;
 
@@ -49,8 +49,6 @@ find . -name '*.hpp' -exec gsed -i '/serialize_tracked_address.hpp/d' {} \;
 find . -name '*.hpp' -exec gsed -i '/serialize_container.hpp/d' {} \;
 find . -name '*.hpp' -exec gsed -i '/friend class boost::serialization/d' {} \;
 find . -name '*.hpp' -exec gsed -i '/detail::serialize_container/d' {} \;
-find . -name '*.hpp' -exec gsed -i '/boost\/mp11\/tuple.hpp/d' {} \;
-find . -name '*.hpp' -exec gsed -i '/boost\/config\/pragma_message.hpp/d' {} \;
 
 find . -name '*.hpp' -exec gsed -i 's/BOOST_CONSTEXPR/constexpr/g' {} \;
 find . -name '*.hpp' -exec gsed -i 's/BOOST_CXX14_CONSTEXPR/constexpr/g' {} \;
