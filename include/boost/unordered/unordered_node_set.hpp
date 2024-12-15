@@ -1,4 +1,5 @@
 // Copyright (C) 2022-2023 Christian Mazakas
+// Copyright (C) 2024 Joaquin M Lopez Munoz
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -8,8 +9,9 @@
 #include <boost/minconfig.hpp>
 #pragma once
 
+#include <boost/unordered/concurrent_node_set_fwd.hpp>
 #include <boost/unordered/detail/foa/element_type.hpp>
-#include <boost/unordered/detail/foa/node_handle.hpp>
+#include <boost/unordered/detail/foa/node_set_handle.hpp>
 #include <boost/unordered/detail/foa/node_set_types.hpp>
 #include <boost/unordered/detail/foa/table.hpp>
 #include <boost/unordered/detail/type_traits.hpp>
@@ -31,37 +33,12 @@ namespace boost {
 #pragma warning(disable : 4714) /* marked as __forceinline not inlined */
 #endif
 
-    namespace detail {
-      template <class TypePolicy, class Allocator>
-      struct node_set_handle
-          : public detail::foa::node_handle_base<TypePolicy, Allocator>
-      {
-      private:
-        using base_type = detail::foa::node_handle_base<TypePolicy, Allocator>;
-
-        using typename base_type::type_policy;
-
-        template <class Key, class Hash, class Pred, class Alloc>
-        friend class boost::unordered::unordered_node_set;
-
-      public:
-        using value_type = typename TypePolicy::value_type;
-
-        constexpr node_set_handle() noexcept = default;
-        node_set_handle(node_set_handle&& nh) noexcept = default;
-        node_set_handle& operator=(node_set_handle&&) noexcept = default;
-
-        value_type& value() const
-        {
-          BOOST_ASSERT(!this->empty());
-          return const_cast<value_type&>(this->data());
-        }
-      };
-    } // namespace detail
-
     template <class Key, class Hash, class KeyEqual, class Allocator>
     class unordered_node_set
     {
+      template <class Key2, class Hash2, class Pred2, class Allocator2>
+      friend class concurrent_node_set;
+
       using set_types = detail::foa::node_set_types<Key,
         typename std::allocator_traits<Allocator>::void_pointer>;
 
@@ -95,11 +72,15 @@ namespace boost {
         typename std::allocator_traits<allocator_type>::const_pointer;
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
-      using node_type = detail::node_set_handle<set_types,
+      using node_type = detail::foa::node_set_handle<set_types,
         typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename set_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;
+
+#if defined(BOOST_UNORDERED_ENABLE_STATS)
+      using stats = typename table_type::stats;
+#endif
 
       unordered_node_set() : unordered_node_set(0) {}
 
@@ -202,6 +183,13 @@ namespace boost {
       {
       }
 
+      template <bool avoid_explicit_instantiation = true>
+      unordered_node_set(
+        concurrent_node_set<Key, Hash, KeyEqual, Allocator>&& other)
+          : table_(std::move(other.table_))
+      {
+      }
+
       ~unordered_node_set() = default;
 
       unordered_node_set& operator=(unordered_node_set const& other)
@@ -214,6 +202,13 @@ namespace boost {
         noexcept(std::declval<table_type&>() = std::declval<table_type&&>()))
       {
         table_ = std::move(other.table_);
+        return *this;
+      }
+
+      unordered_node_set& operator=(std::initializer_list<value_type> il)
+      {
+        this->clear();
+        this->insert(il.begin(), il.end());
         return *this;
       }
 
@@ -304,15 +299,17 @@ namespace boost {
 
       insert_return_type insert(node_type&& nh)
       {
+        using access = detail::foa::node_handle_access;
+
         if (nh.empty()) {
           return {end(), false, node_type{}};
         }
 
         BOOST_ASSERT(get_allocator() == nh.get_allocator());
 
-        auto itp = table_.insert(std::move(nh.element()));
+        auto itp = table_.insert(std::move(access::element(nh)));
         if (itp.second) {
-          nh.reset();
+          access::reset(nh);
           return {itp.first, true, node_type{}};
         } else {
           return {itp.first, false, std::move(nh)};
@@ -321,15 +318,17 @@ namespace boost {
 
       iterator insert(const_iterator, node_type&& nh)
       {
+        using access = detail::foa::node_handle_access;
+
         if (nh.empty()) {
           return end();
         }
 
         BOOST_ASSERT(get_allocator() == nh.get_allocator());
 
-        auto itp = table_.insert(std::move(nh.element()));
+        auto itp = table_.insert(std::move(access::element(nh)));
         if (itp.second) {
-          nh.reset();
+          access::reset(nh);
           return itp.first;
         } else {
           return itp.first;
@@ -387,7 +386,8 @@ namespace boost {
         BOOST_ASSERT(pos != end());
         node_type nh;
         auto elem = table_.extract(pos);
-        nh.emplace(std::move(elem), get_allocator());
+        detail::foa::node_handle_emplacer(nh)(
+          std::move(elem), get_allocator());
         return nh;
       }
 
@@ -558,6 +558,14 @@ namespace boost {
       void rehash(size_type n) { table_.rehash(n); }
 
       void reserve(size_type n) { table_.reserve(n); }
+
+#if defined(BOOST_UNORDERED_ENABLE_STATS)
+      /// Stats
+      ///
+      stats get_stats() const { return table_.get_stats(); }
+
+      void reset_stats() noexcept { table_.reset_stats(); }
+#endif
 
       /// Observers
       ///

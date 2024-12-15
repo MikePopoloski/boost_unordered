@@ -1,7 +1,7 @@
-/* Fast open-addressing concurrent hashset.
+/* Fast open-addressing, node-based concurrent hashset.
  *
  * Copyright 2023 Christian Mazakas.
- * Copyright 2023 Joaquin M Lopez Munoz.
+ * Copyright 2023-2024 Joaquin M Lopez Munoz.
  * Copyright 2024 Braden Ganetsky.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
@@ -10,8 +10,8 @@
  * See https://www.boost.org/libs/unordered for library home page.
  */
 
-#ifndef BOOST_UNORDERED_CONCURRENT_FLAT_SET_FWD_HPP
-#define BOOST_UNORDERED_CONCURRENT_FLAT_SET_FWD_HPP
+#ifndef BOOST_UNORDERED_CONCURRENT_NODE_SET_FWD_HPP
+#define BOOST_UNORDERED_CONCURRENT_NODE_SET_FWD_HPP
 
 #include <boost/minconfig.hpp>
 #include <boost/container_hash/hash_fwd.hpp>
@@ -29,39 +29,39 @@ namespace boost {
     template <class Key, class Hash = boost::hash<Key>,
       class Pred = std::equal_to<Key>,
       class Allocator = std::allocator<Key> >
-    class concurrent_flat_set;
+    class concurrent_node_set;
 
     template <class Key, class Hash, class KeyEqual, class Allocator>
     bool operator==(
-      concurrent_flat_set<Key, Hash, KeyEqual, Allocator> const& lhs,
-      concurrent_flat_set<Key, Hash, KeyEqual, Allocator> const& rhs);
+      concurrent_node_set<Key, Hash, KeyEqual, Allocator> const& lhs,
+      concurrent_node_set<Key, Hash, KeyEqual, Allocator> const& rhs);
 
     template <class Key, class Hash, class KeyEqual, class Allocator>
     bool operator!=(
-      concurrent_flat_set<Key, Hash, KeyEqual, Allocator> const& lhs,
-      concurrent_flat_set<Key, Hash, KeyEqual, Allocator> const& rhs);
+      concurrent_node_set<Key, Hash, KeyEqual, Allocator> const& lhs,
+      concurrent_node_set<Key, Hash, KeyEqual, Allocator> const& rhs);
 
     template <class Key, class Hash, class Pred, class Alloc>
-    void swap(concurrent_flat_set<Key, Hash, Pred, Alloc>& x,
-      concurrent_flat_set<Key, Hash, Pred, Alloc>& y)
+    void swap(concurrent_node_set<Key, Hash, Pred, Alloc>& x,
+      concurrent_node_set<Key, Hash, Pred, Alloc>& y)
       noexcept(noexcept(x.swap(y)));
 
     template <class K, class H, class P, class A, class Predicate>
-    typename concurrent_flat_set<K, H, P, A>::size_type erase_if(
-      concurrent_flat_set<K, H, P, A>& c, Predicate pred);
+    typename concurrent_node_set<K, H, P, A>::size_type erase_if(
+      concurrent_node_set<K, H, P, A>& c, Predicate pred);
 
 #ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
     namespace pmr {
       template <class Key, class Hash = boost::hash<Key>,
         class Pred = std::equal_to<Key> >
-      using concurrent_flat_set = boost::unordered::concurrent_flat_set<Key,
+      using concurrent_node_set = boost::unordered::concurrent_node_set<Key,
         Hash, Pred, std::pmr::polymorphic_allocator<Key> >;
     } // namespace pmr
 #endif
 
   } // namespace unordered
 
-  using boost::unordered::concurrent_flat_set;
+  using boost::unordered::concurrent_node_set;
 } // namespace boost
 
-#endif // BOOST_UNORDERED_CONCURRENT_FLAT_SET_FWD_HPP
+#endif // BOOST_UNORDERED_CONCURRENT_NODE_SET_FWD_HPP

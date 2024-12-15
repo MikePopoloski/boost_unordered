@@ -72,20 +72,48 @@ private:
     T value_;
 };
 
+#if defined(BOOST_MSVC)
+/*
+This is a workaround to an MSVC bug when T is a nested class:
+https://developercommunity.visualstudio.com/t/Compiler-bug:-Incorrect-C2247-and-C2248/10690025
+*/
+namespace detail {
+
+template<class T>
+class empty_value_base
+    : public T {
+public:
+    empty_value_base() = default;
+
+    template<class U, class... Args>
+    constexpr empty_value_base(U&& value, Args&&... args)
+        : T(std::forward<U>(value), std::forward<Args>(args)...) { }
+};
+
+} /* detail */
+#endif
+
 template<class T, unsigned N>
 class empty_value<T, N, true>
+#if defined(BOOST_MSVC)
+    : detail::empty_value_base<T> {
+    typedef detail::empty_value_base<T> empty_base_;
+#else
     : T {
+    typedef T empty_base_;
+#endif
+
 public:
     typedef T type;
 
     empty_value() = default;
 
     constexpr empty_value(boost::empty_init_t)
-        : T() { }
+        : empty_base_() { }
 
     template<class U, class... Args>
     constexpr empty_value(boost::empty_init_t, U&& value, Args&&... args)
-        : T(std::forward<U>(value), std::forward<Args>(args)...) { }
+        : empty_base_(std::forward<U>(value), std::forward<Args>(args)...) { }
 
     constexpr const T& get() const noexcept {
         return *this;

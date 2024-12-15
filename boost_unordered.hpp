@@ -29,6 +29,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #pragma once
 
+#include <atomic>
 #include <bit>
 #include <climits>
 #include <cmath>
@@ -221,6 +222,7 @@ template<class It> std::size_t hash_unordered_range( It, It );
  *
  * Copyright 2023 Christian Mazakas.
  * Copyright 2023 Joaquin M Lopez Munoz.
+ * Copyright 2024 Braden Ganetsky.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -230,6 +232,10 @@ template<class It> std::size_t hash_unordered_range( It, It );
 
 #ifndef BOOST_UNORDERED_CONCURRENT_FLAT_SET_FWD_HPP
 #define BOOST_UNORDERED_CONCURRENT_FLAT_SET_FWD_HPP
+
+#ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
+#include <memory_resource>
+#endif
 
 namespace boost {
   namespace unordered {
@@ -258,12 +264,188 @@ namespace boost {
     typename concurrent_flat_set<K, H, P, A>::size_type erase_if(
       concurrent_flat_set<K, H, P, A>& c, Predicate pred);
 
+#ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
+    namespace pmr {
+      template <class Key, class Hash = boost::hash<Key>,
+        class Pred = std::equal_to<Key> >
+      using concurrent_flat_set = boost::unordered::concurrent_flat_set<Key,
+        Hash, Pred, std::pmr::polymorphic_allocator<Key> >;
+    } // namespace pmr
+#endif
+
   } // namespace unordered
 
   using boost::unordered::concurrent_flat_set;
 } // namespace boost
 
 #endif // BOOST_UNORDERED_CONCURRENT_FLAT_SET_FWD_HPP
+// Copyright (C) 2024 Braden Ganetsky
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#ifndef BOOST_UNORDERED_DETAIL_FOA_TYPES_CONSTRUCTIBILITY_HPP
+#define BOOST_UNORDERED_DETAIL_FOA_TYPES_CONSTRUCTIBILITY_HPP
+
+namespace boost {
+  namespace unordered {
+    namespace detail {
+      namespace foa {
+        template <class Key, class... Args> struct check_key_type_t
+        {
+          static_assert(std::is_constructible<Key, Args...>::value,
+            "key_type must be constructible from Args");
+        };
+        template <class Key> struct check_key_type_t<Key>
+        {
+          static_assert(std::is_constructible<Key>::value,
+            "key_type must be default constructible");
+        };
+        template <class Key> struct check_key_type_t<Key, const Key&>
+        {
+          static_assert(std::is_constructible<Key, const Key&>::value,
+            "key_type must be copy constructible");
+        };
+        template <class Key> struct check_key_type_t<Key, Key&&>
+        {
+          static_assert(std::is_constructible<Key, Key&&>::value,
+            "key_type must be move constructible");
+        };
+
+        template <class Mapped, class... Args> struct check_mapped_type_t
+        {
+          static_assert(std::is_constructible<Mapped, Args...>::value,
+            "mapped_type must be constructible from Args");
+        };
+        template <class Mapped> struct check_mapped_type_t<Mapped>
+        {
+          static_assert(std::is_constructible<Mapped>::value,
+            "mapped_type must be default constructible");
+        };
+        template <class Mapped>
+        struct check_mapped_type_t<Mapped, const Mapped&>
+        {
+          static_assert(std::is_constructible<Mapped, const Mapped&>::value,
+            "mapped_type must be copy constructible");
+        };
+        template <class Mapped> struct check_mapped_type_t<Mapped, Mapped&&>
+        {
+          static_assert(std::is_constructible<Mapped, Mapped&&>::value,
+            "mapped_type must be move constructible");
+        };
+
+        template <class TypePolicy> struct map_types_constructibility
+        {
+          using key_type = typename TypePolicy::key_type;
+          using mapped_type = typename TypePolicy::mapped_type;
+          using init_type = typename TypePolicy::init_type;
+          using value_type = typename TypePolicy::value_type;
+
+          template <class A, class X, class... Args>
+          static void check(A&, X*, Args&&...)
+          {
+            // Pass through, as we cannot say anything about a general allocator
+          }
+
+          template <class... Args> static void check_key_type()
+          {
+            (void)check_key_type_t<key_type, Args...>{};
+          }
+          template <class... Args> static void check_mapped_type()
+          {
+            (void)check_mapped_type_t<mapped_type, Args...>{};
+          }
+
+          template <class Arg>
+          static void check(std::allocator<value_type>&, key_type*, Arg&&)
+          {
+            check_key_type<Arg&&>();
+          }
+
+          template <class Arg1, class Arg2>
+          static void check(
+            std::allocator<value_type>&, value_type*, Arg1&&, Arg2&&)
+          {
+            check_key_type<Arg1&&>();
+            check_mapped_type<Arg2&&>();
+          }
+          template <class Arg1, class Arg2>
+          static void check(std::allocator<value_type>&, value_type*,
+            const std::pair<Arg1, Arg2>&)
+          {
+            check_key_type<const Arg1&>();
+            check_mapped_type<const Arg2&>();
+          }
+          template <class Arg1, class Arg2>
+          static void check(
+            std::allocator<value_type>&, value_type*, std::pair<Arg1, Arg2>&&)
+          {
+            check_key_type<Arg1&&>();
+            check_mapped_type<Arg2&&>();
+          }
+          template <class... Args1, class... Args2>
+          static void check(std::allocator<value_type>&, value_type*,
+            std::piecewise_construct_t, std::tuple<Args1...>&&,
+            std::tuple<Args2...>&&)
+          {
+            check_key_type<Args1&&...>();
+            check_mapped_type<Args2&&...>();
+          }
+
+          template <class Arg1, class Arg2>
+          static void check(
+            std::allocator<value_type>&, init_type*, Arg1&&, Arg2&&)
+          {
+            check_key_type<Arg1&&>();
+            check_mapped_type<Arg2&&>();
+          }
+          template <class Arg1, class Arg2>
+          static void check(std::allocator<value_type>&, init_type*,
+            const std::pair<Arg1, Arg2>&)
+          {
+            check_key_type<const Arg1&>();
+            check_mapped_type<const Arg2&>();
+          }
+          template <class Arg1, class Arg2>
+          static void check(
+            std::allocator<value_type>&, init_type*, std::pair<Arg1, Arg2>&&)
+          {
+            check_key_type<Arg1&&>();
+            check_mapped_type<Arg2&&>();
+          }
+          template <class... Args1, class... Args2>
+          static void check(std::allocator<value_type>&, init_type*,
+            std::piecewise_construct_t, std::tuple<Args1...>&&,
+            std::tuple<Args2...>&&)
+          {
+            check_key_type<Args1&&...>();
+            check_mapped_type<Args2&&...>();
+          }
+        };
+
+        template <class TypePolicy> struct set_types_constructibility
+        {
+          using key_type = typename TypePolicy::key_type;
+          using value_type = typename TypePolicy::value_type;
+          static_assert(std::is_same<key_type, value_type>::value, "");
+
+          template <class A, class X, class... Args>
+          static void check(A&, X*, Args&&...)
+          {
+            // Pass through, as we cannot say anything about a general allocator
+          }
+
+          template <class... Args>
+          static void check(std::allocator<value_type>&, key_type*, Args&&...)
+          {
+            (void)check_key_type_t<key_type, Args&&...>{};
+          }
+        };
+      } // namespace foa
+    } // namespace detail
+  } // namespace unordered
+} // namespace boost
+
+#endif // BOOST_UNORDERED_DETAIL_FOA_TYPES_CONSTRUCTIBILITY_HPP
 // Copyright (C) 2023 Christian Mazakas
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -285,6 +467,9 @@ namespace boost {
 
           using element_type = value_type;
 
+          using types = flat_set_types<Key>;
+          using constructibility_checker = set_types_constructibility<types>;
+
           static Key& value_from(element_type& x) { return x; }
 
           static element_type&& move(element_type& x) { return std::move(x); }
@@ -292,6 +477,7 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
+            constructibility_checker::check(al, p, std::forward<Args>(args)...);
             std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
@@ -301,8 +487,8 @@ namespace boost {
           }
         };
       } // namespace foa
-    }   // namespace detail
-  }     // namespace unordered
+    } // namespace detail
+  } // namespace unordered
 } // namespace boost
 
 #endif // BOOST_UNORDERED_DETAIL_FOA_FLAT_SET_TYPES_HPP
@@ -534,20 +720,48 @@ private:
     T value_;
 };
 
+#ifdef BOOST_MSVC
+/*
+This is a workaround to an MSVC bug when T is a nested class:
+https://developercommunity.visualstudio.com/t/Compiler-bug:-Incorrect-C2247-and-C2248/10690025
+*/
+namespace detail {
+
+template<class T>
+class empty_value_base
+    : public T {
+public:
+    empty_value_base() = default;
+
+    template<class U, class... Args>
+    constexpr empty_value_base(U&& value, Args&&... args)
+        : T(std::forward<U>(value), std::forward<Args>(args)...) { }
+};
+
+}
+#endif
+
 template<class T, unsigned N>
 class empty_value<T, N, true>
+#ifdef BOOST_MSVC
+    : detail::empty_value_base<T> {
+    typedef detail::empty_value_base<T> empty_base_;
+#else
     : T {
+    typedef T empty_base_;
+#endif
+
 public:
     typedef T type;
 
     empty_value() = default;
 
     constexpr empty_value(boost::empty_init_t)
-        : T() { }
+        : empty_base_() { }
 
     template<class U, class... Args>
     constexpr empty_value(boost::empty_init_t, U&& value, Args&&... args)
-        : T(std::forward<U>(value), std::forward<Args>(args)...) { }
+        : empty_base_(std::forward<U>(value), std::forward<Args>(args)...) { }
 
     constexpr const T& get() const noexcept {
         return *this;
@@ -1055,6 +1269,17 @@ namespace boost {
       using iter_to_alloc_t =
         typename std::pair<iter_key_t<T> const, iter_val_t<T> >;
 #endif
+
+#if BOOST_CXX_VERSION < 201703L
+      template <class T>
+      constexpr typename std::add_const<T>::type& as_const(T& t) noexcept
+      {
+        return t;
+      }
+      template <class T> void as_const(const T&&) = delete;
+#else
+      using std::as_const;
+#endif
     } // namespace detail
   } // namespace unordered
 } // namespace boost
@@ -1062,7 +1287,7 @@ namespace boost {
 #endif // BOOST_UNORDERED_DETAIL_TYPE_TRAITS_HPP
 /* Hash function characterization.
  *
- * Copyright 2022 Joaquin M Lopez Munoz.
+ * Copyright 2022-2024 Joaquin M Lopez Munoz.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -1079,12 +1304,34 @@ namespace unordered{
 namespace detail{
 
 template<typename Hash,typename=void>
-struct hash_is_avalanching_impl: std::false_type{};
+struct hash_is_avalanching_impl:std::false_type{};
+
+template<typename IsAvalanching>
+struct avalanching_value
+{
+  static constexpr bool value=IsAvalanching::value;
+};
+
+/* may be explicitly marked as BOOST_DEPRECATED in the future */
+template<> struct avalanching_value<void>
+{
+  static constexpr bool value=true;
+};
 
 template<typename Hash>
-struct hash_is_avalanching_impl<Hash,
-  boost::unordered::detail::void_t<typename Hash::is_avalanching> >:
-    std::true_type{};
+struct hash_is_avalanching_impl<
+  Hash,
+  boost::unordered::detail::void_t<typename Hash::is_avalanching>
+>:std::integral_constant<
+  bool,
+  avalanching_value<typename Hash::is_avalanching>::value
+>{};
+
+template<typename Hash>
+struct hash_is_avalanching_impl<
+  Hash,
+  typename std::enable_if<((void)Hash::is_avalanching,true)>::type
+>{};
 
 }
 
@@ -1092,12 +1339,1112 @@ struct hash_is_avalanching_impl<Hash,
  * when actual characterization differs from default.
  */
 
-/* hash_is_avalanching<Hash>::value is true when the type Hash::is_avalanching
- * is present, false otherwise.
+/* hash_is_avalanching<Hash>::value is:
+ *   - false if Hash::is_avalanching is not present.
+ *   - Hash::is_avalanching::value if this is present and constexpr-convertible
+ *     to a bool.
+ *   - true if Hash::is_avalanching is void (deprecated).
+ *   - ill-formed otherwise.
  */
 template<typename Hash>
 struct hash_is_avalanching: detail::hash_is_avalanching_impl<Hash>::type{};
 
+}
+}
+
+#endif
+// Copyright 2024 Braden Ganetsky
+// Distributed under the Boost Software License, Version 1.0.
+// https://www.boost.org/LICENSE_1_0.txt
+
+// Generated on 2024-08-25T17:48:54
+
+#ifndef BOOST_UNORDERED_UNORDERED_PRINTERS_HPP
+#define BOOST_UNORDERED_UNORDERED_PRINTERS_HPP
+
+#ifndef BOOST_ALL_NO_EMBEDDED_GDB_SCRIPTS
+#ifdef __ELF__
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Woverlength-strings"
+#endif
+__asm__(".pushsection \".debug_gdb_scripts\", \"MS\",@progbits,1\n"
+        ".ascii \"\\4gdb.inlined-script.BOOST_UNORDERED_UNORDERED_PRINTERS_HPP\\n\"\n"
+        ".ascii \"import gdb.printing\\n\"\n"
+        ".ascii \"import gdb.xmethod\\n\"\n"
+        ".ascii \"import re\\n\"\n"
+        ".ascii \"import math\\n\"\n"
+
+        ".ascii \"class BoostUnorderedHelpers:\\n\"\n"
+        ".ascii \"    def maybe_unwrap_atomic(n):\\n\"\n"
+        ".ascii \"        if f\\\"{n.type.strip_typedefs()}\\\".startswith(\\\"std::atomic<\\\"):\\n\"\n"
+        ".ascii \"            underlying_type = n.type.template_argument(0)\\n\"\n"
+        ".ascii \"            return n.cast(underlying_type)\\n\"\n"
+        ".ascii \"        else:\\n\"\n"
+        ".ascii \"            return n\\n\"\n"
+
+        ".ascii \"    def maybe_unwrap_foa_element(e):\\n\"\n"
+        ".ascii \"        if f\\\"{e.type.strip_typedefs()}\\\".startswith(\\\"boost::unordered::detail::foa::element_type<\\\"):\\n\"\n"
+        ".ascii \"            return e[\\\"p\\\"]\\n\"\n"
+        ".ascii \"        else:\\n\"\n"
+        ".ascii \"            return e\\n\"\n"
+
+        ".ascii \"    def maybe_unwrap_reference(value):\\n\"\n"
+        ".ascii \"        if value.type.code == gdb.TYPE_CODE_REF:\\n\"\n"
+        ".ascii \"            return value.referenced_value()\\n\"\n"
+        ".ascii \"        else:\\n\"\n"
+        ".ascii \"            return value\\n\"\n"
+
+        ".ascii \"    def countr_zero(n):\\n\"\n"
+        ".ascii \"        for i in range(32):\\n\"\n"
+        ".ascii \"            if (n & (1 << i)) != 0:\\n\"\n"
+        ".ascii \"                return i\\n\"\n"
+        ".ascii \"        return 32\\n\"\n"
+
+        ".ascii \"class BoostUnorderedPointerCustomizationPoint:\\n\"\n"
+        ".ascii \"    def __init__(self, any_ptr):\\n\"\n"
+        ".ascii \"        vis = gdb.default_visualizer(any_ptr)\\n\"\n"
+        ".ascii \"        if vis is None:\\n\"\n"
+        ".ascii \"            self.to_address = lambda ptr: ptr\\n\"\n"
+        ".ascii \"            self.next = lambda ptr, offset: ptr + offset\\n\"\n"
+        ".ascii \"        else:\\n\"\n"
+        ".ascii \"            self.to_address = lambda ptr: ptr if (ptr.type.code == gdb.TYPE_CODE_PTR) else type(vis).boost_to_address(ptr)\\n\"\n"
+        ".ascii \"            self.next = lambda ptr, offset: type(vis).boost_next(ptr, offset)\\n\"\n"
+
+        ".ascii \"class BoostUnorderedFcaPrinter:\\n\"\n"
+        ".ascii \"    def __init__(self, val):\\n\"\n"
+        ".ascii \"        self.val = BoostUnorderedHelpers.maybe_unwrap_reference(val)\\n\"\n"
+        ".ascii \"        self.name = f\\\"{self.val.type.strip_typedefs()}\\\".split(\\\"<\\\")[0]\\n\"\n"
+        ".ascii \"        self.name = self.name.replace(\\\"boost::unordered::\\\", \\\"boost::\\\")\\n\"\n"
+        ".ascii \"        self.is_map = self.name.endswith(\\\"map\\\")\\n\"\n"
+        ".ascii \"        self.cpo = BoostUnorderedPointerCustomizationPoint(self.val[\\\"table_\\\"][\\\"buckets_\\\"][\\\"buckets\\\"])\\n\"\n"
+
+        ".ascii \"    def to_string(self):\\n\"\n"
+        ".ascii \"        size = self.val[\\\"table_\\\"][\\\"size_\\\"]\\n\"\n"
+        ".ascii \"        return f\\\"{self.name} with {size} elements\\\"\\n\"\n"
+
+        ".ascii \"    def display_hint(self):\\n\"\n"
+        ".ascii \"        return \\\"map\\\"\\n\"\n"
+
+        ".ascii \"    def children(self):\\n\"\n"
+        ".ascii \"        def generator():\\n\"\n"
+        ".ascii \"            grouped_buckets = self.val[\\\"table_\\\"][\\\"buckets_\\\"]\\n\"\n"
+
+        ".ascii \"            size = grouped_buckets[\\\"size_\\\"]\\n\"\n"
+        ".ascii \"            buckets = grouped_buckets[\\\"buckets\\\"]\\n\"\n"
+        ".ascii \"            bucket_index = 0\\n\"\n"
+
+        ".ascii \"            count = 0\\n\"\n"
+        ".ascii \"            while bucket_index != size:\\n\"\n"
+        ".ascii \"                current_bucket = self.cpo.next(self.cpo.to_address(buckets), bucket_index)\\n\"\n"
+        ".ascii \"                node = self.cpo.to_address(current_bucket.dereference()[\\\"next\\\"])\\n\"\n"
+        ".ascii \"                while node != 0:\\n\"\n"
+        ".ascii \"                    value = node.dereference()[\\\"buf\\\"][\\\"t_\\\"]\\n\"\n"
+        ".ascii \"                    if self.is_map:\\n\"\n"
+        ".ascii \"                        first = value[\\\"first\\\"]\\n\"\n"
+        ".ascii \"                        second = value[\\\"second\\\"]\\n\"\n"
+        ".ascii \"                        yield \\\"\\\", first\\n\"\n"
+        ".ascii \"                        yield \\\"\\\", second\\n\"\n"
+        ".ascii \"                    else:\\n\"\n"
+        ".ascii \"                        yield \\\"\\\", count\\n\"\n"
+        ".ascii \"                        yield \\\"\\\", value\\n\"\n"
+        ".ascii \"                    count += 1\\n\"\n"
+        ".ascii \"                    node = self.cpo.to_address(node.dereference()[\\\"next\\\"])\\n\"\n"
+        ".ascii \"                bucket_index += 1\\n\"\n"
+
+        ".ascii \"        return generator()\\n\"\n"
+
+        ".ascii \"class BoostUnorderedFcaIteratorPrinter:\\n\"\n"
+        ".ascii \"    def __init__(self, val):\\n\"\n"
+        ".ascii \"        self.val = val\\n\"\n"
+        ".ascii \"        self.cpo = BoostUnorderedPointerCustomizationPoint(self.val[\\\"p\\\"])\\n\"\n"
+
+        ".ascii \"    def to_string(self):\\n\"\n"
+        ".ascii \"        if self.valid():\\n\"\n"
+        ".ascii \"            value = self.cpo.to_address(self.val[\\\"p\\\"]).dereference()[\\\"buf\\\"][\\\"t_\\\"]\\n\"\n"
+        ".ascii \"            return f\\\"iterator = {{ {value} }}\\\"\\n\"\n"
+        ".ascii \"        else:\\n\"\n"
+        ".ascii \"            return \\\"iterator = { end iterator }\\\"\\n\"\n"
+
+        ".ascii \"    def valid(self):\\n\"\n"
+        ".ascii \"        return (self.cpo.to_address(self.val[\\\"p\\\"]) != 0) and (self.cpo.to_address(self.val[\\\"itb\\\"][\\\"p\\\"]) != 0)\\n\"\n"
+
+        ".ascii \"class BoostUnorderedFoaTableCoreCumulativeStatsPrinter:\\n\"\n"
+        ".ascii \"    def __init__(self, val):\\n\"\n"
+        ".ascii \"        self.val = val\\n\"\n"
+
+        ".ascii \"    def to_string(self):\\n\"\n"
+        ".ascii \"        return \\\"[stats]\\\"\\n\"\n"
+
+        ".ascii \"    def display_hint(self):\\n\"\n"
+        ".ascii \"        return \\\"map\\\"\\n\"\n"
+
+        ".ascii \"    def children(self):\\n\"\n"
+        ".ascii \"        def generator():\\n\"\n"
+        ".ascii \"            members = [\\\"insertion\\\", \\\"successful_lookup\\\", \\\"unsuccessful_lookup\\\"]\\n\"\n"
+        ".ascii \"            for member in members:\\n\"\n"
+        ".ascii \"                yield \\\"\\\", member\\n\"\n"
+        ".ascii \"                yield \\\"\\\", self.val[member]\\n\"\n"
+        ".ascii \"        return generator()\\n\"\n"
+
+        ".ascii \"class BoostUnorderedFoaCumulativeStatsPrinter:\\n\"\n"
+        ".ascii \"    def __init__(self, val):\\n\"\n"
+        ".ascii \"        self.val = val\\n\"\n"
+        ".ascii \"        self.n = self.val[\\\"n\\\"]\\n\"\n"
+        ".ascii \"        self.N = self.val.type.template_argument(0)\\n\"\n"
+
+        ".ascii \"    def display_hint(self):\\n\"\n"
+        ".ascii \"        return \\\"map\\\"\\n\"\n"
+
+        ".ascii \"    def children(self):\\n\"\n"
+        ".ascii \"        def generator():\\n\"\n"
+        ".ascii \"            yield \\\"\\\", \\\"count\\\"\\n\"\n"
+        ".ascii \"            yield \\\"\\\", self.n\\n\"\n"
+
+        ".ascii \"            sequence_stats_data = gdb.lookup_type(\\\"boost::unordered::detail::foa::sequence_stats_data\\\")\\n\"\n"
+        ".ascii \"            data = self.val[\\\"data\\\"]\\n\"\n"
+        ".ascii \"            arr = data.address.reinterpret_cast(sequence_stats_data.pointer())\\n\"\n"
+        ".ascii \"            def build_string(idx):\\n\"\n"
+        ".ascii \"                entry = arr[idx]\\n\"\n"
+        ".ascii \"                avg = float(entry[\\\"m\\\"])\\n\"\n"
+        ".ascii \"                var = float(entry[\\\"s\\\"] / self.n) if (self.n != 0) else 0.0\\n\"\n"
+        ".ascii \"                dev = math.sqrt(var)\\n\"\n"
+        ".ascii \"                return f\\\"{{avg = {avg}, var = {var}, dev = {dev}}}\\\"\\n\"\n"
+
+        ".ascii \"            if self.N > 0:\\n\"\n"
+        ".ascii \"                yield \\\"\\\", \\\"probe_length\\\"\\n\"\n"
+        ".ascii \"                yield \\\"\\\", build_string(0)\\n\"\n"
+        ".ascii \"            if self.N > 1:\\n\"\n"
+        ".ascii \"                yield \\\"\\\", \\\"num_comparisons\\\"\\n\"\n"
+        ".ascii \"                yield \\\"\\\", build_string(1)\\n\"\n"
+
+        ".ascii \"        return generator()\\n\"\n"
+
+        ".ascii \"class BoostUnorderedFoaPrinter:\\n\"\n"
+        ".ascii \"    def __init__(self, val):\\n\"\n"
+        ".ascii \"        self.val = BoostUnorderedHelpers.maybe_unwrap_reference(val)\\n\"\n"
+        ".ascii \"        self.name = f\\\"{self.val.type.strip_typedefs()}\\\".split(\\\"<\\\")[0]\\n\"\n"
+        ".ascii \"        self.name = self.name.replace(\\\"boost::unordered::\\\", \\\"boost::\\\")\\n\"\n"
+        ".ascii \"        self.is_map = self.name.endswith(\\\"map\\\")\\n\"\n"
+        ".ascii \"        self.cpo = BoostUnorderedPointerCustomizationPoint(self.val[\\\"table_\\\"][\\\"arrays\\\"][\\\"groups_\\\"])\\n\"\n"
+
+        ".ascii \"    def to_string(self):\\n\"\n"
+        ".ascii \"        size = BoostUnorderedHelpers.maybe_unwrap_atomic(self.val[\\\"table_\\\"][\\\"size_ctrl\\\"][\\\"size\\\"])\\n\"\n"
+        ".ascii \"        return f\\\"{self.name} with {size} elements\\\"\\n\"\n"
+
+        ".ascii \"    def display_hint(self):\\n\"\n"
+        ".ascii \"        return \\\"map\\\"\\n\"\n"
+
+        ".ascii \"    def is_regular_layout(self, group):\\n\"\n"
+        ".ascii \"        typename = group[\\\"m\\\"].type.strip_typedefs()\\n\"\n"
+        ".ascii \"        array_size = typename.sizeof // typename.target().sizeof\\n\"\n"
+        ".ascii \"        if array_size == 16:\\n\"\n"
+        ".ascii \"            return True\\n\"\n"
+        ".ascii \"        elif array_size == 2:\\n\"\n"
+        ".ascii \"            return False\\n\"\n"
+
+        ".ascii \"    def match_occupied(self, group):\\n\"\n"
+        ".ascii \"        m = group[\\\"m\\\"]\\n\"\n"
+        ".ascii \"        at = lambda b: BoostUnorderedHelpers.maybe_unwrap_atomic(m[b][\\\"n\\\"])\\n\"\n"
+
+        ".ascii \"        if self.is_regular_layout(group):\\n\"\n"
+        ".ascii \"            bits = [1 << b for b in range(16) if at(b) == 0]\\n\"\n"
+        ".ascii \"            return 0x7FFF & ~sum(bits)\\n\"\n"
+        ".ascii \"        else:\\n\"\n"
+        ".ascii \"            xx = at(0) | at(1)\\n\"\n"
+        ".ascii \"            yy = xx | (xx >> 32)\\n\"\n"
+        ".ascii \"            return 0x7FFF & (yy | (yy >> 16))\\n\"\n"
+
+        ".ascii \"    def is_sentinel(self, group, pos):\\n\"\n"
+        ".ascii \"        m = group[\\\"m\\\"]\\n\"\n"
+        ".ascii \"        at = lambda b: BoostUnorderedHelpers.maybe_unwrap_atomic(m[b][\\\"n\\\"])\\n\"\n"
+
+        ".ascii \"        N = group[\\\"N\\\"]\\n\"\n"
+        ".ascii \"        sentinel_ = group[\\\"sentinel_\\\"]\\n\"\n"
+        ".ascii \"        if self.is_regular_layout(group):\\n\"\n"
+        ".ascii \"            return pos == N-1 and at(N-1) == sentinel_\\n\"\n"
+        ".ascii \"        else:\\n\"\n"
+        ".ascii \"            return pos == N-1 and (at(0) & 0x4000400040004000) == 0x4000 and (at(1) & 0x4000400040004000) == 0\\n\"\n"
+
+        ".ascii \"    def children(self):\\n\"\n"
+        ".ascii \"        def generator():\\n\"\n"
+        ".ascii \"            table = self.val[\\\"table_\\\"]\\n\"\n"
+        ".ascii \"            groups = self.cpo.to_address(table[\\\"arrays\\\"][\\\"groups_\\\"])\\n\"\n"
+        ".ascii \"            elements = self.cpo.to_address(table[\\\"arrays\\\"][\\\"elements_\\\"])\\n\"\n"
+
+        ".ascii \"            pc_ = groups.cast(gdb.lookup_type(\\\"unsigned char\\\").pointer())\\n\"\n"
+        ".ascii \"            p_ = elements\\n\"\n"
+        ".ascii \"            first_time = True\\n\"\n"
+        ".ascii \"            mask = 0\\n\"\n"
+        ".ascii \"            n0 = 0\\n\"\n"
+        ".ascii \"            n = 0\\n\"\n"
+
+        ".ascii \"            count = 0\\n\"\n"
+        ".ascii \"            while p_ != 0:\\n\"\n"
+        ".ascii \"                # This if block mirrors the condition in the begin() call\\n\"\n"
+        ".ascii \"                if (not first_time) or (self.match_occupied(groups.dereference()) & 1):\\n\"\n"
+        ".ascii \"                    pointer = BoostUnorderedHelpers.maybe_unwrap_foa_element(p_)\\n\"\n"
+        ".ascii \"                    value = self.cpo.to_address(pointer).dereference()\\n\"\n"
+        ".ascii \"                    if self.is_map:\\n\"\n"
+        ".ascii \"                        first = value[\\\"first\\\"]\\n\"\n"
+        ".ascii \"                        second = value[\\\"second\\\"]\\n\"\n"
+        ".ascii \"                        yield \\\"\\\", first\\n\"\n"
+        ".ascii \"                        yield \\\"\\\", second\\n\"\n"
+        ".ascii \"                    else:\\n\"\n"
+        ".ascii \"                        yield \\\"\\\", count\\n\"\n"
+        ".ascii \"                        yield \\\"\\\", value\\n\"\n"
+        ".ascii \"                    count += 1\\n\"\n"
+        ".ascii \"                first_time = False\\n\"\n"
+
+        ".ascii \"                n0 = pc_.cast(gdb.lookup_type(\\\"uintptr_t\\\")) % groups.dereference().type.sizeof\\n\"\n"
+        ".ascii \"                pc_ = self.cpo.next(pc_, -n0)\\n\"\n"
+
+        ".ascii \"                mask = (self.match_occupied(pc_.cast(groups.type).dereference()) >> (n0+1)) << (n0+1)\\n\"\n"
+        ".ascii \"                while mask == 0:\\n\"\n"
+        ".ascii \"                    pc_ = self.cpo.next(pc_, groups.dereference().type.sizeof)\\n\"\n"
+        ".ascii \"                    p_ = self.cpo.next(p_, groups.dereference()[\\\"N\\\"])\\n\"\n"
+        ".ascii \"                    mask = self.match_occupied(pc_.cast(groups.type).dereference())\\n\"\n"
+
+        ".ascii \"                n = BoostUnorderedHelpers.countr_zero(mask)\\n\"\n"
+        ".ascii \"                if self.is_sentinel(pc_.cast(groups.type).dereference(), n):\\n\"\n"
+        ".ascii \"                    p_ = 0\\n\"\n"
+        ".ascii \"                else:\\n\"\n"
+        ".ascii \"                    pc_ = self.cpo.next(pc_, n)\\n\"\n"
+        ".ascii \"                    p_ = self.cpo.next(p_, n - n0)\\n\"\n"
+
+        ".ascii \"        return generator()\\n\"\n"
+
+        ".ascii \"class BoostUnorderedFoaIteratorPrinter:\\n\"\n"
+        ".ascii \"    def __init__(self, val):\\n\"\n"
+        ".ascii \"        self.val = val\\n\"\n"
+        ".ascii \"        self.cpo = BoostUnorderedPointerCustomizationPoint(self.val[\\\"p_\\\"])\\n\"\n"
+
+        ".ascii \"    def to_string(self):\\n\"\n"
+        ".ascii \"        if self.valid():\\n\"\n"
+        ".ascii \"            element = self.cpo.to_address(self.val[\\\"p_\\\"])\\n\"\n"
+        ".ascii \"            pointer = BoostUnorderedHelpers.maybe_unwrap_foa_element(element)\\n\"\n"
+        ".ascii \"            value = self.cpo.to_address(pointer).dereference()\\n\"\n"
+        ".ascii \"            return f\\\"iterator = {{ {value} }}\\\"\\n\"\n"
+        ".ascii \"        else:\\n\"\n"
+        ".ascii \"            return \\\"iterator = { end iterator }\\\"\\n\"\n"
+
+        ".ascii \"    def valid(self):\\n\"\n"
+        ".ascii \"        return (self.cpo.to_address(self.val[\\\"p_\\\"]) != 0) and (self.cpo.to_address(self.val[\\\"pc_\\\"]) != 0)\\n\"\n"
+
+        ".ascii \"def boost_unordered_build_pretty_printer():\\n\"\n"
+        ".ascii \"    pp = gdb.printing.RegexpCollectionPrettyPrinter(\\\"boost_unordered\\\")\\n\"\n"
+        ".ascii \"    add_template_printer = lambda name, printer: pp.add_printer(name, f\\\"^{name}<.*>$\\\", printer)\\n\"\n"
+        ".ascii \"    add_concrete_printer = lambda name, printer: pp.add_printer(name, f\\\"^{name}$\\\", printer)\\n\"\n"
+
+        ".ascii \"    add_template_printer(\\\"boost::unordered::unordered_map\\\", BoostUnorderedFcaPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::unordered_multimap\\\", BoostUnorderedFcaPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::unordered_set\\\", BoostUnorderedFcaPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::unordered_multiset\\\", BoostUnorderedFcaPrinter)\\n\"\n"
+
+        ".ascii \"    add_template_printer(\\\"boost::unordered::detail::iterator_detail::iterator\\\", BoostUnorderedFcaIteratorPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::detail::iterator_detail::c_iterator\\\", BoostUnorderedFcaIteratorPrinter)\\n\"\n"
+
+        ".ascii \"    add_template_printer(\\\"boost::unordered::unordered_flat_map\\\", BoostUnorderedFoaPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::unordered_flat_set\\\", BoostUnorderedFoaPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::unordered_node_map\\\", BoostUnorderedFoaPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::unordered_node_set\\\", BoostUnorderedFoaPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::concurrent_flat_map\\\", BoostUnorderedFoaPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::concurrent_flat_set\\\", BoostUnorderedFoaPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::concurrent_node_map\\\", BoostUnorderedFoaPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::concurrent_node_set\\\", BoostUnorderedFoaPrinter)\\n\"\n"
+
+        ".ascii \"    add_template_printer(\\\"boost::unordered::detail::foa::table_iterator\\\", BoostUnorderedFoaIteratorPrinter)\\n\"\n"
+
+        ".ascii \"    add_concrete_printer(\\\"boost::unordered::detail::foa::table_core_cumulative_stats\\\", BoostUnorderedFoaTableCoreCumulativeStatsPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::detail::foa::cumulative_stats\\\", BoostUnorderedFoaCumulativeStatsPrinter)\\n\"\n"
+        ".ascii \"    add_template_printer(\\\"boost::unordered::detail::foa::concurrent_cumulative_stats\\\", BoostUnorderedFoaCumulativeStatsPrinter)\\n\"\n"
+
+        ".ascii \"    return pp\\n\"\n"
+
+        ".ascii \"gdb.printing.register_pretty_printer(gdb.current_objfile(), boost_unordered_build_pretty_printer())\\n\"\n"
+
+        ".ascii \"# https://sourceware.org/gdb/current/onlinedocs/gdb.html/Writing-an-Xmethod.html\\n\"\n"
+        ".ascii \"class BoostUnorderedFoaGetStatsMethod(gdb.xmethod.XMethod):\\n\"\n"
+        ".ascii \"    def __init__(self):\\n\"\n"
+        ".ascii \"        gdb.xmethod.XMethod.__init__(self, \\\"get_stats\\\")\\n\"\n"
+
+        ".ascii \"    def get_worker(self, method_name):\\n\"\n"
+        ".ascii \"        if method_name == \\\"get_stats\\\":\\n\"\n"
+        ".ascii \"            return BoostUnorderedFoaGetStatsWorker()\\n\"\n"
+
+        ".ascii \"class BoostUnorderedFoaGetStatsWorker(gdb.xmethod.XMethodWorker):\\n\"\n"
+        ".ascii \"    def get_arg_types(self):\\n\"\n"
+        ".ascii \"        return None\\n\"\n"
+
+        ".ascii \"    def get_result_type(self, obj):\\n\"\n"
+        ".ascii \"        return gdb.lookup_type(\\\"boost::unordered::detail::foa::table_core_cumulative_stats\\\")\\n\"\n"
+
+        ".ascii \"    def __call__(self, obj):\\n\"\n"
+        ".ascii \"        try:\\n\"\n"
+        ".ascii \"            return obj[\\\"table_\\\"][\\\"cstats\\\"]\\n\"\n"
+        ".ascii \"        except gdb.error:\\n\"\n"
+        ".ascii \"            print(\\\"Error: Binary was compiled without stats. Recompile with `BOOST_UNORDERED_ENABLE_STATS` defined.\\\")\\n\"\n"
+        ".ascii \"            return\\n\"\n"
+
+        ".ascii \"class BoostUnorderedFoaMatcher(gdb.xmethod.XMethodMatcher):\\n\"\n"
+        ".ascii \"    def __init__(self):\\n\"\n"
+        ".ascii \"        gdb.xmethod.XMethodMatcher.__init__(self, 'BoostUnorderedFoaMatcher')\\n\"\n"
+        ".ascii \"        self.methods = [BoostUnorderedFoaGetStatsMethod()]\\n\"\n"
+
+        ".ascii \"    def match(self, class_type, method_name):\\n\"\n"
+        ".ascii \"        template_name = f\\\"{class_type.strip_typedefs()}\\\".split(\\\"<\\\")[0]\\n\"\n"
+        ".ascii \"        regex = \\\"^boost::unordered::(unordered|concurrent)_(flat|node)_(map|set)$\\\"\\n\"\n"
+        ".ascii \"        if not re.match(regex, template_name):\\n\"\n"
+        ".ascii \"            return None\\n\"\n"
+
+        ".ascii \"        workers = []\\n\"\n"
+        ".ascii \"        for method in self.methods:\\n\"\n"
+        ".ascii \"            if method.enabled:\\n\"\n"
+        ".ascii \"                worker = method.get_worker(method_name)\\n\"\n"
+        ".ascii \"                if worker:\\n\"\n"
+        ".ascii \"                    workers.append(worker)\\n\"\n"
+        ".ascii \"        return workers\\n\"\n"
+
+        ".ascii \"gdb.xmethod.register_xmethod_matcher(None, BoostUnorderedFoaMatcher())\\n\"\n"
+
+        ".ascii \"\\\"\\\"\\\" Fancy pointer support \\\"\\\"\\\"\\n\"\n"
+
+        ".ascii \"\\\"\\\"\\\"\\n\"\n"
+        ".ascii \"To allow your own fancy pointer type to interact with Boost.Unordered GDB pretty-printers,\\n\"\n"
+        ".ascii \"create a pretty-printer for your own type with the following additional methods.\\n\"\n"
+
+        ".ascii \"(Note, this is assuming the presence of a type alias `pointer` for the underlying\\n\"\n"
+        ".ascii \"raw pointer type, Substitute whichever name is applicable in your case.)\\n\"\n"
+
+        ".ascii \"`boost_to_address(fancy_ptr)`\\n\"\n"
+        ".ascii \"    * A static method, but `@staticmethod` is not required\\n\"\n"
+        ".ascii \"    * Parameter `fancy_ptr` of type `gdb.Value`\\n\"\n"
+        ".ascii \"        * Its `.type` will be your fancy pointer type\\n\"\n"
+        ".ascii \"    * Returns a `gdb.Value` with the raw pointer equivalent to your fancy pointer\\n\"\n"
+        ".ascii \"        * This method should be equivalent to calling `operator->()` on your fancy pointer in C++\\n\"\n"
+
+        ".ascii \"`boost_next(raw_ptr, offset)`\\n\"\n"
+        ".ascii \"    * Parameter `raw_ptr` of type `gdb.Value`\\n\"\n"
+        ".ascii \"        * Its `.type` will be `pointer`\\n\"\n"
+        ".ascii \"    * Parameter `offset`\\n\"\n"
+        ".ascii \"        * Either has integer type, or is of type `gdb.Value` with an underlying integer\\n\"\n"
+        ".ascii \"    * Returns a `gdb.Value` with the raw pointer equivalent to your fancy pointer, as if you did the following operations\\n\"\n"
+        ".ascii \"        1. Convert the incoming raw pointer to your fancy pointer\\n\"\n"
+        ".ascii \"        2. Use operator+= to add the offset to the fancy pointer\\n\"\n"
+        ".ascii \"        3. Convert back to the raw pointer\\n\"\n"
+        ".ascii \"    * Note, you will not actually do these operations as stated. You will do equivalent lower-level operations that emulate having done the above\\n\"\n"
+        ".ascii \"        * Ultimately, it will be as if you called `operator+()` on your fancy pointer in C++, but using only raw pointers\\n\"\n"
+
+        ".ascii \"Example\\n\"\n"
+        ".ascii \"```\\n\"\n"
+        ".ascii \"class MyFancyPtrPrinter:\\n\"\n"
+        ".ascii \"    ...\\n\"\n"
+
+        ".ascii \"    # Equivalent to `operator->()`\\n\"\n"
+        ".ascii \"    def boost_to_address(fancy_ptr):\\n\"\n"
+        ".ascii \"        ...\\n\"\n"
+        ".ascii \"        return ...\\n\"\n"
+
+        ".ascii \"    # Equivalent to `operator+()`\\n\"\n"
+        ".ascii \"    def boost_next(raw_ptr, offset):\\n\"\n"
+        ".ascii \"        ...\\n\"\n"
+        ".ascii \"        return ...\\n\"\n"
+
+        ".ascii \"    ...\\n\"\n"
+        ".ascii \"```\\n\"\n"
+        ".ascii \"\\\"\\\"\\\"\\n\"\n"
+
+        ".byte 0\n"
+        ".popsection\n");
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+#endif // defined(__ELF__)
+#endif // !defined(BOOST_ALL_NO_EMBEDDED_GDB_SCRIPTS)
+
+#endif // !defined(BOOST_UNORDERED_UNORDERED_PRINTERS_HPP)
+#ifndef BOOST_CORE_DETAIL_SP_THREAD_PAUSE_HPP_INCLUDED
+#define BOOST_CORE_DETAIL_SP_THREAD_PAUSE_HPP_INCLUDED
+
+// MS compatible compilers support #pragma once
+
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+# pragma once
+#endif
+
+// boost/core/detail/sp_thread_pause.hpp
+//
+// inline void bost::core::sp_thread_pause();
+//
+//   Emits a "pause" instruction.
+//
+// Copyright 2008, 2020, 2023 Peter Dimov
+// Distributed under the Boost Software License, Version 1.0
+// https://www.boost.org/LICENSE_1_0.txt
+
+#ifdef __has_builtin
+# if __has_builtin(__builtin_ia32_pause) && !defined(__INTEL_COMPILER)
+#  define BOOST_CORE_HAS_BUILTIN_IA32_PAUSE
+# endif
+#endif
+
+#ifdef BOOST_CORE_HAS_BUILTIN_IA32_PAUSE
+
+# define BOOST_CORE_SP_PAUSE() __builtin_ia32_pause()
+
+#elif defined(_MSC_VER) && ( defined(_M_IX86) || defined(_M_X64) )
+
+# include <intrin.h>
+# define BOOST_CORE_SP_PAUSE() _mm_pause()
+
+#elif defined(_MSC_VER) && ( defined(_M_ARM) || defined(_M_ARM64) )
+
+# include <intrin.h>
+# define BOOST_CORE_SP_PAUSE() __yield()
+
+#elif defined(__GNUC__) && ( defined(__i386__) || defined(__x86_64__) )
+
+# define BOOST_CORE_SP_PAUSE() __asm__ __volatile__( "rep; nop" : : : "memory" )
+
+#elif defined(__GNUC__) && ( (defined(__ARM_ARCH) && __ARM_ARCH >= 8) || defined(__ARM_ARCH_8A__) || defined(__aarch64__) )
+
+# define BOOST_CORE_SP_PAUSE() __asm__ __volatile__( "yield" : : : "memory" )
+
+#else
+
+# define BOOST_CORE_SP_PAUSE() ((void)0)
+
+#endif
+
+namespace boost
+{
+namespace core
+{
+
+BOOST_FORCEINLINE void sp_thread_pause() noexcept
+{
+    BOOST_CORE_SP_PAUSE();
+}
+
+} // namespace core
+} // namespace boost
+
+#undef BOOST_CORE_SP_PAUSE
+
+#endif // #ifndef BOOST_CORE_DETAIL_SP_THREAD_PAUSE_HPP_INCLUDED
+#ifndef BOOST_CORE_DETAIL_SP_WIN32_SLEEP_HPP_INCLUDED
+#define BOOST_CORE_DETAIL_SP_WIN32_SLEEP_HPP_INCLUDED
+
+// MS compatible compilers support #pragma once
+
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+# pragma once
+#endif
+
+// boost/core/detail/sp_win32_sleep.hpp
+//
+// Declares the Win32 Sleep() function.
+//
+// Copyright 2008, 2020 Peter Dimov
+// Distributed under the Boost Software License, Version 1.0
+// https://www.boost.org/LICENSE_1_0.txt
+
+#ifdef  BOOST_USE_WINDOWS_H 
+# include <windows.h>
+#endif
+
+namespace boost
+{
+namespace core
+{
+namespace detail
+{
+
+#ifndef  BOOST_USE_WINDOWS_H 
+
+#if defined(__clang__) && defined(__x86_64__)
+// clang x64 warns that __stdcall is ignored
+# define BOOST_CORE_SP_STDCALL
+#else
+# define BOOST_CORE_SP_STDCALL __stdcall
+#endif
+
+#ifdef __LP64__ // Cygwin 64
+  extern "C" __declspec(dllimport) void BOOST_CORE_SP_STDCALL Sleep( unsigned int ms );
+#else
+  extern "C" __declspec(dllimport) void BOOST_CORE_SP_STDCALL Sleep( unsigned long ms );
+#endif
+
+extern "C" __declspec(dllimport) int BOOST_CORE_SP_STDCALL SwitchToThread();
+
+#undef BOOST_CORE_SP_STDCALL
+
+#endif // !defined( BOOST_USE_WINDOWS_H )
+
+} // namespace detail
+} // namespace core
+} // namespace boost
+
+#endif // #ifndef BOOST_CORE_DETAIL_SP_WIN32_SLEEP_HPP_INCLUDED
+#ifndef BOOST_CORE_DETAIL_SP_THREAD_YIELD_HPP_INCLUDED
+#define BOOST_CORE_DETAIL_SP_THREAD_YIELD_HPP_INCLUDED
+
+// MS compatible compilers support #pragma once
+
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+# pragma once
+#endif
+
+// boost/core/detail/sp_thread_yield.hpp
+//
+// inline void bost::core::sp_thread_yield();
+//
+//   Gives up the remainder of the time slice,
+//   as if by calling sched_yield().
+//
+// Copyright 2008, 2020 Peter Dimov
+// Distributed under the Boost Software License, Version 1.0
+// https://www.boost.org/LICENSE_1_0.txt
+
+#if defined( _WIN32 ) || defined( __WIN32__ ) || defined( __CYGWIN__ )
+
+#ifdef BOOST_SP_REPORT_IMPLEMENTATION
+  BOOST_PRAGMA_MESSAGE("Using SwitchToThread() in sp_thread_yield")
+#endif
+
+namespace boost
+{
+namespace core
+{
+namespace detail
+{
+
+inline void sp_thread_yield() noexcept
+{
+    SwitchToThread();
+}
+
+} // namespace detail
+
+using boost::core::detail::sp_thread_yield;
+
+} // namespace core
+} // namespace boost
+
+#elif defined(BOOST_HAS_SCHED_YIELD)
+
+#ifdef BOOST_SP_REPORT_IMPLEMENTATION
+  BOOST_PRAGMA_MESSAGE("Using sched_yield() in sp_thread_yield")
+#endif
+
+#ifndef _AIX
+# include <sched.h>
+#else
+  // AIX's sched.h defines ::var which sometimes conflicts with Lambda's var
+  extern "C" int sched_yield(void);
+#endif
+
+namespace boost
+{
+namespace core
+{
+
+inline void sp_thread_yield() noexcept
+{
+    sched_yield();
+}
+
+} // namespace core
+} // namespace boost
+
+#else
+
+#ifdef BOOST_SP_REPORT_IMPLEMENTATION
+  BOOST_PRAGMA_MESSAGE("Using sp_thread_pause() in sp_thread_yield")
+#endif
+
+namespace boost
+{
+namespace core
+{
+
+inline void sp_thread_yield() noexcept
+{
+    sp_thread_pause();
+}
+
+} // namespace core
+} // namespace boost
+
+#endif
+
+#endif // #ifndef BOOST_CORE_DETAIL_SP_THREAD_YIELD_HPP_INCLUDED
+#ifndef BOOST_CORE_DETAIL_SP_THREAD_SLEEP_HPP_INCLUDED
+#define BOOST_CORE_DETAIL_SP_THREAD_SLEEP_HPP_INCLUDED
+
+// MS compatible compilers support #pragma once
+
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+# pragma once
+#endif
+
+// boost/core/detail/sp_thread_sleep.hpp
+//
+// inline void bost::core::sp_thread_sleep();
+//
+//   Cease execution for a while to yield to other threads,
+//   as if by calling nanosleep() with an appropriate interval.
+//
+// Copyright 2008, 2020, 2023 Peter Dimov
+// Distributed under the Boost Software License, Version 1.0
+// https://www.boost.org/LICENSE_1_0.txt
+
+#if defined( _WIN32 ) || defined( __WIN32__ ) || defined( __CYGWIN__ )
+
+#ifdef BOOST_SP_REPORT_IMPLEMENTATION
+  BOOST_PRAGMA_MESSAGE("Using Sleep(1) in sp_thread_sleep")
+#endif
+
+namespace boost
+{
+namespace core
+{
+namespace detail
+{
+
+inline void sp_thread_sleep() noexcept
+{
+    Sleep( 1 );
+}
+
+} // namespace detail
+
+using boost::core::detail::sp_thread_sleep;
+
+} // namespace core
+} // namespace boost
+
+#elif defined(BOOST_HAS_NANOSLEEP)
+
+#ifdef BOOST_SP_REPORT_IMPLEMENTATION
+  BOOST_PRAGMA_MESSAGE("Using nanosleep() in sp_thread_sleep")
+#endif
+
+#include <time.h>
+
+#if defined(BOOST_HAS_PTHREADS) && !defined(__ANDROID__)
+# include <pthread.h>
+#endif
+
+namespace boost
+{
+namespace core
+{
+
+inline void sp_thread_sleep() noexcept
+{
+#if defined(BOOST_HAS_PTHREADS) && !defined(__ANDROID__)
+
+    int oldst;
+    pthread_setcancelstate( PTHREAD_CANCEL_DISABLE, &oldst );
+
+#endif
+
+    // g++ -Wextra warns on {} or {0}
+    struct timespec rqtp = { 0, 0 };
+
+    // POSIX says that timespec has tv_sec and tv_nsec
+    // But it doesn't guarantee order or placement
+
+    rqtp.tv_sec = 0;
+    rqtp.tv_nsec = 1000;
+
+    nanosleep( &rqtp, 0 );
+
+#if defined(BOOST_HAS_PTHREADS) && !defined(__ANDROID__)
+
+    pthread_setcancelstate( oldst, &oldst );
+
+#endif
+
+}
+
+} // namespace core
+} // namespace boost
+
+#else
+
+#ifdef BOOST_SP_REPORT_IMPLEMENTATION
+  BOOST_PRAGMA_MESSAGE("Using sp_thread_yield() in sp_thread_sleep")
+#endif
+
+namespace boost
+{
+namespace core
+{
+
+inline void sp_thread_sleep() noexcept
+{
+    sp_thread_yield();
+}
+
+} // namespace core
+} // namespace boost
+
+#endif
+
+#endif // #ifndef BOOST_CORE_DETAIL_SP_THREAD_SLEEP_HPP_INCLUDED
+#ifndef BOOST_CORE_YIELD_PRIMITIVES_HPP_INCLUDED
+#define BOOST_CORE_YIELD_PRIMITIVES_HPP_INCLUDED
+
+// Copyright 2023 Peter Dimov
+// Distributed under the Boost Software License, Version 1.0.
+// https://www.boost.org/LICENSE_1_0.txt
+
+#endif // #ifndef BOOST_CORE_YIELD_PRIMITIVES_HPP_INCLUDED
+#ifndef BOOST_UNORDERED_DETAIL_FOA_RW_SPINLOCK_HPP_INCLUDED
+#define BOOST_UNORDERED_DETAIL_FOA_RW_SPINLOCK_HPP_INCLUDED
+
+// Copyright 2023 Peter Dimov
+// Distributed under the Boost Software License, Version 1.0.
+// https://www.boost.org/LICENSE_1_0.txt
+
+namespace boost{
+namespace unordered{
+namespace detail{
+namespace foa{
+
+class rw_spinlock
+{
+private:
+
+    // bit 31: locked exclusive
+    // bit 30: writer pending
+    // bit 29..0: reader lock count
+
+    static constexpr std::uint32_t locked_exclusive_mask = 1u << 31; // 0x8000'0000
+    static constexpr std::uint32_t writer_pending_mask = 1u << 30; // 0x4000'0000
+    static constexpr std::uint32_t reader_lock_count_mask = writer_pending_mask - 1; // 0x3FFF'FFFF
+
+    std::atomic<std::uint32_t> state_ = {};
+
+private:
+
+    // Effects: Provides a hint to the implementation that the current thread
+    //          has been unable to make progress for k+1 iterations.
+
+    static void yield( unsigned k ) noexcept
+    {
+        unsigned const sleep_every = 1024; // see below
+
+        k %= sleep_every;
+
+        if( k < 5 )
+        {
+            // Intel recommendation from the Optimization Reference Manual
+            // Exponentially increase number of PAUSE instructions each
+            // iteration until reaching a maximum which is approximately
+            // one timeslice long (2^4 == 16 in our case)
+
+            unsigned const pause_count = 1u << k;
+
+            for( unsigned i = 0; i < pause_count; ++i )
+            {
+                boost::core::sp_thread_pause();
+            }
+        }
+        else if( k < sleep_every - 1 )
+        {
+            // Once the maximum number of PAUSE instructions is reached,
+            // we switch to yielding the timeslice immediately
+
+            boost::core::sp_thread_yield();
+        }
+        else
+        {
+            // After `sleep_every` iterations of no progress, we sleep,
+            // to avoid a deadlock if a lower priority thread has the lock
+
+            boost::core::sp_thread_sleep();
+        }
+    }
+
+public:
+
+    bool try_lock_shared() noexcept
+    {
+        std::uint32_t st = state_.load( std::memory_order_relaxed );
+
+        if( st >= reader_lock_count_mask )
+        {
+            // either bit 31 set, bit 30 set, or reader count is max
+            return false;
+        }
+
+        std::uint32_t newst = st + 1;
+        return state_.compare_exchange_strong( st, newst, std::memory_order_acquire, std::memory_order_relaxed );
+    }
+
+    void lock_shared() noexcept
+    {
+        for( unsigned k = 0; ; ++k )
+        {
+            std::uint32_t st = state_.load( std::memory_order_relaxed );
+
+            if( st < reader_lock_count_mask )
+            {
+                std::uint32_t newst = st + 1;
+                if( state_.compare_exchange_weak( st, newst, std::memory_order_acquire, std::memory_order_relaxed ) ) return;
+            }
+
+            yield( k );
+        }
+    }
+
+    void unlock_shared() noexcept
+    {
+        // pre: locked shared, not locked exclusive
+
+        state_.fetch_sub( 1, std::memory_order_release );
+
+        // if the writer pending bit is set, there's a writer waiting
+        // let it acquire the lock; it will clear the bit on unlock
+    }
+
+    bool try_lock() noexcept
+    {
+        std::uint32_t st = state_.load( std::memory_order_relaxed );
+
+        if( st & locked_exclusive_mask )
+        {
+            // locked exclusive
+            return false;
+        }
+
+        if( st & reader_lock_count_mask )
+        {
+            // locked shared
+            return false;
+        }
+
+        std::uint32_t newst = locked_exclusive_mask;
+        return state_.compare_exchange_strong( st, newst, std::memory_order_acquire, std::memory_order_relaxed );
+    }
+
+    void lock() noexcept
+    {
+        for( unsigned k = 0; ; ++k )
+        {
+            std::uint32_t st = state_.load( std::memory_order_relaxed );
+
+            if( st & locked_exclusive_mask )
+            {
+                // locked exclusive, spin
+            }
+            else if( ( st & reader_lock_count_mask ) == 0 )
+            {
+                // not locked exclusive, not locked shared, try to lock
+
+                std::uint32_t newst = locked_exclusive_mask;
+                if( state_.compare_exchange_weak( st, newst, std::memory_order_acquire, std::memory_order_relaxed ) ) return;
+            }
+            else if( st & writer_pending_mask )
+            {
+                // writer pending bit already set, nothing to do
+            }
+            else
+            {
+                // locked shared, set writer pending bit
+
+                std::uint32_t newst = st | writer_pending_mask;
+                state_.compare_exchange_weak( st, newst, std::memory_order_relaxed, std::memory_order_relaxed );
+            }
+
+            yield( k );
+        }
+    }
+
+    void unlock() noexcept
+    {
+        // pre: locked exclusive, not locked shared
+        state_.store( 0, std::memory_order_release );
+    }
+};
+
+}
+}
+}
+}
+
+#endif // BOOST_UNORDERED_DETAIL_FOA_RW_SPINLOCK_HPP_INCLUDED
+/* Copyright 2024 Joaquin M Lopez Munoz.
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
+ *
+ * See https://www.boost.org/libs/unordered for library home page.
+ */
+
+#ifndef BOOST_UNORDERED_DETAIL_FOA_CUMULATIVE_STATS_HPP
+#define BOOST_UNORDERED_DETAIL_FOA_CUMULATIVE_STATS_HPP
+
+#include <array>
+
+#ifdef BOOST_HAS_THREADS
+#include <mutex>
+#endif
+
+namespace boost{
+namespace unordered{
+namespace detail{
+namespace foa{
+
+/* Cumulative one-pass calculation of the average, variance and deviation of
+ * running sequences.
+ */
+
+struct sequence_stats_data
+{
+  double m=0.0;
+  double m_prior=0.0;
+  double s=0.0;
+};
+
+struct welfords_algorithm
+{
+  template<typename T>
+  int operator()(T&& x,sequence_stats_data& d)const noexcept
+  {
+    static_assert(
+      noexcept(static_cast<double>(x)),
+      "Argument conversion to double must not throw.");
+
+    d.m_prior=d.m;
+    d.m+=(static_cast<double>(x)-d.m)/static_cast<double>(n);
+    d.s+=(n!=1)*
+      (static_cast<double>(x)-d.m_prior)*(static_cast<double>(x)-d.m);
+
+    return 0;
+  }
+
+  std::size_t n;
+};
+
+struct sequence_stats_summary
+{
+  double average;
+  double variance;
+  double deviation;
+};
+
+/* Stats calculated jointly for N same-sized sequences to save the space
+ * for count.
+ */
+
+template<std::size_t N>
+class cumulative_stats
+{
+public:
+  struct summary
+  {
+    std::size_t                          count;
+    std::array<sequence_stats_summary,N> sequence_summary;
+  };
+
+  void reset()noexcept{*this=cumulative_stats();}
+  
+  template<typename... Ts>
+  void add(Ts&&... xs)noexcept
+  {
+    static_assert(
+      sizeof...(Ts)==N,"A sample must be provided for each sequence.");
+
+    if(BOOST_UNLIKELY(++n==0)){
+      reset();
+      n=1;
+    }
+    mp11::tuple_transform(
+      welfords_algorithm{n},
+      std::forward_as_tuple(std::forward<Ts>(xs)...),
+      data);
+  }
+  
+  summary get_summary()const noexcept
+  {
+    summary res;
+    res.count=n;
+    for(std::size_t i=0;i<N;++i){
+      double average=data[i].m,
+             variance=n!=0?data[i].s/static_cast<double>(n):0.0,
+             deviation=std::sqrt(variance);
+      res.sequence_summary[i]={average,variance,deviation};
+    }
+    return res;
+  }
+
+private:
+  std::size_t                       n=0;
+  std::array<sequence_stats_data,N> data;
+};
+
+#ifdef BOOST_HAS_THREADS
+
+template<std::size_t N>
+class concurrent_cumulative_stats:cumulative_stats<N>
+{
+  using super=cumulative_stats<N>;
+  using lock_guard=std::lock_guard<rw_spinlock>;
+
+public:
+  using summary=typename super::summary;
+
+  concurrent_cumulative_stats()noexcept:super{}{}
+  concurrent_cumulative_stats(const concurrent_cumulative_stats& x)noexcept:
+    concurrent_cumulative_stats{x,lock_guard{x.mut}}{}
+
+  concurrent_cumulative_stats&
+  operator=(const concurrent_cumulative_stats& x)noexcept
+  {
+    auto x1=x;
+    lock_guard lck{mut};
+    static_cast<super&>(*this)=x1;
+    return *this;
+  }
+
+  void reset()noexcept
+  {
+    lock_guard lck{mut};
+    super::reset();
+  }
+  
+  template<typename... Ts>
+  void add(Ts&&... xs)noexcept
+  {
+    lock_guard lck{mut};
+    super::add(std::forward<Ts>(xs)...);
+  }
+  
+  summary get_summary()const noexcept
+  {
+    lock_guard lck{mut};
+    return super::get_summary();
+  }
+
+private:
+  concurrent_cumulative_stats(const super& x,lock_guard&&):super{x}{}
+
+  mutable rw_spinlock mut;
+};
+
+#else
+
+template<std::size_t N>
+using concurrent_cumulative_stats=cumulative_stats<N>;
+
+#endif
+
+}
+}
 }
 }
 
@@ -1986,6 +3333,7 @@ struct pow2_quadratic_prober
   pow2_quadratic_prober(std::size_t pos_):pos{pos_}{}
 
   inline std::size_t get()const{return pos;}
+  inline std::size_t length()const{return step+1;}
 
   /* next returns false when the whole array has been traversed, which ends
    * probing (in practice, full-table probing will only happen with very small
@@ -2134,6 +3482,11 @@ struct table_arrays
       rebind<group_type>;
   using group_type_pointer_traits=std::pointer_traits<group_type_pointer>;
 
+  // For natvis purposes
+  using char_pointer=
+    typename std::pointer_traits<value_type_pointer>::template
+      rebind<unsigned char>;
+
   table_arrays(
     std::size_t gsi,std::size_t gsm,
     group_type_pointer pg,value_type_pointer pe):
@@ -2246,6 +3599,54 @@ struct table_arrays
   group_type_pointer groups_;
   value_type_pointer elements_;
 };
+
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+/* stats support */
+
+struct table_core_cumulative_stats
+{
+  concurrent_cumulative_stats<1> insertion;
+  concurrent_cumulative_stats<2> successful_lookup,
+                                 unsuccessful_lookup;
+};
+
+struct table_core_insertion_stats
+{
+  std::size_t            count;
+  sequence_stats_summary probe_length;
+};
+
+struct table_core_lookup_stats
+{
+  std::size_t            count;
+  sequence_stats_summary probe_length;
+  sequence_stats_summary num_comparisons;
+};
+
+struct table_core_stats
+{
+  table_core_insertion_stats insertion;
+  table_core_lookup_stats    successful_lookup,
+                             unsuccessful_lookup;
+};
+
+#define BOOST_UNORDERED_ADD_STATS(stats,args) stats.add args
+#define BOOST_UNORDERED_SWAP_STATS(stats1,stats2) std::swap(stats1,stats2)
+#define BOOST_UNORDERED_COPY_STATS(stats1,stats2) stats1=stats2
+#define BOOST_UNORDERED_RESET_STATS_OF(x) x.reset_stats()
+#define BOOST_UNORDERED_STATS_COUNTER(name) std::size_t name=0
+#define BOOST_UNORDERED_INCREMENT_STATS_COUNTER(name) ++name
+
+#else
+
+#define BOOST_UNORDERED_ADD_STATS(stats,args) ((void)0)
+#define BOOST_UNORDERED_SWAP_STATS(stats1,stats2) ((void)0)
+#define BOOST_UNORDERED_COPY_STATS(stats1,stats2) ((void)0)
+#define BOOST_UNORDERED_RESET_STATS_OF(x) ((void)0)
+#define BOOST_UNORDERED_STATS_COUNTER(name) ((void)0)
+#define BOOST_UNORDERED_INCREMENT_STATS_COUNTER(name) ((void)0)
+
+#endif
 
 struct if_constexpr_void_else{void operator()()const{}};
 
@@ -2507,6 +3908,16 @@ public:
   using locator=table_locator<group_type,element_type>;
   using arrays_holder_type=arrays_holder<arrays_type,Allocator>;
 
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+  using cumulative_stats=table_core_cumulative_stats;
+  using stats=table_core_stats;
+#endif
+
+#ifdef BOOST_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
   table_core(
     std::size_t n=default_bucket_count,const Hash& h_=Hash(),
     const Pred& pred_=Pred(),const Allocator& al_=Allocator()):
@@ -2514,6 +3925,10 @@ public:
     allocator_base{empty_init,al_},arrays(new_arrays(n)),
     size_ctrl{initial_max_load(),0}
     {}
+
+#ifdef BOOST_GCC
+#pragma GCC diagnostic pop
+#endif
 
   /* genericize on an ArraysFn so that we can do things like delay an
    * allocation for the group_access data required by cfoa after the move
@@ -2541,6 +3956,7 @@ public:
     x.arrays=ah.release();
     x.size_ctrl.ml=x.initial_max_load();
     x.size_ctrl.size=0;
+    BOOST_UNORDERED_SWAP_STATS(cstats,x.cstats);
   }
 
   table_core(table_core&& x)
@@ -2566,11 +3982,13 @@ public:
       using std::swap;
       swap(arrays,x.arrays);
       swap(size_ctrl,x.size_ctrl);
+      BOOST_UNORDERED_SWAP_STATS(cstats,x.cstats);
     }
     else{
       reserve(x.size());
       clear_on_exit c{x};
       (void)c;
+      BOOST_UNORDERED_RESET_STATS_OF(x);
 
       /* This works because subsequent x.clear() does not depend on the
        * elements' values.
@@ -2686,9 +4104,11 @@ public:
         arrays=x.arrays;
         size_ctrl.ml=std::size_t(x.size_ctrl.ml);
         size_ctrl.size=std::size_t(x.size_ctrl.size);
+        BOOST_UNORDERED_COPY_STATS(cstats,x.cstats);
         x.arrays=ah.release();
         x.size_ctrl.ml=x.initial_max_load();
         x.size_ctrl.size=0;
+        BOOST_UNORDERED_RESET_STATS_OF(x);
       }
       else{
         swap(h(),x.h());
@@ -2698,6 +4118,7 @@ public:
         noshrink_reserve(x.size());
         clear_on_exit c{x};
         (void)c;
+        BOOST_UNORDERED_RESET_STATS_OF(x);
 
         /* This works because subsequent x.clear() does not depend on the
          * elements' values.
@@ -2751,6 +4172,7 @@ public:
   BOOST_FORCEINLINE locator find(
     const Key& x,std::size_t pos0,std::size_t hash)const
   {    
+    BOOST_UNORDERED_STATS_COUNTER(num_cmps);
     prober pb(pos0);
     do{
       auto pos=pb.get();
@@ -2762,18 +4184,25 @@ public:
         auto p=elements+pos*N;
         BOOST_UNORDERED_PREFETCH_ELEMENTS(p,N);
         do{
+          BOOST_UNORDERED_INCREMENT_STATS_COUNTER(num_cmps);
           auto n=unchecked_countr_zero(mask);
           if(BOOST_LIKELY(bool(pred()(x,key_from(p[n]))))){
+            BOOST_UNORDERED_ADD_STATS(
+              cstats.successful_lookup,(pb.length(),num_cmps));
             return {pg,n,p+n};
           }
           mask&=mask-1;
         }while(mask);
       }
       if(BOOST_LIKELY(pg->is_not_overflowed(hash))){
+        BOOST_UNORDERED_ADD_STATS(
+          cstats.unsuccessful_lookup,(pb.length(),num_cmps));
         return {};
       }
     }
     while(BOOST_LIKELY(pb.next(arrays.groups_size_mask)));
+    BOOST_UNORDERED_ADD_STATS(
+      cstats.unsuccessful_lookup,(pb.length(),num_cmps));
     return {};
   }
 
@@ -2857,6 +4286,38 @@ public:
   {
     rehash(std::size_t(std::ceil(float(n)/mlf)));
   }
+
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+  stats get_stats()const
+  {
+    auto insertion=cstats.insertion.get_summary();
+    auto successful_lookup=cstats.successful_lookup.get_summary();
+    auto unsuccessful_lookup=cstats.unsuccessful_lookup.get_summary();
+    return{
+      {
+        insertion.count,
+        insertion.sequence_summary[0]
+      },
+      {
+        successful_lookup.count,
+        successful_lookup.sequence_summary[0],
+        successful_lookup.sequence_summary[1]
+      },
+      {
+        unsuccessful_lookup.count,
+        unsuccessful_lookup.sequence_summary[0],
+        unsuccessful_lookup.sequence_summary[1]
+      },
+    };
+  }
+
+  void reset_stats()noexcept
+  {
+    cstats.insertion.reset();
+    cstats.successful_lookup.reset();
+    cstats.unsuccessful_lookup.reset();
+  }
+#endif
 
   friend bool operator==(const table_core& x,const table_core& y)
   {
@@ -3065,8 +4526,12 @@ public:
     return true;
   }
 
-  arrays_type    arrays;
-  size_ctrl_type size_ctrl;
+  arrays_type              arrays;
+  size_ctrl_type           size_ctrl;
+
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+  mutable cumulative_stats cstats;
+#endif
 
 private:
   template<
@@ -3079,6 +4544,11 @@ private:
   using pred_base=empty_value<Pred,1>;
   using allocator_base=empty_value<Allocator,2>;
 
+#ifdef BOOST_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
   /* used by allocator-extended move ctor */
 
   table_core(Hash&& h_,Pred&& pred_,const Allocator& al_):
@@ -3088,6 +4558,10 @@ private:
     size_ctrl{initial_max_load(),0}
   {
   }
+
+#ifdef BOOST_GCC
+#pragma GCC diagnostic pop
+#endif
 
   arrays_type new_arrays(std::size_t n)const
   {
@@ -3355,6 +4829,7 @@ private:
         auto p=arrays_.elements()+pos*N+n;
         construct_element(p,std::forward<Args>(args)...);
         pg->set(n,hash);
+        BOOST_UNORDERED_ADD_STATS(cstats.insertion,(pb.length()));
         return {pg,n,p};
       }
       else pg->mark_overflow(hash);
@@ -3377,7 +4852,7 @@ private:
 #endif
 /* Fast open-addressing hash table.
  *
- * Copyright 2022-2023 Joaquin M Lopez Munoz.
+ * Copyright 2022-2024 Joaquin M Lopez Munoz.
  * Copyright 2023 Christian Mazakas.
  * Copyright 2024 Braden Ganetsky.
  * Distributed under the Boost Software License, Version 1.0.
@@ -3716,6 +5191,10 @@ public:
     const_iterator>::type;
   using erase_return_type=table_erase_return_type<iterator>;
 
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+  using stats=typename super::stats;
+#endif
+
   table(
     std::size_t n=default_bucket_count,const Hash& h_=Hash(),
     const Pred& pred_=Pred(),const Allocator& al_=Allocator()):
@@ -3897,6 +5376,11 @@ public:
   using super::rehash;
   using super::reserve;
 
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+  using super::get_stats;
+  using super::reset_stats;
+#endif
+
   template<typename Predicate>
   friend std::size_t erase_if(table& x,Predicate& pr)
   {
@@ -3939,6 +5423,7 @@ private:
     x.arrays=ah.release();
     x.size_ctrl.ml=x.initial_max_load();
     x.size_ctrl.size=0;
+    BOOST_UNORDERED_SWAP_STATS(this->cstats,x.cstats);
   }
 
   template<typename ExclusiveLockGuard>
@@ -4003,6 +5488,7 @@ private:
 
 #endif
 // Copyright (C) 2022 Christian Mazakas
+// Copyright (C) 2024 Braden Ganetsky
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -4032,6 +5518,15 @@ namespace boost {
     void swap(unordered_flat_set<Key, Hash, KeyEqual, Allocator>& lhs,
       unordered_flat_set<Key, Hash, KeyEqual, Allocator>& rhs)
       noexcept(noexcept(lhs.swap(rhs)));
+
+#ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
+    namespace pmr {
+      template <class Key, class Hash = boost::hash<Key>,
+        class KeyEqual = std::equal_to<Key> >
+      using unordered_flat_set = boost::unordered::unordered_flat_set<Key, Hash,
+        KeyEqual, std::pmr::polymorphic_allocator<Key> >;
+    } // namespace pmr
+#endif
   } // namespace unordered
 
   using boost::unordered::unordered_flat_set;
@@ -5530,6 +7025,7 @@ namespace boost
 
 #endif // #ifndef BOOST_FUNCTIONAL_HASH_HASH_HPP
 // Copyright (C) 2022-2023 Christian Mazakas
+// Copyright (C) 2024 Joaquin M Lopez Munoz
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -5584,6 +7080,10 @@ namespace boost {
         typename std::allocator_traits<allocator_type>::const_pointer;
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
+
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+      using stats = typename table_type::stats;
+#endif
 
       unordered_flat_set() : unordered_flat_set(0) {}
 
@@ -5686,6 +7186,7 @@ namespace boost {
       {
       }
 
+      template <bool avoid_explicit_instantiation = true>
       unordered_flat_set(
         concurrent_flat_set<Key, Hash, KeyEqual, Allocator>&& other)
           : table_(std::move(other.table_))
@@ -5704,6 +7205,13 @@ namespace boost {
         noexcept(std::declval<table_type&>() = std::declval<table_type&&>()))
       {
         table_ = std::move(other.table_);
+        return *this;
+      }
+
+      unordered_flat_set& operator=(std::initializer_list<value_type> il)
+      {
+        this->clear();
+        this->insert(il.begin(), il.end());
         return *this;
       }
 
@@ -5987,6 +7495,14 @@ namespace boost {
 
       void reserve(size_type n) { table_.reserve(n); }
 
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+      /// Stats
+      ///
+      stats get_stats() const { return table_.get_stats(); }
+
+      void reset_stats() noexcept { table_.reset_stats(); }
+#endif
+
       /// Observers
       ///
 
@@ -6123,6 +7639,7 @@ namespace boost {
 /* Fast open-addressing concurrent hashmap.
  *
  * Copyright 2023 Christian Mazakas.
+ * Copyright 2024 Braden Ganetsky.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -6160,6 +7677,15 @@ namespace boost {
     typename concurrent_flat_map<K, T, H, P, A>::size_type erase_if(
       concurrent_flat_map<K, T, H, P, A>& c, Predicate pred);
 
+#ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
+    namespace pmr {
+      template <class Key, class T, class Hash = boost::hash<Key>,
+        class Pred = std::equal_to<Key> >
+      using concurrent_flat_map = boost::unordered::concurrent_flat_map<Key, T,
+        Hash, Pred, std::pmr::polymorphic_allocator<std::pair<Key const, T> > >;
+    } // namespace pmr
+#endif
+
   } // namespace unordered
 
   using boost::unordered::concurrent_flat_map;
@@ -6191,6 +7717,9 @@ namespace boost {
 
           using element_type = value_type;
 
+          using types = flat_map_types<Key, T>;
+          using constructibility_checker = map_types_constructibility<types>;
+
           static value_type& value_from(element_type& x) { return x; }
 
           template <class K, class V>
@@ -6214,18 +7743,21 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, init_type* p, Args&&... args)
           {
+            constructibility_checker::check(al, p, std::forward<Args>(args)...);
             std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
+            constructibility_checker::check(al, p, std::forward<Args>(args)...);
             std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, key_type* p, Args&&... args)
           {
+            constructibility_checker::check(al, p, std::forward<Args>(args)...);
             std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
@@ -6245,8 +7777,8 @@ namespace boost {
           }
         };
       } // namespace foa
-    }   // namespace detail
-  }     // namespace unordered
+    } // namespace detail
+  } // namespace unordered
 } // namespace boost
 
 #endif // BOOST_UNORDERED_DETAIL_FOA_FLAT_MAP_TYPES_HPP
@@ -6419,9 +7951,12 @@ template<class E, class T> std::basic_ostream<E, T> & operator<<( std::basic_ost
 
 # define BOOST_CURRENT_LOCATION ::boost::source_location(__builtin_FILE(), __builtin_LINE(), __builtin_FUNCTION(), __builtin_COLUMN())
 
-#elif defined(BOOST_GCC) && BOOST_GCC >= 70000
+#elif defined(BOOST_GCC) && BOOST_GCC >= 80000
 
 // The built-ins are available in 4.8+, but are not constant expressions until 7
+// In addition, reproducible builds require -ffile-prefix-map, which is GCC 8
+// https://github.com/boostorg/assert/issues/38
+
 # define BOOST_CURRENT_LOCATION ::boost::source_location(__builtin_FILE(), __builtin_LINE(), __builtin_FUNCTION())
 
 #elif defined(BOOST_GCC) && BOOST_GCC >= 50000
@@ -7283,6 +8818,7 @@ namespace boost {
 
 #endif // BOOST_UNORDERED_DETAIL_THROW_EXCEPTION_HPP
 // Copyright (C) 2022 Christian Mazakas
+// Copyright (C) 2024 Braden Ganetsky
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -7312,6 +8848,16 @@ namespace boost {
     void swap(unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>& lhs,
       unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>& rhs)
       noexcept(noexcept(lhs.swap(rhs)));
+
+#ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
+    namespace pmr {
+      template <class Key, class T, class Hash = boost::hash<Key>,
+        class KeyEqual = std::equal_to<Key> >
+      using unordered_flat_map =
+        boost::unordered::unordered_flat_map<Key, T, Hash, KeyEqual,
+          std::pmr::polymorphic_allocator<std::pair<const Key, T> > >;
+    } // namespace pmr
+#endif
   } // namespace unordered
 
   using boost::unordered::unordered_flat_map;
@@ -7319,6 +8865,7 @@ namespace boost {
 
 #endif
 // Copyright (C) 2022-2023 Christian Mazakas
+// Copyright (C) 2024 Joaquin M Lopez Munoz
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -7375,6 +8922,10 @@ namespace boost {
         typename std::allocator_traits<allocator_type>::const_pointer;
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
+
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+      using stats = typename table_type::stats;
+#endif
 
       unordered_flat_map() : unordered_flat_map(0) {}
 
@@ -7477,6 +9028,7 @@ namespace boost {
       {
       }
 
+      template <bool avoid_explicit_instantiation = true>
       unordered_flat_map(
         concurrent_flat_map<Key, T, Hash, KeyEqual, Allocator>&& other)
           : table_(std::move(other.table_))
@@ -7495,6 +9047,13 @@ namespace boost {
         noexcept(std::declval<table_type&>() = std::declval<table_type&&>()))
       {
         table_ = std::move(other.table_);
+        return *this;
+      }
+
+      unordered_flat_map& operator=(std::initializer_list<value_type> il)
+      {
+        this->clear();
+        this->insert(il.begin(), il.end());
         return *this;
       }
 
@@ -7954,6 +9513,14 @@ namespace boost {
 
       void reserve(size_type n) { table_.reserve(n); }
 
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+      /// Stats
+      ///
+      stats get_stats() const { return table_.get_stats(); }
+
+      void reset_stats() noexcept { table_.reset_stats(); }
+#endif
+
       /// Observers
       ///
 
@@ -8097,6 +9664,63 @@ namespace boost {
 } // namespace boost
 
 #endif
+/* Fast open-addressing, node-based concurrent hashset.
+ *
+ * Copyright 2023 Christian Mazakas.
+ * Copyright 2023-2024 Joaquin M Lopez Munoz.
+ * Copyright 2024 Braden Ganetsky.
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
+ *
+ * See https://www.boost.org/libs/unordered for library home page.
+ */
+
+#ifndef BOOST_UNORDERED_CONCURRENT_NODE_SET_FWD_HPP
+#define BOOST_UNORDERED_CONCURRENT_NODE_SET_FWD_HPP
+
+namespace boost {
+  namespace unordered {
+
+    template <class Key, class Hash = boost::hash<Key>,
+      class Pred = std::equal_to<Key>,
+      class Allocator = std::allocator<Key> >
+    class concurrent_node_set;
+
+    template <class Key, class Hash, class KeyEqual, class Allocator>
+    bool operator==(
+      concurrent_node_set<Key, Hash, KeyEqual, Allocator> const& lhs,
+      concurrent_node_set<Key, Hash, KeyEqual, Allocator> const& rhs);
+
+    template <class Key, class Hash, class KeyEqual, class Allocator>
+    bool operator!=(
+      concurrent_node_set<Key, Hash, KeyEqual, Allocator> const& lhs,
+      concurrent_node_set<Key, Hash, KeyEqual, Allocator> const& rhs);
+
+    template <class Key, class Hash, class Pred, class Alloc>
+    void swap(concurrent_node_set<Key, Hash, Pred, Alloc>& x,
+      concurrent_node_set<Key, Hash, Pred, Alloc>& y)
+      noexcept(noexcept(x.swap(y)));
+
+    template <class K, class H, class P, class A, class Predicate>
+    typename concurrent_node_set<K, H, P, A>::size_type erase_if(
+      concurrent_node_set<K, H, P, A>& c, Predicate pred);
+
+#ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
+    namespace pmr {
+      template <class Key, class Hash = boost::hash<Key>,
+        class Pred = std::equal_to<Key> >
+      using concurrent_node_set = boost::unordered::concurrent_node_set<Key,
+        Hash, Pred, std::pmr::polymorphic_allocator<Key> >;
+    } // namespace pmr
+#endif
+
+  } // namespace unordered
+
+  using boost::unordered::concurrent_node_set;
+} // namespace boost
+
+#endif // BOOST_UNORDERED_CONCURRENT_NODE_SET_FWD_HPP
 /* Copyright 2023 Christian Mazakas.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
@@ -8160,6 +9784,7 @@ struct element_type
 
 #endif // BOOST_UNORDERED_DETAIL_FOA_ELEMENT_TYPE_HPP
 /* Copyright 2023 Christian Mazakas.
+ * Copyright 2024 Joaquin M Lopez Munoz.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -8183,6 +9808,13 @@ struct insert_return_type
   NodeType node;
 };
 
+template <class NodeType>
+struct iteratorless_insert_return_type
+{
+  bool     inserted;
+  NodeType node;
+};
+
 template <class TypePolicy,class Allocator>
 struct node_handle_base
 {
@@ -8198,7 +9830,27 @@ struct node_handle_base
     element_type p_;
     [[no_unique_address]] opt_storage<Allocator> a_;
 
-  protected:
+    friend struct node_handle_access;
+
+    template<bool B>
+    void move_assign_allocator_if(node_handle_base&& nh)noexcept
+    {
+      move_assign_allocator_if(
+        std::integral_constant<bool,B>{}, std::move(nh));
+    }
+
+    void move_assign_allocator_if(
+      std::true_type, node_handle_base&& nh)noexcept
+    {
+      al()=std::move(nh.al());
+    }
+
+    void move_assign_allocator_if(
+      std::false_type, node_handle_base&&)noexcept
+    {
+    }
+
+protected:
     node_value_type& data()noexcept
     {
       return *(p_.p);
@@ -8282,9 +9934,7 @@ struct node_handle_base
             BOOST_ASSERT(pocma||al()==nh.al());
 
             type_policy::destroy(al(),&p_);
-            if(pocma){
-              al()=std::move(nh.al());
-            }
+            move_assign_allocator_if<pocma>(std::move(nh));
 
             p_=std::move(nh.p_);
             nh.reset();
@@ -8309,7 +9959,17 @@ struct node_handle_base
       }
     }
 
-    allocator_type get_allocator()const noexcept{return al();}
+    allocator_type get_allocator()const
+    {
+#ifdef BOOST_GCC
+      /* GCC lifetime analysis incorrectly warns about uninitialized
+       * allocator object under some circumstances.
+       */
+      if(empty())__builtin_unreachable();
+#endif
+      return al();
+    }
+
     explicit operator bool()const noexcept{ return !empty();}
     [[nodiscard]] bool empty()const noexcept{return p_.p==nullptr;}
 
@@ -8352,12 +10012,134 @@ struct node_handle_base
     }
 };
 
+// Internal usage of node_handle_base protected API
+
+struct node_handle_access
+{
+  template <class TypePolicy, class Allocator>
+  using node_type = node_handle_base<TypePolicy, Allocator>;
+
+#if BOOST_CLANG_VERSION < 190000
+  // https://github.com/llvm/llvm-project/issues/25708
+
+  template <class TypePolicy, class Allocator>
+  struct element_type_impl
+  {
+    using type = typename node_type<TypePolicy, Allocator>::element_type;
+  };
+  template <class TypePolicy, class Allocator>
+  using element_type = typename element_type_impl<TypePolicy, Allocator>::type;
+#else
+  template <class TypePolicy, class Allocator>
+  using element_type = typename node_type<TypePolicy, Allocator>::element_type;
+#endif
+
+  template <class TypePolicy, class Allocator>
+  static element_type<TypePolicy, Allocator>&
+  element(node_type<TypePolicy, Allocator>& nh)noexcept
+  {
+    return nh.element();
+  }
+
+  template <class TypePolicy, class Allocator>
+  static element_type<TypePolicy, Allocator>
+  const& element(node_type<TypePolicy, Allocator> const& nh)noexcept
+  {
+    return nh.element();
+  }
+
+  template <class TypePolicy, class Allocator>
+  static void emplace(
+    node_type<TypePolicy, Allocator>& nh,
+    element_type<TypePolicy, Allocator>&& x, Allocator a)
+  {
+    nh.emplace(std::move(x), a);
+  }
+
+  template <class TypePolicy,class Allocator>
+  static void reset(node_type<TypePolicy, Allocator>& nh)
+  {
+    nh.reset();
+  }
+};
+
+template <class TypePolicy, class Allocator>
+class node_handle_emplacer_class
+{
+  using access = node_handle_access;
+  using node_type = access::node_type<TypePolicy, Allocator>;
+  using element_type = access::element_type<TypePolicy, Allocator>;
+
+  node_type & nh;
+
+public:
+  node_handle_emplacer_class(node_type& nh_): nh(nh_) {}
+
+  void operator()(element_type&& x,Allocator a)
+  {
+    access::emplace(nh, std::move(x), a);
+  }
+};
+
+template <class TypePolicy, class Allocator>
+node_handle_emplacer_class<TypePolicy, Allocator>
+node_handle_emplacer(node_handle_base<TypePolicy, Allocator>& nh)
+{
+  return {nh};
+}
+
 }
 }
 }
 }
 
 #endif // BOOST_UNORDERED_DETAIL_FOA_NODE_HANDLE_HPP
+/* Copyright 2023 Christian Mazakas.
+ * Copyright 2024 Joaquin M Lopez Munoz. 
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
+ *
+ * See https://www.boost.org/libs/unordered for library home page.
+ */
+
+#ifndef BOOST_UNORDERED_DETAIL_FOA_NODE_SET_HANDLE_HPP
+#define BOOST_UNORDERED_DETAIL_FOA_NODE_SET_HANDLE_HPP
+
+namespace boost{
+namespace unordered{
+namespace detail{
+namespace foa{
+
+template <class TypePolicy, class Allocator>
+struct node_set_handle
+    : public detail::foa::node_handle_base<TypePolicy, Allocator>
+{
+private:
+  using base_type = detail::foa::node_handle_base<TypePolicy, Allocator>;
+
+  using typename base_type::type_policy;
+
+public:
+  using value_type = typename TypePolicy::value_type;
+
+  constexpr node_set_handle() noexcept = default;
+  node_set_handle(node_set_handle&& nh) noexcept = default;
+  node_set_handle& operator=(node_set_handle&&) noexcept = default;
+
+  value_type& value() const
+  {
+    BOOST_ASSERT(!this->empty());
+    return const_cast<value_type&>(this->data());
+  }
+};
+
+}
+}
+}
+}
+
+#endif // BOOST_UNORDERED_DETAIL_FOA_NODE_SET_HANDLE_HPP
 // Copyright (C) 2023 Christian Mazakas
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -8380,6 +10162,9 @@ namespace boost {
 
           using element_type = foa::element_type<value_type, VoidPtr>;
 
+          using types = node_set_types<Key, VoidPtr>;
+          using constructibility_checker = set_types_constructibility<types>;
+
           static value_type& value_from(element_type const& x) { return *x.p; }
           static Key const& extract(element_type const& k) { return *k.p; }
           static element_type&& move(element_type& x) { return std::move(x); }
@@ -8389,7 +10174,7 @@ namespace boost {
           static void construct(
             A& al, element_type* p, element_type const& copy)
           {
-            construct(al, p, *copy.p);
+            construct(al, p, detail::as_const(*copy.p));
           }
 
           template <typename Allocator>
@@ -8403,6 +10188,7 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
+            constructibility_checker::check(al, p, std::forward<Args>(args)...);
             std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
@@ -8412,9 +10198,12 @@ namespace boost {
             p->p = std::allocator_traits<std::remove_cvref_t<decltype(al)>>::allocate(al, 1);
             BOOST_TRY
             {
+              auto address = std::to_address(p->p);
+              constructibility_checker::check(
+                al, address, std::forward<Args>(args)...);
               std::allocator_traits<std::remove_cvref_t<decltype(
                 al)>>::construct(
-                al, std::to_address(p->p), std::forward<Args>(args)...);
+                al, address, std::forward<Args>(args)...);
             }
             BOOST_CATCH(...)
             {
@@ -8440,12 +10229,13 @@ namespace boost {
         };
 
       } // namespace foa
-    }   // namespace detail
-  }     // namespace unordered
+    } // namespace detail
+  } // namespace unordered
 } // namespace boost
 
 #endif // BOOST_UNORDERED_DETAIL_FOA_NODE_SET_TYPES_HPP
 // Copyright (C) 2023 Christian Mazakas
+// Copyright (C) 2024 Braden Ganetsky
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -8475,6 +10265,15 @@ namespace boost {
     void swap(unordered_node_set<Key, Hash, KeyEqual, Allocator>& lhs,
       unordered_node_set<Key, Hash, KeyEqual, Allocator>& rhs)
       noexcept(noexcept(lhs.swap(rhs)));
+
+#ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
+    namespace pmr {
+      template <class Key, class Hash = boost::hash<Key>,
+        class KeyEqual = std::equal_to<Key> >
+      using unordered_node_set = boost::unordered::unordered_node_set<Key, Hash,
+        KeyEqual, std::pmr::polymorphic_allocator<Key> >;
+    } // namespace pmr
+#endif
   } // namespace unordered
 
   using boost::unordered::unordered_node_set;
@@ -8482,6 +10281,7 @@ namespace boost {
 
 #endif
 // Copyright (C) 2022-2023 Christian Mazakas
+// Copyright (C) 2024 Joaquin M Lopez Munoz
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -8498,37 +10298,12 @@ namespace boost {
 #pragma warning(disable : 4714)
 #endif
 
-    namespace detail {
-      template <class TypePolicy, class Allocator>
-      struct node_set_handle
-          : public detail::foa::node_handle_base<TypePolicy, Allocator>
-      {
-      private:
-        using base_type = detail::foa::node_handle_base<TypePolicy, Allocator>;
-
-        using typename base_type::type_policy;
-
-        template <class Key, class Hash, class Pred, class Alloc>
-        friend class boost::unordered::unordered_node_set;
-
-      public:
-        using value_type = typename TypePolicy::value_type;
-
-        constexpr node_set_handle() noexcept = default;
-        node_set_handle(node_set_handle&& nh) noexcept = default;
-        node_set_handle& operator=(node_set_handle&&) noexcept = default;
-
-        value_type& value() const
-        {
-          BOOST_ASSERT(!this->empty());
-          return const_cast<value_type&>(this->data());
-        }
-      };
-    } // namespace detail
-
     template <class Key, class Hash, class KeyEqual, class Allocator>
     class unordered_node_set
     {
+      template <class Key2, class Hash2, class Pred2, class Allocator2>
+      friend class concurrent_node_set;
+
       using set_types = detail::foa::node_set_types<Key,
         typename std::allocator_traits<Allocator>::void_pointer>;
 
@@ -8562,11 +10337,15 @@ namespace boost {
         typename std::allocator_traits<allocator_type>::const_pointer;
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
-      using node_type = detail::node_set_handle<set_types,
+      using node_type = detail::foa::node_set_handle<set_types,
         typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename set_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;
+
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+      using stats = typename table_type::stats;
+#endif
 
       unordered_node_set() : unordered_node_set(0) {}
 
@@ -8669,6 +10448,13 @@ namespace boost {
       {
       }
 
+      template <bool avoid_explicit_instantiation = true>
+      unordered_node_set(
+        concurrent_node_set<Key, Hash, KeyEqual, Allocator>&& other)
+          : table_(std::move(other.table_))
+      {
+      }
+
       ~unordered_node_set() = default;
 
       unordered_node_set& operator=(unordered_node_set const& other)
@@ -8681,6 +10467,13 @@ namespace boost {
         noexcept(std::declval<table_type&>() = std::declval<table_type&&>()))
       {
         table_ = std::move(other.table_);
+        return *this;
+      }
+
+      unordered_node_set& operator=(std::initializer_list<value_type> il)
+      {
+        this->clear();
+        this->insert(il.begin(), il.end());
         return *this;
       }
 
@@ -8771,15 +10564,17 @@ namespace boost {
 
       insert_return_type insert(node_type&& nh)
       {
+        using access = detail::foa::node_handle_access;
+
         if (nh.empty()) {
           return {end(), false, node_type{}};
         }
 
         BOOST_ASSERT(get_allocator() == nh.get_allocator());
 
-        auto itp = table_.insert(std::move(nh.element()));
+        auto itp = table_.insert(std::move(access::element(nh)));
         if (itp.second) {
-          nh.reset();
+          access::reset(nh);
           return {itp.first, true, node_type{}};
         } else {
           return {itp.first, false, std::move(nh)};
@@ -8788,15 +10583,17 @@ namespace boost {
 
       iterator insert(const_iterator, node_type&& nh)
       {
+        using access = detail::foa::node_handle_access;
+
         if (nh.empty()) {
           return end();
         }
 
         BOOST_ASSERT(get_allocator() == nh.get_allocator());
 
-        auto itp = table_.insert(std::move(nh.element()));
+        auto itp = table_.insert(std::move(access::element(nh)));
         if (itp.second) {
-          nh.reset();
+          access::reset(nh);
           return itp.first;
         } else {
           return itp.first;
@@ -8854,7 +10651,8 @@ namespace boost {
         BOOST_ASSERT(pos != end());
         node_type nh;
         auto elem = table_.extract(pos);
-        nh.emplace(std::move(elem), get_allocator());
+        detail::foa::node_handle_emplacer(nh)(
+          std::move(elem), get_allocator());
         return nh;
       }
 
@@ -9026,6 +10824,14 @@ namespace boost {
 
       void reserve(size_type n) { table_.reserve(n); }
 
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+      /// Stats
+      ///
+      stats get_stats() const { return table_.get_stats(); }
+
+      void reset_stats() noexcept { table_.reset_stats(); }
+#endif
+
       /// Observers
       ///
 
@@ -9159,6 +10965,117 @@ namespace boost {
 } // namespace boost
 
 #endif
+/* Fast open-addressing, node-based concurrent hashmap.
+ *
+ * Copyright 2023 Christian Mazakas.
+ * Copyright 2024 Braden Ganetsky.
+ * Copyright 2024 Joaquin M Lopez Munoz.
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
+ *
+ * See https://www.boost.org/libs/unordered for library home page.
+ */
+
+#ifndef BOOST_UNORDERED_CONCURRENT_NODE_MAP_FWD_HPP
+#define BOOST_UNORDERED_CONCURRENT_NODE_MAP_FWD_HPP
+
+namespace boost {
+  namespace unordered {
+
+    template <class Key, class T, class Hash = boost::hash<Key>,
+      class Pred = std::equal_to<Key>,
+      class Allocator = std::allocator<std::pair<Key const, T> > >
+    class concurrent_node_map;
+
+    template <class Key, class T, class Hash, class KeyEqual, class Allocator>
+    bool operator==(
+      concurrent_node_map<Key, T, Hash, KeyEqual, Allocator> const& lhs,
+      concurrent_node_map<Key, T, Hash, KeyEqual, Allocator> const& rhs);
+
+    template <class Key, class T, class Hash, class KeyEqual, class Allocator>
+    bool operator!=(
+      concurrent_node_map<Key, T, Hash, KeyEqual, Allocator> const& lhs,
+      concurrent_node_map<Key, T, Hash, KeyEqual, Allocator> const& rhs);
+
+    template <class Key, class T, class Hash, class Pred, class Alloc>
+    void swap(concurrent_node_map<Key, T, Hash, Pred, Alloc>& x,
+      concurrent_node_map<Key, T, Hash, Pred, Alloc>& y)
+      noexcept(noexcept(x.swap(y)));
+
+    template <class K, class T, class H, class P, class A, class Predicate>
+    typename concurrent_node_map<K, T, H, P, A>::size_type erase_if(
+      concurrent_node_map<K, T, H, P, A>& c, Predicate pred);
+
+#ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
+    namespace pmr {
+      template <class Key, class T, class Hash = boost::hash<Key>,
+        class Pred = std::equal_to<Key> >
+      using concurrent_node_map = boost::unordered::concurrent_node_map<Key, T,
+        Hash, Pred, std::pmr::polymorphic_allocator<std::pair<Key const, T> > >;
+    } // namespace pmr
+#endif
+
+  } // namespace unordered
+
+  using boost::unordered::concurrent_node_map;
+} // namespace boost
+
+#endif // BOOST_UNORDERED_CONCURRENT_NODE_MAP_FWD_HPP
+/* Copyright 2023 Christian Mazakas.
+ * Copyright 2024 Joaquin M Lopez Munoz. 
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
+ *
+ * See https://www.boost.org/libs/unordered for library home page.
+ */
+
+#ifndef BOOST_UNORDERED_DETAIL_FOA_NODE_MAP_HANDLE_HPP
+#define BOOST_UNORDERED_DETAIL_FOA_NODE_MAP_HANDLE_HPP
+
+namespace boost{
+namespace unordered{
+namespace detail{
+namespace foa{
+
+template <class TypePolicy, class Allocator>
+struct node_map_handle
+    : public node_handle_base<TypePolicy, Allocator>
+{
+private:
+  using base_type = node_handle_base<TypePolicy, Allocator>;
+
+  using typename base_type::type_policy;
+
+public:
+  using key_type = typename TypePolicy::key_type;
+  using mapped_type = typename TypePolicy::mapped_type;
+
+  constexpr node_map_handle() noexcept = default;
+  node_map_handle(node_map_handle&& nh) noexcept = default;
+
+  node_map_handle& operator=(node_map_handle&&) noexcept = default;
+
+  key_type& key() const
+  {
+    BOOST_ASSERT(!this->empty());
+    return const_cast<key_type&>(this->data().first);
+  }
+
+  mapped_type& mapped() const
+  {
+    BOOST_ASSERT(!this->empty());
+    return const_cast<mapped_type&>(this->data().second);
+  }
+};
+
+}
+}
+}
+}
+
+#endif // BOOST_UNORDERED_DETAIL_FOA_NODE_MAP_HANDLE_HPP
 // Copyright (C) 2023 Christian Mazakas
 // Copyright (C) 2024 Braden Ganetsky
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -9183,6 +11100,9 @@ namespace boost {
           using moved_type = std::pair<raw_key_type&&, raw_mapped_type&&>;
 
           using element_type = foa::element_type<value_type, VoidPtr>;
+
+          using types = node_map_types<Key, T, VoidPtr>;
+          using constructibility_checker = map_types_constructibility<types>;
 
           static value_type& value_from(element_type const& x)
           {
@@ -9223,24 +11143,27 @@ namespace boost {
           static void construct(
             A& al, element_type* p, element_type const& copy)
           {
-            construct(al, p, *copy.p);
+            construct(al, p, detail::as_const(*copy.p));
           }
 
           template <class A, class... Args>
           static void construct(A& al, init_type* p, Args&&... args)
           {
+            constructibility_checker::check(al, p, std::forward<Args>(args)...);
             std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, value_type* p, Args&&... args)
           {
+            constructibility_checker::check(al, p, std::forward<Args>(args)...);
             std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
           template <class A, class... Args>
           static void construct(A& al, key_type* p, Args&&... args)
           {
+            constructibility_checker::check(al, p, std::forward<Args>(args)...);
             std::allocator_traits<std::remove_cvref_t<decltype(al)>>::construct(al, p, std::forward<Args>(args)...);
           }
 
@@ -9250,9 +11173,12 @@ namespace boost {
             p->p = std::allocator_traits<std::remove_cvref_t<decltype(al)>>::allocate(al, 1);
             BOOST_TRY
             {
+              auto address = std::to_address(p->p);
+              constructibility_checker::check(
+                al, address, std::forward<Args>(args)...);
               std::allocator_traits<std::remove_cvref_t<decltype(
                 al)>>::construct(
-                al, std::to_address(p->p), std::forward<Args>(args)...);
+                al, address, std::forward<Args>(args)...);
             }
             BOOST_CATCH(...)
             {
@@ -9288,12 +11214,13 @@ namespace boost {
         };
 
       } // namespace foa
-    }   // namespace detail
-  }     // namespace unordered
+    } // namespace detail
+  } // namespace unordered
 } // namespace boost
 
 #endif // BOOST_UNORDERED_DETAIL_FOA_NODE_MAP_TYPES_HPP
 // Copyright (C) 2022 Christian Mazakas
+// Copyright (C) 2024 Braden Ganetsky
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -9323,6 +11250,16 @@ namespace boost {
     void swap(unordered_node_map<Key, T, Hash, KeyEqual, Allocator>& lhs,
       unordered_node_map<Key, T, Hash, KeyEqual, Allocator>& rhs)
       noexcept(noexcept(lhs.swap(rhs)));
+
+#ifndef BOOST_NO_CXX17_HDR_MEMORY_RESOURCE
+    namespace pmr {
+      template <class Key, class T, class Hash = boost::hash<Key>,
+        class KeyEqual = std::equal_to<Key> >
+      using unordered_node_map =
+        boost::unordered::unordered_node_map<Key, T, Hash, KeyEqual,
+          std::pmr::polymorphic_allocator<std::pair<const Key, T> > >;
+    } // namespace pmr
+#endif
   } // namespace unordered
 
   using boost::unordered::unordered_node_map;
@@ -9330,6 +11267,7 @@ namespace boost {
 
 #endif
 // Copyright (C) 2022-2023 Christian Mazakas
+// Copyright (C) 2024 Joaquin M Lopez Munoz
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -9346,45 +11284,13 @@ namespace boost {
 #pragma warning(disable : 4714)
 #endif
 
-    namespace detail {
-      template <class TypePolicy, class Allocator>
-      struct node_map_handle
-          : public detail::foa::node_handle_base<TypePolicy, Allocator>
-      {
-      private:
-        using base_type = detail::foa::node_handle_base<TypePolicy, Allocator>;
-
-        using typename base_type::type_policy;
-
-        template <class Key, class T, class Hash, class Pred, class Alloc>
-        friend class boost::unordered::unordered_node_map;
-
-      public:
-        using key_type = typename TypePolicy::key_type;
-        using mapped_type = typename TypePolicy::mapped_type;
-
-        constexpr node_map_handle() noexcept = default;
-        node_map_handle(node_map_handle&& nh) noexcept = default;
-
-        node_map_handle& operator=(node_map_handle&&) noexcept = default;
-
-        key_type& key() const
-        {
-          BOOST_ASSERT(!this->empty());
-          return const_cast<key_type&>(this->data().first);
-        }
-
-        mapped_type& mapped() const
-        {
-          BOOST_ASSERT(!this->empty());
-          return const_cast<mapped_type&>(this->data().second);
-        }
-      };
-    } // namespace detail
-
     template <class Key, class T, class Hash, class KeyEqual, class Allocator>
     class unordered_node_map
     {
+      template <class Key2, class T2, class Hash2, class Pred2,
+        class Allocator2>
+      friend class concurrent_node_map;
+
       using map_types = detail::foa::node_map_types<Key, T,
         typename std::allocator_traits<Allocator>::void_pointer>;
 
@@ -9419,11 +11325,15 @@ namespace boost {
         typename std::allocator_traits<allocator_type>::const_pointer;
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
-      using node_type = detail::node_map_handle<map_types,
+      using node_type = detail::foa::node_map_handle<map_types,
         typename std::allocator_traits<Allocator>::template rebind_alloc<
           typename map_types::value_type>>;
       using insert_return_type =
         detail::foa::insert_return_type<iterator, node_type>;
+
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+      using stats = typename table_type::stats;
+#endif
 
       unordered_node_map() : unordered_node_map(0) {}
 
@@ -9526,6 +11436,13 @@ namespace boost {
       {
       }
 
+      template <bool avoid_explicit_instantiation = true>
+      unordered_node_map(
+        concurrent_node_map<Key, T, Hash, KeyEqual, Allocator>&& other)
+          : table_(std::move(other.table_))
+      {
+      }
+
       ~unordered_node_map() = default;
 
       unordered_node_map& operator=(unordered_node_map const& other)
@@ -9538,6 +11455,13 @@ namespace boost {
         noexcept(std::declval<table_type&>() = std::declval<table_type&&>()))
       {
         table_ = std::move(other.table_);
+        return *this;
+      }
+
+      unordered_node_map& operator=(std::initializer_list<value_type> il)
+      {
+        this->clear();
+        this->insert(il.begin(), il.end());
         return *this;
       }
 
@@ -9613,15 +11537,17 @@ namespace boost {
 
       insert_return_type insert(node_type&& nh)
       {
+        using access = detail::foa::node_handle_access;
+
         if (nh.empty()) {
           return {end(), false, node_type{}};
         }
 
         BOOST_ASSERT(get_allocator() == nh.get_allocator());
 
-        auto itp = table_.insert(std::move(nh.element()));
+        auto itp = table_.insert(std::move(access::element(nh)));
         if (itp.second) {
-          nh.reset();
+          access::reset(nh);
           return {itp.first, true, node_type{}};
         } else {
           return {itp.first, false, std::move(nh)};
@@ -9630,15 +11556,17 @@ namespace boost {
 
       iterator insert(const_iterator, node_type&& nh)
       {
+        using access = detail::foa::node_handle_access;
+
         if (nh.empty()) {
           return end();
         }
 
         BOOST_ASSERT(get_allocator() == nh.get_allocator());
 
-        auto itp = table_.insert(std::move(nh.element()));
+        auto itp = table_.insert(std::move(access::element(nh)));
         if (itp.second) {
-          nh.reset();
+          access::reset(nh);
           return itp.first;
         } else {
           return itp.first;
@@ -9813,7 +11741,8 @@ namespace boost {
         BOOST_ASSERT(pos != end());
         node_type nh;
         auto elem = table_.extract(pos);
-        nh.emplace(std::move(elem), get_allocator());
+        detail::foa::node_handle_emplacer(nh)(
+          std::move(elem), get_allocator());
         return nh;
       }
 
@@ -10058,6 +11987,14 @@ namespace boost {
       void rehash(size_type n) { table_.rehash(n); }
 
       void reserve(size_type n) { table_.reserve(n); }
+
+#ifdef BOOST_UNORDERED_ENABLE_STATS
+      /// Stats
+      ///
+      stats get_stats() const { return table_.get_stats(); }
+
+      void reset_stats() noexcept { table_.reset_stats(); }
+#endif
 
       /// Observers
       ///
