@@ -105,7 +105,7 @@
       ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "clang++-16"
+        "CMAKE_CXX_COMPILER": "clang++-19"
       }
     },
     {
@@ -116,7 +116,7 @@
       ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_COMPILER": "clang++-16"
+        "CMAKE_CXX_COMPILER": "clang++-19"
       }
     },
     {
