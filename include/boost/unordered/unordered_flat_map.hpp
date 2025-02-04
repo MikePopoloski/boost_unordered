@@ -12,6 +12,7 @@
 #include <boost/unordered/concurrent_flat_map_fwd.hpp>
 #include <boost/unordered/detail/foa/flat_map_types.hpp>
 #include <boost/unordered/detail/foa/table.hpp>
+#include <boost/unordered/detail/serialize_container.hpp>
 #include <boost/unordered/detail/throw_exception.hpp>
 #include <boost/unordered/detail/type_traits.hpp>
 #include <boost/unordered/unordered_flat_map_fwd.hpp>
@@ -73,6 +74,9 @@ namespace boost {
       using iterator = typename table_type::iterator;
       using const_iterator = typename table_type::const_iterator;
 
+#if defined(BOOST_UNORDERED_ENABLE_STATS)
+      using stats = typename table_type::stats;
+#endif
 
       unordered_flat_map() : unordered_flat_map(0) {}
 
@@ -660,6 +664,13 @@ namespace boost {
 
       void reserve(size_type n) { table_.reserve(n); }
 
+#if defined(BOOST_UNORDERED_ENABLE_STATS)
+      /// Stats
+      ///
+      stats get_stats() const { return table_.get_stats(); }
+
+      void reset_stats() noexcept { table_.reset_stats(); }
+#endif
 
       /// Observers
       ///
@@ -708,6 +719,7 @@ namespace boost {
       unordered_flat_map<Key, T, Hash, KeyEqual, Allocator>& map,
       unsigned int version)
     {
+      detail::serialize_container(ar, map, version);
     }
 
 #if defined(BOOST_MSVC)

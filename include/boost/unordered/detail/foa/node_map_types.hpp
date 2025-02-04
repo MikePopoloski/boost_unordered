@@ -98,7 +98,7 @@ namespace boost {
           template <class A, class... Args>
           static void construct(A& al, element_type* p, Args&&... args)
           {
-            p->p = std::allocator_traits<std::remove_cvref_t<decltype(al)>>::allocate(al, 1);
+            p->p = std::allocator_traits<std::remove_cvref_t<decltype(al)>>::allocate(al,  1);
             BOOST_TRY
             {
               auto address = std::to_address(p->p);
@@ -118,17 +118,17 @@ namespace boost {
 
           template <class A> static void destroy(A& al, value_type* p) noexcept
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::destroy(al, p);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::destroy(al,  p);
           }
 
           template <class A> static void destroy(A& al, init_type* p) noexcept
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::destroy(al, p);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::destroy(al,  p);
           }
 
           template <class A> static void destroy(A& al, key_type* p) noexcept
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::destroy(al, p);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::destroy(al,  p);
           }
 
           template <class A>

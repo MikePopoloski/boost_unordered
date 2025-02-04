@@ -35,6 +35,9 @@
 #include <type_traits>
 #include <utility>
 
+#if defined(BOOST_UNORDERED_ENABLE_STATS)
+#include <boost/unordered/detail/foa/cumulative_stats.hpp>
+#endif
 
 #if !defined(BOOST_UNORDERED_DISABLE_SSE2)
 #if defined(BOOST_UNORDERED_ENABLE_SSE2)|| \
@@ -1127,6 +1130,44 @@ struct table_arrays
   value_type_pointer elements_;
 };
 
+#if defined(BOOST_UNORDERED_ENABLE_STATS)
+/* stats support */
+
+struct table_core_cumulative_stats
+{
+  concurrent_cumulative_stats<1> insertion;
+  concurrent_cumulative_stats<2> successful_lookup,
+                                 unsuccessful_lookup;
+};
+
+struct table_core_insertion_stats
+{
+  std::size_t            count;
+  sequence_stats_summary probe_length;
+};
+
+struct table_core_lookup_stats
+{
+  std::size_t            count;
+  sequence_stats_summary probe_length;
+  sequence_stats_summary num_comparisons;
+};
+
+struct table_core_stats
+{
+  table_core_insertion_stats insertion;
+  table_core_lookup_stats    successful_lookup,
+                             unsuccessful_lookup;
+};
+
+#define BOOST_UNORDERED_ADD_STATS(stats,args) stats.add args
+#define BOOST_UNORDERED_SWAP_STATS(stats1,stats2) std::swap(stats1,stats2)
+#define BOOST_UNORDERED_COPY_STATS(stats1,stats2) stats1=stats2
+#define BOOST_UNORDERED_RESET_STATS_OF(x) x.reset_stats()
+#define BOOST_UNORDERED_STATS_COUNTER(name) std::size_t name=0
+#define BOOST_UNORDERED_INCREMENT_STATS_COUNTER(name) ++name
+
+#else
 
 #define BOOST_UNORDERED_ADD_STATS(stats,args) ((void)0)
 #define BOOST_UNORDERED_SWAP_STATS(stats1,stats2) ((void)0)
@@ -1135,6 +1176,7 @@ struct table_arrays
 #define BOOST_UNORDERED_STATS_COUNTER(name) ((void)0)
 #define BOOST_UNORDERED_INCREMENT_STATS_COUNTER(name) ((void)0)
 
+#endif
 
 struct if_constexpr_void_else{void operator()()const{}};
 
@@ -1399,6 +1441,10 @@ public:
   using locator=table_locator<group_type,element_type>;
   using arrays_holder_type=arrays_holder<arrays_type,Allocator>;
 
+#if defined(BOOST_UNORDERED_ENABLE_STATS)
+  using cumulative_stats=table_core_cumulative_stats;
+  using stats=table_core_stats;
+#endif
 
 #if defined(BOOST_GCC)
 #pragma GCC diagnostic push
@@ -1774,6 +1820,37 @@ public:
     rehash(std::size_t(std::ceil(float(n)/mlf)));
   }
 
+#if defined(BOOST_UNORDERED_ENABLE_STATS)
+  stats get_stats()const
+  {
+    auto insertion=cstats.insertion.get_summary();
+    auto successful_lookup=cstats.successful_lookup.get_summary();
+    auto unsuccessful_lookup=cstats.unsuccessful_lookup.get_summary();
+    return{
+      {
+        insertion.count,
+        insertion.sequence_summary[0]
+      },
+      {
+        successful_lookup.count,
+        successful_lookup.sequence_summary[0],
+        successful_lookup.sequence_summary[1]
+      },
+      {
+        unsuccessful_lookup.count,
+        unsuccessful_lookup.sequence_summary[0],
+        unsuccessful_lookup.sequence_summary[1]
+      },
+    };
+  }
+
+  void reset_stats()noexcept
+  {
+    cstats.insertion.reset();
+    cstats.successful_lookup.reset();
+    cstats.unsuccessful_lookup.reset();
+  }
+#endif
 
   friend bool operator==(const table_core& x,const table_core& y)
   {
@@ -1985,6 +2062,9 @@ public:
   arrays_type              arrays;
   size_ctrl_type           size_ctrl;
 
+#if defined(BOOST_UNORDERED_ENABLE_STATS)
+  mutable cumulative_stats cstats;
+#endif
 
 private:
   template<

@@ -38,7 +38,7 @@ namespace boost {
 
           template <class A> static void destroy(A& al, value_type* p) noexcept
           {
-            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::destroy(al, p);
+            std::allocator_traits<std::remove_cvref_t<decltype(al)>>::destroy(al,  p);
           }
         };
       } // namespace foa

@@ -26,7 +26,7 @@ namespace boost {
         template <class Allocator, class T>
         static void destroy(Allocator& a, T* p)
         {
-          std::allocator_traits<std::remove_cvref_t<decltype(a)>>::destroy(a, p);
+          std::allocator_traits<std::remove_cvref_t<decltype(a)>>::destroy(a,  p);
         }
       };
 
