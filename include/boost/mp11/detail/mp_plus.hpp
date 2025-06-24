@@ -20,7 +20,7 @@ namespace mp11
 namespace detail
 {
 
-#if defined( BOOST_MP11_HAS_FOLD_EXPRESSIONS ) && !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, != 0 ) && !BOOST_MP11_WORKAROUND( BOOST_MP11_CLANG, != 0 )
+#if defined( BOOST_MP11_HAS_FOLD_EXPRESSIONS )
 
 // msvc fails with parser stack overflow for large sizeof...(T)
 // clang exceeds -fbracket-depth, which defaults to 256
@@ -40,23 +40,6 @@ template<> struct mp_plus_impl<>
     using type = std::integral_constant<int, 0>;
 };
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_GCC, < 40800 )
-
-template<class T1, class... T> struct mp_plus_impl<T1, T...>
-{
-    static const decltype(T1::value + mp_plus_impl<T...>::type::value) _v = T1::value + mp_plus_impl<T...>::type::value;
-    using type = std::integral_constant<typename std::remove_const<decltype(_v)>::type, _v>;
-};
-
-template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class T10, class... T> struct mp_plus_impl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T...>
-{
-    static const
-        decltype(T1::value + T2::value + T3::value + T4::value + T5::value + T6::value + T7::value + T8::value + T9::value + T10::value + mp_plus_impl<T...>::type::value)
-        _v = T1::value + T2::value + T3::value + T4::value + T5::value + T6::value + T7::value + T8::value + T9::value + T10::value + mp_plus_impl<T...>::type::value;
-    using type = std::integral_constant<typename std::remove_const<decltype(_v)>::type, _v>;
-};
-
-#else
 
 template<class T1, class... T> struct mp_plus_impl<T1, T...>
 {
@@ -70,7 +53,6 @@ template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, c
     using type = std::integral_constant<typename std::remove_const<decltype(_v)>::type, _v>;
 };
 
-#endif
 
 #endif
 

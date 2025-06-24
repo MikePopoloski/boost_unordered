@@ -10,15 +10,8 @@
 
 // BOOST_MP11_WORKAROUND
 
-#if defined( BOOST_STRICT_CONFIG ) || defined( BOOST_MP11_NO_WORKAROUNDS )
 
-# define BOOST_MP11_WORKAROUND( symbol, test ) 0
 
-#else
-
-# define BOOST_MP11_WORKAROUND( symbol, test ) ((symbol) != 0 && ((symbol) test))
-
-#endif
 
 //
 
@@ -92,9 +85,6 @@
 # undef BOOST_MP11_MSVC
 # define BOOST_MP11_MSVC _MSC_VER
 
-# if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-#  define BOOST_MP11_NO_CONSTEXPR
-# endif
 
 #if _MSC_FULL_VER < 190024210 // 2015u3
 #  undef BOOST_MP11_CONSTEXPR
@@ -129,16 +119,10 @@
 # define BOOST_MP11_HAS_TEMPLATE_AUTO
 #endif
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-// mp_value<0> is bool, mp_value<-1L> is int, etc
-# undef BOOST_MP11_HAS_TEMPLATE_AUTO
-#endif
 
 // BOOST_MP11_DEPRECATED(msg)
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_CLANG, < 304 )
-#  define BOOST_MP11_DEPRECATED(msg)
-#elif defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
 #  define BOOST_MP11_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #elif defined(_MSC_VER) && _MSC_VER >= 1900
 #  define BOOST_MP11_DEPRECATED(msg) [[deprecated(msg)]]

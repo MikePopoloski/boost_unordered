@@ -14,6 +14,7 @@
 #include <boost/core/serialization.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <memory>
 #include <type_traits>
 
 namespace boost{

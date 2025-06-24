@@ -11,15 +11,6 @@
 #include <boost/mp11/utility.hpp>
 #include <boost/mp11/detail/config.hpp>
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1930 )
-
-// not exactly good practice, but...
-namespace std
-{
-    template<class... _Types> class tuple;
-}
-
-#endif
 
 namespace boost
 {
@@ -30,40 +21,10 @@ namespace mp11
 namespace detail
 {
 
-#if !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1930 )
 
 template<class T> using mpmf_wrap = mp_identity<T>;
 template<class T> using mpmf_unwrap = typename T::type;
 
-#else
-
-template<class... T> struct mpmf_tuple {};
-
-template<class T> struct mpmf_wrap_impl
-{
-    using type = mp_identity<T>;
-};
-
-template<class... T> struct mpmf_wrap_impl< std::tuple<T...> >
-{
-    using type = mp_identity< mpmf_tuple<T...> >;
-};
-
-template<class T> using mpmf_wrap = typename mpmf_wrap_impl<T>::type;
-
-template<class T> struct mpmf_unwrap_impl
-{
-    using type = typename T::type;
-};
-
-template<class... T> struct mpmf_unwrap_impl< mp_identity< mpmf_tuple<T...> > >
-{
-    using type = std::tuple<T...>;
-};
-
-template<class T> using mpmf_unwrap = typename mpmf_unwrap_impl<T>::type;
-
-#endif // #if !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1930 )
 
 template<class M, class K> struct mp_map_find_impl;
 

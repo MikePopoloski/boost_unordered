@@ -9,6 +9,7 @@ Distributed under the Boost Software License, Version 1.0.
 #define BOOST_CORE_NVP_HPP
 
 #include <boost/minconfig.hpp>
+#include <memory>
 
 namespace boost {
 namespace serialization {

@@ -11,6 +11,7 @@
 #include <boost/unordered/detail/type_traits.hpp>
 
 #include <boost/core/no_exceptions_support.hpp>
+#include <memory>
 
 namespace boost {
   namespace unordered {
