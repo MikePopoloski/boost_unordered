@@ -90,7 +90,7 @@ namespace detail
 
 template<class L, template<class...> class P> struct mp_count_if_impl;
 
-#if defined( BOOST_MP11_HAS_CXX14_CONSTEXPR ) && !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1930 )
+#if defined( BOOST_MP11_HAS_CXX14_CONSTEXPR )
 
 template<template<class...> class P, class... T> constexpr std::size_t cx_count_if()
 {
@@ -122,16 +122,9 @@ template<template<class...> class L, class... T, template<class...> class P> str
 
 template<template<class...> class L, class... T, template<class...> class P> struct mp_count_if_impl<L<T...>, P>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-
-    template<class T> struct _f { using type = mp_to_bool<P<T>>; };
-    using type = mp_size_t<mp_plus<typename _f<T>::type...>::value>;
-
-#else
 
     using type = mp_size_t<mp_plus<mp_to_bool<P<T>>...>::value>;
 
-#endif
 };
 
 #endif

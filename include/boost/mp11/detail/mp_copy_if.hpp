@@ -28,13 +28,8 @@ template<class L, template<class...> class P> struct mp_copy_if_impl
 
 template<template<class...> class L, class... T, template<class...> class P> struct mp_copy_if_impl<L<T...>, P>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-    template<class U> struct _f { using type = mp_if<P<U>, mp_list<U>, mp_list<>>; };
-    using type = mp_append<L<>, typename _f<T>::type...>;
-#else
     template<class U> using _f = mp_if<P<U>, mp_list<U>, mp_list<>>;
     using type = mp_append<L<>, _f<T>...>;
-#endif
 };
 
 } // namespace detail

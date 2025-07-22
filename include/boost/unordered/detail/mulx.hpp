@@ -8,6 +8,7 @@
 
 #include <climits>
 #include <cstddef>
+#include <cstdint>
 
 #if defined(_MSC_VER) && !defined(__clang__)
 # include <intrin.h>

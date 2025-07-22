@@ -14,4 +14,5 @@ prefix/
 CMakeLists.txt.user
 CMakeUserPresets.json
 .ccls
-
+boost_*/
+boost_*.tar.gz

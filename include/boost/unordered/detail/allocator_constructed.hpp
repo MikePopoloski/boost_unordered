@@ -10,6 +10,7 @@
 #define BOOST_UNORDERED_DETAIL_ALLOCATOR_CONSTRUCTED_HPP
 
 #include <boost/unordered/detail/opt_storage.hpp>
+#include <memory>
 
 namespace boost {
   namespace unordered {

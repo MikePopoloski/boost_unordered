@@ -5,7 +5,7 @@
 #ifndef BOOST_HASH_IS_UNORDERED_RANGE_HPP_INCLUDED
 #define BOOST_HASH_IS_UNORDERED_RANGE_HPP_INCLUDED
 
-#include <boost/container_hash/is_range.hpp>
+#include <ranges>
 #include <type_traits>
 
 namespace boost
@@ -28,7 +28,7 @@ template<class T> struct has_hasher_< T, std::integral_constant< bool,
 namespace container_hash
 {
 
-template<class T> struct is_unordered_range: std::integral_constant< bool, is_range<T>::value && hash_detail::has_hasher_<T>::value >
+template<class T> struct is_unordered_range: std::integral_constant< bool, std::ranges::range<T> && hash_detail::has_hasher_<T>::value >
 {
 };
 
