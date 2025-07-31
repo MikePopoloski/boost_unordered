@@ -205,8 +205,6 @@ namespace boost
 namespace container_hash
 {
 
-template<class T> struct is_range;
-template<class T> struct is_contiguous_range;
 template<class T> struct is_unordered_range;
 template<class T> struct is_described_class;
 template<class T> struct is_tuple_like;
@@ -300,7 +298,7 @@ namespace boost {
 // Same format as BOOST_VERSION:
 //   major * 100000 + minor * 100 + patch
 
-#define BOOST_MP11_VERSION 108700
+#define BOOST_MP11_VERSION 108800
 
 #endif // #ifndef BOOST_MP11_VERSION_HPP_INCLUDED
 #ifndef BOOST_MP11_DETAIL_CONFIG_HPP_INCLUDED
@@ -314,16 +312,6 @@ namespace boost {
 // http://www.boost.org/LICENSE_1_0.txt
 
 // BOOST_MP11_WORKAROUND
-
-#if defined( BOOST_STRICT_CONFIG ) || defined( BOOST_MP11_NO_WORKAROUNDS )
-
-# define BOOST_MP11_WORKAROUND( symbol, test ) 0
-
-#else
-
-# define BOOST_MP11_WORKAROUND( symbol, test ) ((symbol) != 0 && ((symbol) test))
-
-#endif
 
 //
 
@@ -397,10 +385,6 @@ namespace boost {
 # undef BOOST_MP11_MSVC
 # define BOOST_MP11_MSVC _MSC_VER
 
-# if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-#  define BOOST_MP11_NO_CONSTEXPR
-# endif
-
 #if _MSC_FULL_VER < 190024210 // 2015u3
 #  undef BOOST_MP11_CONSTEXPR
 #  define BOOST_MP11_CONSTEXPR
@@ -434,16 +418,9 @@ namespace boost {
 # define BOOST_MP11_HAS_TEMPLATE_AUTO
 #endif
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-// mp_value<0> is bool, mp_value<-1L> is int, etc
-# undef BOOST_MP11_HAS_TEMPLATE_AUTO
-#endif
-
 // BOOST_MP11_DEPRECATED(msg)
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_CLANG, < 304 )
-#  define BOOST_MP11_DEPRECATED(msg)
-#elif defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
 #  define BOOST_MP11_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #elif defined(_MSC_VER) && _MSC_VER >= 1900
 #  define BOOST_MP11_DEPRECATED(msg) [[deprecated(msg)]]
@@ -728,27 +705,6 @@ template<class C, class T, class... E> using mp_if = typename detail::mp_if_c_im
 
 // mp_valid
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_INTEL, != 0 ) // tested at 1800
-
-// contributed by Roland Schulz in https://github.com/boostorg/mp11/issues/17
-
-namespace detail
-{
-
-template<class...> using void_t = void;
-
-template<class, template<class...> class F, class... T>
-struct mp_valid_impl: mp_false {};
-
-template<template<class...> class F, class... T>
-struct mp_valid_impl<void_t<F<T...>>, F, T...>: mp_true {};
-
-} // namespace detail
-
-template<template<class...> class F, class... T> using mp_valid = typename detail::mp_valid_impl<void, F, T...>;
-
-#else
-
 // implementation by Bruno Dutra (by the name is_evaluable)
 namespace detail
 {
@@ -765,8 +721,6 @@ template<template<class...> class F, class... T> struct mp_valid_impl
 
 template<template<class...> class F, class... T> using mp_valid = typename detail::mp_valid_impl<F, T...>::type;
 
-#endif
-
 template<class Q, class... T> using mp_valid_q = mp_valid<Q::template fn, T...>;
 
 // mp_defer
@@ -782,26 +736,9 @@ struct mp_no_type
 {
 };
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_CUDA, >= 9000000 && BOOST_MP11_CUDA < 10000000 )
-
-template<template<class...> class F, class... T> struct mp_defer_cuda_workaround
-{
-    using type = mp_if<mp_valid<F, T...>, detail::mp_defer_impl<F, T...>, detail::mp_no_type>;
-};
-
-#endif
-
 } // namespace detail
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_CUDA, >= 9000000 && BOOST_MP11_CUDA < 10000000 )
-
-template<template<class...> class F, class... T> using mp_defer = typename detail::mp_defer_cuda_workaround< F, T...>::type;
-
-#else
-
 template<template<class...> class F, class... T> using mp_defer = mp_if<mp_valid<F, T...>, detail::mp_defer_impl<F, T...>, detail::mp_no_type>;
-
-#endif
 
 } // namespace mp11
 } // namespace boost
@@ -876,7 +813,7 @@ namespace mp11
 namespace detail
 {
 
-#if defined( BOOST_MP11_HAS_FOLD_EXPRESSIONS ) && !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, != 0 ) && !BOOST_MP11_WORKAROUND( BOOST_MP11_CLANG, != 0 )
+#ifdef  BOOST_MP11_HAS_FOLD_EXPRESSIONS 
 
 // msvc fails with parser stack overflow for large sizeof...(T)
 // clang exceeds -fbracket-depth, which defaults to 256
@@ -896,24 +833,6 @@ template<> struct mp_plus_impl<>
     using type = std::integral_constant<int, 0>;
 };
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_GCC, < 40800 )
-
-template<class T1, class... T> struct mp_plus_impl<T1, T...>
-{
-    static const decltype(T1::value + mp_plus_impl<T...>::type::value) _v = T1::value + mp_plus_impl<T...>::type::value;
-    using type = std::integral_constant<typename std::remove_const<decltype(_v)>::type, _v>;
-};
-
-template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8, class T9, class T10, class... T> struct mp_plus_impl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T...>
-{
-    static const
-        decltype(T1::value + T2::value + T3::value + T4::value + T5::value + T6::value + T7::value + T8::value + T9::value + T10::value + mp_plus_impl<T...>::type::value)
-        _v = T1::value + T2::value + T3::value + T4::value + T5::value + T6::value + T7::value + T8::value + T9::value + T10::value + mp_plus_impl<T...>::type::value;
-    using type = std::integral_constant<typename std::remove_const<decltype(_v)>::type, _v>;
-};
-
-#else
-
 template<class T1, class... T> struct mp_plus_impl<T1, T...>
 {
     static const auto _v = T1::value + mp_plus_impl<T...>::type::value;
@@ -925,8 +844,6 @@ template<class T1, class T2, class T3, class T4, class T5, class T6, class T7, c
     static const auto _v = T1::value + T2::value + T3::value + T4::value + T5::value + T6::value + T7::value + T8::value + T9::value + T10::value + mp_plus_impl<T...>::type::value;
     using type = std::integral_constant<typename std::remove_const<decltype(_v)>::type, _v>;
 };
-
-#endif
 
 #endif
 
@@ -1026,7 +943,7 @@ namespace detail
 
 template<class L, template<class...> class P> struct mp_count_if_impl;
 
-#if defined( BOOST_MP11_HAS_CXX14_CONSTEXPR ) && !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1930 )
+#ifdef  BOOST_MP11_HAS_CXX14_CONSTEXPR 
 
 template<template<class...> class P, class... T> constexpr std::size_t cx_count_if()
 {
@@ -1058,16 +975,9 @@ template<template<class...> class L, class... T, template<class...> class P> str
 
 template<template<class...> class L, class... T, template<class...> class P> struct mp_count_if_impl<L<T...>, P>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-
-    template<class T> struct _f { using type = mp_to_bool<P<T>>; };
-    using type = mp_size_t<mp_plus<typename _f<T>::type...>::value>;
-
-#else
 
     using type = mp_size_t<mp_plus<mp_to_bool<P<T>>...>::value>;
 
-#endif
 };
 
 #endif
@@ -1105,22 +1015,10 @@ template<class L, class V, template<class...> class F> struct mp_fold_impl
 // An error "no type named 'type'" here means that the first argument to mp_fold is not a list
 };
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1800 )
-
-template<template<class...> class L, class... T, class V, template<class...> class F> struct mp_fold_impl<L<T...>, V, F>
-{
-    static_assert( sizeof...(T) == 0, "T... must be empty" );
-    using type = V;
-};
-
-#else
-
 template<template<class...> class L, class V, template<class...> class F> struct mp_fold_impl<L<>, V, F>
 {
     using type = V;
 };
-
-#endif
 
 //
 
@@ -1348,26 +1246,8 @@ template<template<class...> class F> struct mp_quote_trait
 };
 
 // mp_invoke_q
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1900 )
-
-namespace detail
-{
-
-template<class Q, class... T> struct mp_invoke_q_impl: mp_defer<Q::template fn, T...> {};
-
-} // namespace detail
-
-template<class Q, class... T> using mp_invoke_q = typename detail::mp_invoke_q_impl<Q, T...>::type;
-
-#elif BOOST_MP11_WORKAROUND( BOOST_MP11_GCC, < 50000 )
-
-template<class Q, class... T> using mp_invoke_q = typename mp_defer<Q::template fn, T...>::type;
-
-#else
 
 template<class Q, class... T> using mp_invoke_q = typename Q::template fn<T...>;
-
-#endif
 
 // mp_not_fn<P>
 template<template<class...> class P> struct mp_not_fn
@@ -1385,14 +1265,10 @@ template<class L, class Q> using mp_compose_helper = mp_list< mp_apply_q<Q, L> >
 
 } // namespace detail
 
-#if !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1900 )
-
 template<template<class...> class... F> struct mp_compose
 {
     template<class... T> using fn = mp_front< mp_fold<mp_list<mp_quote<F>...>, mp_list<T...>, detail::mp_compose_helper> >;
 };
-
-#endif
 
 template<class... Q> struct mp_compose_q
 {
@@ -1426,44 +1302,6 @@ namespace detail
 // append_type_lists
 
 template<class... L> struct mp_append_impl;
-
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1800 )
-
-template<class... L> struct mp_append_impl
-{
-};
-
-template<> struct mp_append_impl<>
-{
-    using type = mp_list<>;
-};
-
-template<template<class...> class L, class... T> struct mp_append_impl<L<T...>>
-{
-    using type = L<T...>;
-};
-
-template<template<class...> class L1, class... T1, template<class...> class L2, class... T2> struct mp_append_impl<L1<T1...>, L2<T2...>>
-{
-    using type = L1<T1..., T2...>;
-};
-
-template<template<class...> class L1, class... T1, template<class...> class L2, class... T2, template<class...> class L3, class... T3> struct mp_append_impl<L1<T1...>, L2<T2...>, L3<T3...>>
-{
-    using type = L1<T1..., T2..., T3...>;
-};
-
-template<template<class...> class L1, class... T1, template<class...> class L2, class... T2, template<class...> class L3, class... T3, template<class...> class L4, class... T4> struct mp_append_impl<L1<T1...>, L2<T2...>, L3<T3...>, L4<T4...>>
-{
-    using type = L1<T1..., T2..., T3..., T4...>;
-};
-
-template<template<class...> class L1, class... T1, template<class...> class L2, class... T2, template<class...> class L3, class... T3, template<class...> class L4, class... T4, template<class...> class L5, class... T5, class... Lr> struct mp_append_impl<L1<T1...>, L2<T2...>, L3<T3...>, L4<T4...>, L5<T5...>, Lr...>
-{
-    using type = typename mp_append_impl<L1<T1..., T2..., T3..., T4..., T5...>, Lr...>::type;
-};
-
-#else
 
 template<class L1 = mp_list<>, class L2 = mp_list<>, class L3 = mp_list<>, class L4 = mp_list<>, class L5 = mp_list<>, class L6 = mp_list<>, class L7 = mp_list<>, class L8 = mp_list<>, class L9 = mp_list<>, class L10 = mp_list<>, class L11 = mp_list<>> struct append_11_impl
 {
@@ -1556,20 +1394,6 @@ template<
     using type = typename mp_append_impl<prefix, Lr...>::type;
 };
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_CUDA, >= 9000000 && BOOST_MP11_CUDA < 10000000 )
-
-template<class... L>
-struct mp_append_impl_cuda_workaround
-{
-    using type = mp_if_c<(sizeof...(L) > 111), mp_quote<append_inf_impl>, mp_if_c<(sizeof...(L) > 11), mp_quote<append_111_impl>, mp_quote<append_11_impl> > >;
-};
-
-template<class... L> struct mp_append_impl: mp_append_impl_cuda_workaround<L...>::type::template fn<L...>
-{
-};
-
-#else
-
 template<class... L> struct mp_append_impl:
     mp_cond<
         mp_bool<(sizeof...(L) > 111)>, mp_quote<append_inf_impl>,
@@ -1578,10 +1402,6 @@ template<class... L> struct mp_append_impl:
     >::template fn<L...>
 {
 };
-
-#endif // #if BOOST_MP11_WORKAROUND( BOOST_MP11_CUDA, >= 9000000 && BOOST_MP11_CUDA < 10000000 )
-
-#endif // #if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1800 )
 
 struct append_type_lists
 {
@@ -2285,38 +2105,6 @@ namespace mp11
 //   in detail/mp_void.hpp
 
 // mp_and<T...>
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1910 )
-
-namespace detail
-{
-
-template<class... T> struct mp_and_impl;
-
-} // namespace detail
-
-template<class... T> using mp_and = mp_to_bool< typename detail::mp_and_impl<T...>::type >;
-
-namespace detail
-{
-
-template<> struct mp_and_impl<>
-{
-    using type = mp_true;
-};
-
-template<class T> struct mp_and_impl<T>
-{
-    using type = T;
-};
-
-template<class T1, class... T> struct mp_and_impl<T1, T...>
-{
-    using type = mp_eval_if< mp_not<T1>, T1, mp_and, T... >;
-};
-
-} // namespace detail
-
-#else
 
 namespace detail
 {
@@ -2335,19 +2123,10 @@ template<class... T> struct mp_and_impl< mp_list<T...>, mp_void<mp_if<T, void>..
 
 template<class... T> using mp_and = typename detail::mp_and_impl<mp_list<T...>>::type;
 
-#endif
-
 // mp_all<T...>
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86355
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 ) || BOOST_MP11_WORKAROUND( BOOST_MP11_GCC, != 0 )
-
-template<class... T> using mp_all = mp_bool< mp_count_if< mp_list<T...>, mp_not >::value == 0 >;
-
-#else
 
 template<class... T> using mp_all = mp_bool< mp_count< mp_list<mp_to_bool<T>...>, mp_false >::value == 0 >;
-
-#endif
 
 // mp_or<T...>
 namespace detail
@@ -2381,15 +2160,8 @@ template<class T1, class... T> struct mp_or_impl<T1, T...>
 
 // mp_any<T...>
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86356
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 ) || BOOST_MP11_WORKAROUND( BOOST_MP11_GCC, != 0 )
-
-template<class... T> using mp_any = mp_bool< mp_count_if< mp_list<T...>, mp_to_bool >::value != 0 >;
-
-#else
 
 template<class... T> using mp_any = mp_bool< mp_count< mp_list<mp_to_bool<T>...>, mp_true >::value != 0 >;
-
-#endif
 
 // mp_same<T...>
 namespace detail
@@ -2503,13 +2275,8 @@ template<class L, template<class...> class P> struct mp_copy_if_impl
 
 template<template<class...> class L, class... T, template<class...> class P> struct mp_copy_if_impl<L<T...>, P>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-    template<class U> struct _f { using type = mp_if<P<U>, mp_list<U>, mp_list<>>; };
-    using type = mp_append<L<>, typename _f<T>::type...>;
-#else
     template<class U> using _f = mp_if<P<U>, mp_list<U>, mp_list<>>;
     using type = mp_append<L<>, _f<T>...>;
-#endif
 };
 
 } // namespace detail
@@ -2546,13 +2313,8 @@ template<class L, template<class...> class P> struct mp_remove_if_impl
 
 template<template<class...> class L, class... T, template<class...> class P> struct mp_remove_if_impl<L<T...>, P>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-    template<class U> struct _f { using type = mp_if<P<U>, mp_list<>, mp_list<U>>; };
-    using type = mp_append<L<>, typename _f<T>::type...>;
-#else
     template<class U> using _f = mp_if<P<U>, mp_list<>, mp_list<U>>;
     using type = mp_append<L<>, _f<T>...>;
-#endif
 };
 
 } // namespace detail
@@ -2567,7 +2329,7 @@ template<class L, class Q> using mp_remove_if_q = mp_remove_if<L, Q::template fn
 #ifndef BOOST_MP11_SET_HPP_INCLUDED
 #define BOOST_MP11_SET_HPP_INCLUDED
 
-// Copyright 2015, 2019 Peter Dimov.
+// Copyright 2015, 2019, 2024 Peter Dimov.
 //
 // Distributed under the Boost Software License, Version 1.0.
 //
@@ -2651,6 +2413,20 @@ template<class S, class... T> using mp_set_push_front = typename detail::mp_set_
 namespace detail
 {
 
+struct mp_is_set_helper_start
+{
+    static constexpr bool value = true;
+    template<class T> static mp_false contains( T );
+};
+
+template<class Base, class T>
+struct mp_is_set_helper: Base
+{
+    static constexpr bool value = Base::value && !decltype( Base::contains( mp_identity<T>{} ) )::value;
+    using Base::contains;
+    static mp_true contains( mp_identity<T> );
+};
+
 template<class S> struct mp_is_set_impl
 {
     using type = mp_false;
@@ -2658,7 +2434,7 @@ template<class S> struct mp_is_set_impl
 
 template<template<class...> class L, class... T> struct mp_is_set_impl<L<T...>>
 {
-    using type = mp_to_bool<std::is_same<mp_list<T...>, mp_set_push_back<mp_list<>, T...> > >;
+    using type = mp_bool<mp_fold<mp_list<T...>, detail::mp_is_set_helper_start, detail::mp_is_set_helper>::value>;
 };
 
 } // namespace detail
@@ -2753,16 +2529,6 @@ template<class L, class... S> using mp_set_difference = mp_if< mp_all<mp_is_list
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1930 )
-
-// not exactly good practice, but...
-namespace std
-{
-    template<class... _Types> class tuple;
-}
-
-#endif
-
 namespace boost
 {
 namespace mp11
@@ -2772,40 +2538,8 @@ namespace mp11
 namespace detail
 {
 
-#if !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1930 )
-
 template<class T> using mpmf_wrap = mp_identity<T>;
 template<class T> using mpmf_unwrap = typename T::type;
-
-#else
-
-template<class... T> struct mpmf_tuple {};
-
-template<class T> struct mpmf_wrap_impl
-{
-    using type = mp_identity<T>;
-};
-
-template<class... T> struct mpmf_wrap_impl< std::tuple<T...> >
-{
-    using type = mp_identity< mpmf_tuple<T...> >;
-};
-
-template<class T> using mpmf_wrap = typename mpmf_wrap_impl<T>::type;
-
-template<class T> struct mpmf_unwrap_impl
-{
-    using type = typename T::type;
-};
-
-template<class... T> struct mpmf_unwrap_impl< mp_identity< mpmf_tuple<T...> > >
-{
-    using type = std::tuple<T...>;
-};
-
-template<class T> using mpmf_unwrap = typename mpmf_unwrap_impl<T>::type;
-
-#endif // #if !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1930 )
 
 template<class M, class K> struct mp_map_find_impl;
 
@@ -3354,47 +3088,23 @@ template<template<class...> class F, class... L> struct mp_transform_impl
 
 template<template<class...> class F, template<class...> class L, class... T> struct mp_transform_impl<F, L<T...>>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-
-    template<class... U> struct f { using type = F<U...>; };
-
-    using type = L<typename f<T>::type...>;
-
-#else
 
     using type = L<F<T>...>;
 
-#endif
 };
 
 template<template<class...> class F, template<class...> class L1, class... T1, template<class...> class L2, class... T2> struct mp_transform_impl<F, L1<T1...>, L2<T2...>>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-
-    template<class... U> struct f { using type = F<U...>; };
-
-    using type = L1<typename f<T1, T2>::type...>;
-
-#else
 
     using type = L1<F<T1,T2>...>;
 
-#endif
 };
 
 template<template<class...> class F, template<class...> class L1, class... T1, template<class...> class L2, class... T2, template<class...> class L3, class... T3> struct mp_transform_impl<F, L1<T1...>, L2<T2...>, L3<T3...>>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-
-    template<class... U> struct f { using type = F<U...>; };
-
-    using type = L1<typename f<T1, T2, T3>::type...>;
-
-#else
 
     using type = L1<F<T1,T2,T3>...>;
 
-#endif
 };
 
 #ifdef BOOST_MP11_HAS_TEMPLATE_AUTO
@@ -3416,45 +3126,13 @@ template<template<class...> class F, template<auto...> class L1, auto... A1, tem
 
 #endif
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, == 1900 ) || BOOST_MP11_WORKAROUND( BOOST_MP11_GCC, < 40800 )
-
-template<class... L> using mp_same_size_1 = mp_same<mp_size<L>...>;
-template<class... L> struct mp_same_size_2: mp_defer<mp_same_size_1, L...> {};
-
-#endif
-
 struct list_size_mismatch
 {
 };
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_CUDA, >= 9000000 && BOOST_MP11_CUDA < 10000000 )
-
-template<template<class...> class F, class... L> struct mp_transform_cuda_workaround
-{
-    using type = mp_if<mp_same<mp_size<L>...>, detail::mp_transform_impl<F, L...>, detail::list_size_mismatch>;
-};
-
-#endif
-
 } // namespace detail
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, == 1900 ) || BOOST_MP11_WORKAROUND( BOOST_MP11_GCC, < 40800 )
-
-template<template<class...> class F, class... L> using mp_transform = typename mp_if<typename detail::mp_same_size_2<L...>::type, detail::mp_transform_impl<F, L...>, detail::list_size_mismatch>::type;
-
-#else
-
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_CUDA, >= 9000000 && BOOST_MP11_CUDA < 10000000 )
-
-template<template<class...> class F, class... L> using mp_transform = typename detail::mp_transform_cuda_workaround< F, L...>::type::type;
-
-#else
-
 template<template<class...> class F, class... L> using mp_transform = typename mp_if<mp_same<mp_size<L>...>, detail::mp_transform_impl<F, L...>, detail::list_size_mismatch>::type;
-
-#endif
-
-#endif
 
 template<class Q, class... L> using mp_transform_q = mp_transform<Q::template fn, L...>;
 
@@ -3487,16 +3165,7 @@ template<template<class...> class P, template<class...> class F, class... L> str
     using Qp = mp_quote<P>;
     using Qf = mp_quote<F>;
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-
-    template<class... U> struct _f_ { using type = mp_eval_if_q<mp_not<mp_invoke_q<Qp, U...>>, mp_first<mp_list<U...>>, Qf, U...>; };
-    template<class... U> using _f = typename _f_<U...>::type;
-
-#else
-
     template<class... U> using _f = mp_eval_if_q<mp_not<mp_invoke_q<Qp, U...>>, mp_first<mp_list<U...>>, Qf, U...>;
-
-#endif
 
     using type = mp_transform<_f, L...>;
 };
@@ -3538,17 +3207,10 @@ template<class L, class V> struct mp_fill_impl
 
 template<template<class...> class L, class... T, class V> struct mp_fill_impl<L<T...>, V>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1900 )
-
-    template<class...> struct _f { using type = V; };
-    using type = L<typename _f<T>::type...>;
-
-#else
 
     template<class...> using _f = V;
     using type = L<_f<T>...>;
 
-#endif
 };
 
 #ifdef BOOST_MP11_HAS_TEMPLATE_AUTO
@@ -3656,16 +3318,21 @@ template<class L, class N> using mp_drop = mp_drop_c<L, std::size_t{ N::value }>
 namespace detail
 {
 
-template<class S, class F> struct mp_from_sequence_impl;
+template<class S, class F, bool Z> struct mp_from_sequence_impl;
 
-template<template<class T, T... I> class S, class U, U... J, class F> struct mp_from_sequence_impl<S<U, J...>, F>
+template<template<class T, T... I> class S, class U, U... J, class F> struct mp_from_sequence_impl<S<U, J...>, F, false>
 {
     using type = mp_list_c<U, (F::value + J)...>;
 };
 
+template<template<class T, T... I> class S, class U, U... J, class F> struct mp_from_sequence_impl<S<U, J...>, F, true>
+{
+    using type = mp_list_c<U, J...>;
+};
+
 } // namespace detail
 
-template<class S, class F = mp_int<0>> using mp_from_sequence = typename detail::mp_from_sequence_impl<S, F>::type;
+template<class S, class F = mp_int<0>> using mp_from_sequence = typename detail::mp_from_sequence_impl<S, F, (F::value == 0)>::type;
 
 // mp_iota(_c)<N, F>
 template<std::size_t N, std::size_t F = 0> using mp_iota_c = mp_from_sequence<make_index_sequence<N>, mp_size_t<F>>;
@@ -3703,26 +3370,9 @@ template<class L, std::size_t I> struct mp_at_c_impl
 
 #endif
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_CUDA, >= 9000000 && BOOST_MP11_CUDA < 10000000 )
-
-template<class L, std::size_t I> struct mp_at_c_cuda_workaround
-{
-    using type = mp_if_c<(I < mp_size<L>::value), detail::mp_at_c_impl<L, I>, void>;
-};
-
-#endif
-
 } // namespace detail
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_CUDA, >= 9000000 && BOOST_MP11_CUDA < 10000000 )
-
-template<class L, std::size_t I> using mp_at_c = typename detail::mp_at_c_cuda_workaround< L, I >::type::type;
-
-#else
-
 template<class L, std::size_t I> using mp_at_c = typename mp_if_c<(I < mp_size<L>::value), detail::mp_at_c_impl<L, I>, void>::type;
-
-#endif
 
 template<class L, class I> using mp_at = mp_at_c<L, std::size_t{ I::value }>;
 
@@ -3823,13 +3473,8 @@ template<class L, class V, class W> struct mp_replace_impl;
 
 template<template<class...> class L, class... T, class V, class W> struct mp_replace_impl<L<T...>, V, W>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1800 )
-    template<class A> struct _f { using type = mp_if<std::is_same<A, V>, W, A>; };
-    using type = L<typename _f<T>::type...>;
-#else
     template<class A> using _f = mp_if<std::is_same<A, V>, W, A>;
     using type = L<_f<T>...>;
-#endif
 };
 
 } // namespace detail
@@ -3844,13 +3489,8 @@ template<class L, template<class...> class P, class W> struct mp_replace_if_impl
 
 template<template<class...> class L, class... T, template<class...> class P, class W> struct mp_replace_if_impl<L<T...>, P, W>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-    template<class U> struct _f { using type = mp_if<P<U>, W, U>; };
-    using type = L<typename _f<T>::type...>;
-#else
     template<class U> using _f = mp_if<P<U>, W, U>;
     using type = L<_f<T>...>;
-#endif
 };
 
 } // namespace detail
@@ -3869,13 +3509,8 @@ template<class L, class V> struct mp_remove_impl;
 
 template<template<class...> class L, class... T, class V> struct mp_remove_impl<L<T...>, V>
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
-    template<class U> struct _f { using type = mp_if<std::is_same<U, V>, mp_list<>, mp_list<U>>; };
-    using type = mp_append<L<>, typename _f<T>::type...>;
-#else
     template<class U> using _f = mp_if<std::is_same<U, V>, mp_list<>, mp_list<U>>;
     using type = mp_append<L<>, _f<T>...>;
-#endif
 };
 
 } // namespace detail
@@ -3920,22 +3555,10 @@ namespace detail
 
 template<class L, template<class...> class P> struct mp_sort_impl;
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1800 )
-
-template<template<class...> class L, class... T, template<class...> class P> struct mp_sort_impl<L<T...>, P>
-{
-    static_assert( sizeof...(T) == 0, "T... must be empty" );
-    using type = L<>;
-};
-
-#else
-
 template<template<class...> class L, template<class...> class P> struct mp_sort_impl<L<>, P>
 {
     using type = L<>;
 };
-
-#endif
 
 template<template<class...> class L, class T1, template<class...> class P> struct mp_sort_impl<L<T1>, P>
 {
@@ -3984,26 +3607,6 @@ template<template<class...> class L, class T1, class... T, std::size_t I, templa
 
     using L2 = mp_second<part>;
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_CUDA, >= 9000000 && BOOST_MP11_CUDA < 10000000 )
-
-    struct detail
-    {
-        struct mp_nth_element_impl_cuda_workaround
-        {
-            using type = mp_cond<
-
-                mp_bool<(I < N1)>, mp_nth_element_impl<L1, I, P>,
-                mp_bool<(I == N1)>, mp_identity<T1>,
-                mp_true, mp_nth_element_impl<L2, I - N1 - 1, P>
-
-            >;
-        };
-    };
-
-    using type = typename detail::mp_nth_element_impl_cuda_workaround::type::type;
-
-#else
-
     using type = typename mp_cond<
 
         mp_bool<(I < N1)>, mp_nth_element_impl<L1, I, P>,
@@ -4012,7 +3615,6 @@ template<template<class...> class L, class T1, class... T, std::size_t I, templa
 
     >::type;
 
-#endif
 };
 
 } // namespace detail
@@ -4027,37 +3629,7 @@ namespace detail
 
 template<class L, class V> struct mp_find_impl;
 
-#if BOOST_MP11_CLANG && defined( BOOST_MP11_HAS_FOLD_EXPRESSIONS )
-
-struct mp_index_holder
-{
-    std::size_t i_;
-    bool f_;
-};
-
-constexpr inline mp_index_holder operator+( mp_index_holder const & v, bool f )
-{
-    if( v.f_ )
-    {
-        return v;
-    }
-    else if( f )
-    {
-        return { v.i_, true };
-    }
-    else
-    {
-        return { v.i_ + 1, false };
-    }
-}
-
-template<template<class...> class L, class... T, class V> struct mp_find_impl<L<T...>, V>
-{
-    static constexpr mp_index_holder _v{ 0, false };
-    using type = mp_size_t< (_v + ... + std::is_same<T, V>::value).i_ >;
-};
-
-#elif !defined( BOOST_MP11_NO_CONSTEXPR )
+#ifndef  BOOST_MP11_NO_CONSTEXPR 
 
 template<template<class...> class L, class V> struct mp_find_impl<L<>, V>
 {
@@ -4096,22 +3668,10 @@ template<template<class...> class L, class... T, class V> struct mp_find_impl<L<
 
 #else
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1800 )
-
-template<template<class...> class L, class... T, class V> struct mp_find_impl<L<T...>, V>
-{
-    static_assert( sizeof...(T) == 0, "T... must be empty" );
-    using type = mp_size_t<0>;
-};
-
-#else
-
 template<template<class...> class L, class V> struct mp_find_impl<L<>, V>
 {
     using type = mp_size_t<0>;
 };
-
-#endif
 
 template<template<class...> class L, class... T, class V> struct mp_find_impl<L<V, T...>, V>
 {
@@ -4136,15 +3696,7 @@ namespace detail
 
 template<class L, template<class...> class P> struct mp_find_if_impl;
 
-#if BOOST_MP11_CLANG && defined( BOOST_MP11_HAS_FOLD_EXPRESSIONS )
-
-template<template<class...> class L, class... T, template<class...> class P> struct mp_find_if_impl<L<T...>, P>
-{
-    static constexpr mp_index_holder _v{ 0, false };
-    using type = mp_size_t< (_v + ... + P<T>::value).i_ >;
-};
-
-#elif !defined( BOOST_MP11_NO_CONSTEXPR )
+#ifndef  BOOST_MP11_NO_CONSTEXPR 
 
 template<template<class...> class L, template<class...> class P> struct mp_find_if_impl<L<>, P>
 {
@@ -4159,22 +3711,10 @@ template<template<class...> class L, class... T, template<class...> class P> str
 
 #else
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1800 )
-
-template<template<class...> class L, class... T, template<class...> class P> struct mp_find_if_impl<L<T...>, P>
-{
-    static_assert( sizeof...(T) == 0, "T... must be empty" );
-    using type = mp_size_t<0>;
-};
-
-#else
-
 template<template<class...> class L, template<class...> class P> struct mp_find_if_impl<L<>, P>
 {
     using type = mp_size_t<0>;
 };
-
-#endif
 
 template<class L, template<class...> class P> struct mp_find_if_impl_2
 {
@@ -4200,22 +3740,10 @@ namespace detail
 
 template<class L> struct mp_reverse_impl;
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1800 )
-
-template<template<class...> class L, class... T> struct mp_reverse_impl<L<T...>>
-{
-    static_assert( sizeof...(T) == 0, "T... must be empty" );
-    using type = L<>;
-};
-
-#else
-
 template<template<class...> class L> struct mp_reverse_impl<L<>>
 {
     using type = L<>;
 };
-
-#endif
 
 template<template<class...> class L, class T1> struct mp_reverse_impl<L<T1>>
 {
@@ -4280,22 +3808,10 @@ namespace detail
 
 template<class L, class V, template<class...> class F> struct mp_reverse_fold_impl;
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1800 )
-
-template<template<class...> class L, class... T, class V, template<class...> class F> struct mp_reverse_fold_impl<L<T...>, V, F>
-{
-    static_assert( sizeof...(T) == 0, "T... must be empty" );
-    using type = V;
-};
-
-#else
-
 template<template<class...> class L, class V, template<class...> class F> struct mp_reverse_fold_impl<L<>, V, F>
 {
     using type = V;
 };
-
-#endif
 
 template<template<class...> class L, class T1, class... T, class V, template<class...> class F> struct mp_reverse_fold_impl<L<T1, T...>, V, F>
 {
@@ -4403,33 +3919,10 @@ template<class F> BOOST_MP11_CONSTEXPR F mp_for_each_impl( mp_list<>, F && f )
 
 } // namespace detail
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, >= 1900 )
-
-// msvc has a limit of 1024
-
-template<class L, class F> BOOST_MP11_CONSTEXPR mp_if_c<mp_size<L>::value <= 1024, F> mp_for_each( F && f )
-{
-    return detail::mp_for_each_impl( mp_rename<L, mp_list>(), std::forward<F>(f) );
-}
-
-template<class L, class F> BOOST_MP11_CONSTEXPR mp_if_c<mp_size<L>::value >= 1025, F> mp_for_each( F && f )
-{
-    using L2 = mp_rename<L, mp_list>;
-
-    using L3 = mp_take_c<L2, 1024>;
-    using L4 = mp_drop_c<L2, 1024>;
-
-    return mp_for_each<L4>( mp_for_each<L3>( std::forward<F>(f) ) );
-}
-
-#else
-
 template<class L, class F> BOOST_MP11_CONSTEXPR F mp_for_each( F && f )
 {
     return detail::mp_for_each_impl( mp_rename<L, mp_list>(), std::forward<F>(f) );
 }
-
-#endif
 
 // mp_insert<L, I, T...>
 template<class L, class I, class... T> using mp_insert = mp_append<mp_take<L, I>, mp_push_front<mp_drop<L, I>, T...>>;
@@ -4506,22 +3999,10 @@ template<class L> using mp_power_set = typename detail::mp_power_set_impl<L>::ty
 namespace detail
 {
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1800 )
-
-template<template<class...> class L, class... T> struct mp_power_set_impl< L<T...> >
-{
-    static_assert( sizeof...(T) == 0, "T... must be empty" );
-    using type = L< L<> >;
-};
-
-#else
-
 template<template<class...> class L> struct mp_power_set_impl< L<> >
 {
     using type = L< L<> >;
 };
-
-#endif
 
 template<template<class...> class L, class T1, class... T> struct mp_power_set_impl< L<T1, T...> >
 {
@@ -4542,15 +4023,9 @@ namespace detail
 
 template<template<class...> class F> struct mp_partial_sum_impl_f
 {
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1900 )
-
-    template<class V, class T> using fn = mp_list<F<mp_first<V>, T>, mp_push_back<mp_second<V>, F<mp_first<V>, T>> >;
-
-#else
 
     template<class V, class T, class N = F<mp_first<V>, T>> using fn = mp_list<N, mp_push_back<mp_second<V>, N>>;
 
-#endif
 };
 
 } // namespace detail
@@ -4632,22 +4107,10 @@ template<class L, class S> struct mp_intersperse_impl
 {
 };
 
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, <= 1800 )
-
-template<template<class...> class L, class... T, class S> struct mp_intersperse_impl<L<T...>, S>
-{
-    static_assert( sizeof...(T) == 0, "T... must be empty" );
-    using type = L<>;
-};
-
-#else
-
 template<template<class...> class L, class S> struct mp_intersperse_impl<L<>, S>
 {
     using type = L<>;
 };
-
-#endif
 
 template<template<class...> class L, class T1, class... T, class S> struct mp_intersperse_impl<L<T1, T...>, S>
 {
@@ -5126,7 +4589,13 @@ inline void current_function_helper()
 
 namespace boost
 {
+#ifdef BOOST_ASSERT_HANDLER_IS_NORETURN
+    BOOST_NORETURN
+#endif
     void assertion_failed(char const * expr, char const * function, char const * file, long line); // user defined
+#ifdef BOOST_ASSERT_HANDLER_IS_NORETURN
+    BOOST_NORETURN
+#endif
     void assertion_failed_msg(char const * expr, char const * msg, char const * function, char const * file, long line); // user defined
 } // namespace boost
 
@@ -5522,8 +4991,6 @@ BOOST_MP11_CONSTEXPR auto tp_extract( Tp&&... tp )
     return tp_forward_r( get<J>( std::forward<Tp>( tp ) )... );
 }
 
-#if !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1900 )
-
 template<class F, class... Tp, std::size_t... J>
 BOOST_MP11_CONSTEXPR auto tuple_transform_impl( integer_sequence<std::size_t, J...>, F const& f, Tp&&... tp )
     -> decltype( tp_forward_v( tuple_apply( f, tp_extract<J>( std::forward<Tp>(tp)... ) )... ) )
@@ -5531,44 +4998,7 @@ BOOST_MP11_CONSTEXPR auto tuple_transform_impl( integer_sequence<std::size_t, J.
     return tp_forward_v( tuple_apply( f, tp_extract<J>( std::forward<Tp>(tp)... ) )... );
 }
 
-#else
-
-template<class F, class Tp1, std::size_t... J>
-BOOST_MP11_CONSTEXPR auto tuple_transform_impl( integer_sequence<std::size_t, J...>, F const& f, Tp1&& tp1 )
-    -> decltype( tp_forward_v( f( get<J>( std::forward<Tp1>(tp1) ) )... ) )
-{
-    return tp_forward_v( f( get<J>( std::forward<Tp1>(tp1) ) )... );
-}
-
-template<class F, class Tp1, class Tp2, std::size_t... J>
-BOOST_MP11_CONSTEXPR auto tuple_transform_impl( integer_sequence<std::size_t, J...>, F const& f, Tp1&& tp1, Tp2&& tp2 )
-    -> decltype( tp_forward_v( f( get<J>( std::forward<Tp1>(tp1) ), get<J>( std::forward<Tp2>(tp2) ) )... ) )
-{
-    return tp_forward_v( f( get<J>( std::forward<Tp1>(tp1) ), get<J>( std::forward<Tp2>(tp2) ) )... );
-}
-
-template<class F, class Tp1, class Tp2, class Tp3, std::size_t... J>
-BOOST_MP11_CONSTEXPR auto tuple_transform_impl( integer_sequence<std::size_t, J...>, F const& f, Tp1&& tp1, Tp2&& tp2, Tp3&& tp3 )
-    -> decltype( tp_forward_v( f( get<J>( std::forward<Tp1>(tp1) ), get<J>( std::forward<Tp2>(tp2) ), get<J>( std::forward<Tp3>(tp3) ) )... ) )
-{
-    return tp_forward_v( f( get<J>( std::forward<Tp1>(tp1) ), get<J>( std::forward<Tp2>(tp2) ), get<J>( std::forward<Tp3>(tp3) ) )... );
-}
-
-#endif // !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1900 )
-
 } // namespace detail
-
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1910 )
-
-template<class F, class Tp1, class... Tp,
-    class Seq = make_index_sequence<std::tuple_size<typename std::remove_reference<Tp1>::type>::value>>
-BOOST_MP11_CONSTEXPR auto tuple_transform( F const& f, Tp1&& tp1, Tp&&... tp )
-    -> decltype( detail::tuple_transform_impl( Seq(), f, std::forward<Tp1>(tp1), std::forward<Tp>(tp)... ) )
-{
-    return detail::tuple_transform_impl( Seq(), f, std::forward<Tp1>(tp1), std::forward<Tp>(tp)... );
-}
-
-#else
 
 template<class F, class... Tp,
     class Z = mp_list<mp_size_t<std::tuple_size<typename std::remove_reference<Tp>::type>::value>...>,
@@ -5579,8 +5009,6 @@ BOOST_MP11_CONSTEXPR auto tuple_transform( F const& f, Tp&&... tp )
 {
     return detail::tuple_transform_impl( Seq(), f, std::forward<Tp>(tp)... );
 }
-
-#endif // BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1910 )
 
 } // namespace mp11
 } // namespace boost
@@ -5717,11 +5145,15 @@ public:
     }
 };
 
+#ifndef BOOST_NO_IOSTREAM
+
 template<class E, class T> std::basic_ostream<E, T> & operator<<( std::basic_ostream<E, T> & os, source_location const & loc )
 {
     os << loc.to_string();
     return os;
 }
+
+#endif
 
 } // namespace boost
 
@@ -7229,7 +6661,7 @@ struct hash_is_avalanching: detail::hash_is_avalanching_impl<Hash>::type{};
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Woverlength-strings"
 #endif
-__asm__(".pushsection \".debug_gdb_scripts\", \"MS\",@progbits,1\n"
+__asm__(".pushsection \".debug_gdb_scripts\", \"MS\",%progbits,1\n"
         ".ascii \"\\4gdb.inlined-script.BOOST_UNORDERED_UNORDERED_PRINTERS_HPP\\n\"\n"
         ".ascii \"import gdb.printing\\n\"\n"
         ".ascii \"import gdb.xmethod\\n\"\n"
@@ -7904,7 +7336,7 @@ namespace core
 
 inline void sp_thread_sleep() noexcept
 {
-#if defined(BOOST_HAS_PTHREADS) && !defined(__ANDROID__)
+#if defined(BOOST_HAS_PTHREADS) && !defined(__ANDROID__) && !defined(__OHOS__)
 
     int oldst;
     pthread_setcancelstate( PTHREAD_CANCEL_DISABLE, &oldst );
@@ -7922,7 +7354,7 @@ inline void sp_thread_sleep() noexcept
 
     nanosleep( &rqtp, 0 );
 
-#if defined(BOOST_HAS_PTHREADS) && !defined(__ANDROID__)
+#if defined(BOOST_HAS_PTHREADS) && !defined(__ANDROID__) && !defined(__OHOS__)
 
     pthread_setcancelstate( oldst, &oldst );
 
@@ -8994,12 +8426,12 @@ struct group15
 
   inline bool is_not_overflowed(std::size_t hash)const
   {
-    return !(reinterpret_cast<const boost::uint16_t*>(m)[hash%8] & 0x8000u);
+    return !(reinterpret_cast<const std::uint16_t*>(m)[hash%8] & 0x8000u);
   }
 
   inline void mark_overflow(std::size_t hash)
   {
-    reinterpret_cast<boost::uint16_t*>(m)[hash%8]|=0x8000u;
+    reinterpret_cast<std::uint16_t*>(m)[hash%8]|=0x8000u;
   }
 
   static inline bool maybe_caused_overflow(unsigned char* pc)
@@ -13189,82 +12621,10 @@ namespace boost {
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
 
-#ifndef BOOST_HASH_IS_RANGE_HPP_INCLUDED
-#define BOOST_HASH_IS_RANGE_HPP_INCLUDED
-
-namespace boost
-{
-
-namespace hash_detail
-{
-
-template<class T> struct iterator_traits: std::iterator_traits<T> {};
-template<> struct iterator_traits< void* > {};
-template<> struct iterator_traits< void const* > {};
-
-template<class T, class It>
-    std::integral_constant< bool, !std::is_same<typename std::remove_cv<T>::type, typename iterator_traits<It>::value_type>::value >
-        is_range_check( It first, It last );
-
-template<class T> decltype( is_range_check<T>( std::declval<T const&>().begin(), std::declval<T const&>().end() ) ) is_range_( int );
-template<class T> std::false_type is_range_( ... );
-
-} // namespace hash_detail
-
-namespace container_hash
-{
-
-template<class T> struct is_range: decltype( hash_detail::is_range_<T>( 0 ) )
-{
-};
-
-} // namespace container_hash
-
-} // namespace boost
-
-#endif // #ifndef BOOST_HASH_IS_RANGE_HPP_INCLUDED
-// Copyright 2017, 2018 Peter Dimov.
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
-
-#ifndef BOOST_HASH_IS_CONTIGUOUS_RANGE_HPP_INCLUDED
-#define BOOST_HASH_IS_CONTIGUOUS_RANGE_HPP_INCLUDED
-
-namespace boost
-{
-namespace hash_detail
-{
-
-template<class It, class T, class S>
-    std::integral_constant< bool, std::is_same<typename std::iterator_traits<It>::value_type, T>::value && std::is_integral<S>::value >
-        is_contiguous_range_check( It first, It last, T const*, T const*, S );
-
-template<class T> decltype( is_contiguous_range_check( std::declval<T const&>().begin(), std::declval<T const&>().end(), std::declval<T const&>().data(), std::declval<T const&>().data() + std::declval<T const&>().size(), std::declval<T const&>().size() ) ) is_contiguous_range_( int );
-template<class T> std::false_type is_contiguous_range_( ... );
-
-template<class T> struct is_contiguous_range: decltype( hash_detail::is_contiguous_range_<T>( 0 ) )
-{
-};
-
-} // namespace hash_detail
-
-namespace container_hash
-{
-
-template<class T> struct is_contiguous_range: std::integral_constant< bool, is_range<T>::value && hash_detail::is_contiguous_range<T>::value >
-{
-};
-
-} // namespace container_hash
-} // namespace boost
-
-#endif // #ifndef BOOST_HASH_IS_CONTIGUOUS_RANGE_HPP_INCLUDED
-// Copyright 2017 Peter Dimov.
-// Distributed under the Boost Software License, Version 1.0.
-// https://www.boost.org/LICENSE_1_0.txt
-
 #ifndef BOOST_HASH_IS_UNORDERED_RANGE_HPP_INCLUDED
 #define BOOST_HASH_IS_UNORDERED_RANGE_HPP_INCLUDED
+
+#include <ranges>
 
 namespace boost
 {
@@ -13286,7 +12646,7 @@ template<class T> struct has_hasher_< T, std::integral_constant< bool,
 namespace container_hash
 {
 
-template<class T> struct is_unordered_range: std::integral_constant< bool, is_range<T>::value && hash_detail::has_hasher_<T>::value >
+template<class T> struct is_unordered_range: std::integral_constant< bool, std::ranges::range<T> && hash_detail::has_hasher_<T>::value >
 {
 };
 
@@ -13656,7 +13016,7 @@ inline std::size_t hash_tuple_like( T const& v )
 template <class T>
 inline
 typename std::enable_if<
-    container_hash::is_tuple_like<T>::value && !container_hash::is_range<T>::value,
+    container_hash::is_tuple_like<T>::value && !std::ranges::range<T>,
 std::size_t>::type
     hash_value( T const& v )
 {
@@ -14350,7 +13710,7 @@ namespace boost
     // ranges (list, set, deque...)
 
     template <typename T>
-    typename std::enable_if<container_hash::is_range<T>::value && !container_hash::is_contiguous_range<T>::value && !container_hash::is_unordered_range<T>::value, std::size_t>::type
+    typename std::enable_if<std::ranges::range<T> && !std::ranges::contiguous_range<T> && !container_hash::is_unordered_range<T>::value, std::size_t>::type
         hash_value( T const& v )
     {
         return boost::hash_range( v.begin(), v.end() );
@@ -14359,7 +13719,7 @@ namespace boost
     // contiguous ranges (string, vector, array)
 
     template <typename T>
-    typename std::enable_if<container_hash::is_contiguous_range<T>::value, std::size_t>::type
+    typename std::enable_if<std::ranges::contiguous_range<T>, std::size_t>::type
         hash_value( T const& v )
     {
         return boost::hash_range( v.data(), v.data() + v.size() );
@@ -14379,7 +13739,7 @@ namespace boost
     // resolve ambiguity with unconstrained stdext::hash_value in <xhash> :-/
 
     template<template<class...> class L, class... T>
-    typename std::enable_if<container_hash::is_range<L<T...>>::value && !container_hash::is_contiguous_range<L<T...>>::value && !container_hash::is_unordered_range<L<T...>>::value, std::size_t>::type
+    typename std::enable_if<std::ranges::range<L<T...>> && !std::ranges::contiguous_range<L<T...>> && !container_hash::is_unordered_range<L<T...>>::value, std::size_t>::type
         hash_value( L<T...> const& v )
     {
         return boost::hash_range( v.begin(), v.end() );
@@ -14388,14 +13748,14 @@ namespace boost
     // contiguous ranges (string, vector, array)
 
     template<template<class...> class L, class... T>
-    typename std::enable_if<container_hash::is_contiguous_range<L<T...>>::value, std::size_t>::type
+    typename std::enable_if<std::ranges::contiguous_range<L<T...>>, std::size_t>::type
         hash_value( L<T...> const& v )
     {
         return boost::hash_range( v.data(), v.data() + v.size() );
     }
 
     template<template<class, std::size_t> class L, class T, std::size_t N>
-    typename std::enable_if<container_hash::is_contiguous_range<L<T, N>>::value, std::size_t>::type
+    typename std::enable_if<std::ranges::contiguous_range<L<T, N>>, std::size_t>::type
         hash_value( L<T, N> const& v )
     {
         return boost::hash_range( v.data(), v.data() + v.size() );

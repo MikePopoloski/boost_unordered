@@ -241,8 +241,6 @@ struct node_handle_access
   using node_type = node_handle_base<TypePolicy, Allocator>;
 
 #if BOOST_CLANG_VERSION < 190000
-  // https://github.com/llvm/llvm-project/issues/25708
-
   template <class TypePolicy, class Allocator>
   struct element_type_impl
   {

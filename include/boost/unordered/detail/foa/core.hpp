@@ -665,12 +665,12 @@ struct group15
 
   inline bool is_not_overflowed(std::size_t hash)const
   {
-    return !(reinterpret_cast<const boost::uint16_t*>(m)[hash%8] & 0x8000u);
+    return !(reinterpret_cast<const std::uint16_t*>(m)[hash%8] & 0x8000u);
   }
 
   inline void mark_overflow(std::size_t hash)
   {
-    reinterpret_cast<boost::uint16_t*>(m)[hash%8]|=0x8000u;
+    reinterpret_cast<std::uint16_t*>(m)[hash%8]|=0x8000u;
   }
 
   static inline bool maybe_caused_overflow(unsigned char* pc)

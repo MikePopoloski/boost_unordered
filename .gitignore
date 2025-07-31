@@ -15,4 +15,5 @@ CMakeLists.txt.user
 CMakeUserPresets.json
 .ccls
 boost_*/
-boost_*.tar.gz
+temp_boost/
+boost_*.tar.gz*

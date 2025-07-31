@@ -1,3 +1,6 @@
+rm boost*.tar.gz*
+rm -rf temp_boost
+
 wget https://archives.boost.io/release/1.88.0/source/boost_1_88_0.tar.gz
 tar -xvf boost_1_88_0.tar.gz
 
@@ -56,6 +59,7 @@ find . -name '*.hpp' -exec sed -i 's/BOOST_ATTRIBUTE_NODISCARD/[[nodiscard]]/g' 
 find . -name '*.hpp' -exec sed -i 's/BOOST_NULLPTR/nullptr/g' {} \;
 find . -name '*.hpp' -exec sed -i 's/boost::uint64_t/std::uint64_t/g' {} \;
 find . -name '*.hpp' -exec sed -i 's/boost::uint32_t/std::uint32_t/g' {} \;
+find . -name '*.hpp' -exec sed -i 's/boost::uint16_t/std::uint16_t/g' {} \;
 find . -name '*.hpp' -exec sed -i 's/boost::uint_least32_t/std::uint_least32_t/g' {} \;
 find . -name '*.hpp' -exec sed -i 's/boost::to_address/std::to_address/g' {} \;
 find . -name '*.hpp' -exec sed -i 's/boost::pointer_traits/std::pointer_traits/g' {} \;
@@ -124,3 +128,14 @@ for file in $(find . -name '*.hpp'); do
     func_replace_boost_with_std "$file" boost/cstdint.hpp cstdint
     func_replace_boost_with_std "$file" boost/core/bit.hpp bit
 done
+
+# Insert a workaround for clang bug prior to version 19
+find . -name 'node_handle.hpp' -exec perl -0777 -0pi -e 's/  template <class TypePolicy, class Allocator>\n  using element_type = typename node_type<TypePolicy, Allocator>::element_type;/#if BOOST_CLANG_VERSION < 190000\n  template <class TypePolicy, class Allocator>\n  struct element_type_impl\n  {\n    using type = typename node_type<TypePolicy, Allocator>::element_type;\n  };\n  template <class TypePolicy, class Allocator>\n  using element_type = typename element_type_impl<TypePolicy, Allocator>::type;\n#else\n  template <class TypePolicy, class Allocator>\n  using element_type = typename node_type<TypePolicy, Allocator>::element_type;\n#endif/gs' {} \;
+
+cd ../..
+rm -rf include/boost
+cp -R temp_boost/boost include/boost
+cd tools
+./acme.py ../boost_unordered_template.hpp -o boost_unordered.hpp
+./acme.py ../boost_concurrent_template.hpp -o boost_concurrent.hpp
+cd ..
