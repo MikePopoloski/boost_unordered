@@ -27,7 +27,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
     - name: Install dependencies
@@ -37,14 +37,19 @@ jobs:
         sudo add-apt-repository "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-19 main"
         sudo apt-get update
         sudo apt-get install -y g++-12 g++-10 clang-19
-    - uses: ilammy/msvc-dev-cmd@v1
-      if: matrix.os == 'windows-latest'
     - uses: MarkusJx/install-boost@v2.6.0
       id: install-boost
       with:
         boost_version: 1.86.0
     - name: Configure
+      if: matrix.os != 'windows-latest'
       run: cmake --preset ${{ matrix.preset }} -DCMAKE_PREFIX_PATH=${{ steps.install-boost.outputs.BOOST_ROOT }}
+    - name: Configure (windows)
+      if: matrix.os == 'windows-latest'
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        cmake --preset ${{ matrix.preset }} -DCMAKE_PREFIX_PATH=${{ steps.install-boost.outputs.BOOST_ROOT }}
     - name: Build
       run: cmake --build build/${{ matrix.preset }} -j8
     - name: Run tests
