@@ -39,7 +39,7 @@ jobs:
         sudo apt-get install -y g++-12 g++-10 clang-19
     - uses: ilammy/msvc-dev-cmd@v1
       if: matrix.os == 'windows-latest'
-    - uses: MarkusJx/install-boost@v2.4.5
+    - uses: MarkusJx/install-boost@v2.6.0
       id: install-boost
       with:
         boost_version: 1.86.0
