@@ -1,6 +1,6 @@
 /* Common base for Boost.Unordered open-addressing tables.
  *
- * Copyright 2022-2024 Joaquin M Lopez Munoz.
+ * Copyright 2022-2025 Joaquin M Lopez Munoz.
  * Copyright 2023 Christian Mazakas.
  * Copyright 2024 Braden Ganetsky.
  * Distributed under the Boost Software License, Version 1.0.
@@ -15,6 +15,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/minconfig.hpp>
+#include <boost/container_hash/hash_is_avalanching.hpp>
 #include <boost/core/empty_value.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 #include <boost/unordered/detail/allocator_constructed.hpp>
@@ -22,8 +23,7 @@
 #include <boost/unordered/detail/mulx.hpp>
 #include <boost/unordered/detail/static_assert.hpp>
 #include <boost/unordered/detail/type_traits.hpp>
-#include <boost/unordered/hash_traits.hpp>
-#include <boost/unordered/unordered_printers.hpp>
+#include <boost/unordered/detail/unordered_printers.hpp>
 #include <bit>
 #include <climits>
 #include <cmath>
@@ -919,6 +919,8 @@ inline unsigned int unchecked_countr_zero(int x)
   unsigned long r;
   _BitScanForward(&r,(unsigned long)x);
   return (unsigned int)r;
+#elif defined(BOOST_GCC)||defined(BOOST_CLANG)
+  return (unsigned int)__builtin_ctz((unsigned int)x);
 #else
   BOOST_UNORDERED_ASSUME(x!=0);
   return (unsigned int)std::countr_zero((unsigned int)x);
@@ -1415,7 +1417,7 @@ public:
   using size_policy=pow2_size_policy;
   using prober=pow2_quadratic_prober;
   using mix_policy=typename std::conditional<
-    hash_is_avalanching<Hash>::value,
+    boost::hash_is_avalanching<Hash>::value,
     no_mix,
     mulx_mix
   >::type;

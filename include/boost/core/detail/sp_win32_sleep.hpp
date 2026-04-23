@@ -26,7 +26,7 @@ namespace core
 namespace detail
 {
 
-#if !defined( BOOST_USE_WINDOWS_H )
+#if !defined(BOOST_USE_WINDOWS_H) && (defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__))
 
 #if defined(__clang__) && defined(__x86_64__)
 // clang x64 warns that __stdcall is ignored

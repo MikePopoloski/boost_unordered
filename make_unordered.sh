@@ -1,11 +1,11 @@
 rm boost*.tar.gz*
 rm -rf temp_boost
 
-wget https://archives.boost.io/release/1.88.0/source/boost_1_88_0.tar.gz
-tar -xvf boost_1_88_0.tar.gz
+wget https://archives.boost.io/release/1.91.0/source/boost_1_91_0.tar.gz
+tar -xvf boost_1_91_0.tar.gz
 
 mkdir temp_boost
-bcp --boost=./boost_1_88_0 boost/unordered/unordered_flat_map.hpp boost/unordered/unordered_flat_set.hpp boost/unordered/unordered_node_map.hpp boost/unordered/unordered_node_set.hpp boost/unordered/concurrent_flat_map.hpp boost/unordered/concurrent_flat_set.hpp boost/unordered/concurrent_node_map.hpp boost/unordered/concurrent_node_set.hpp temp_boost
+bcp --boost=./boost_1_91_0 boost/unordered/unordered_flat_map.hpp boost/unordered/unordered_flat_set.hpp boost/unordered/unordered_node_map.hpp boost/unordered/unordered_node_set.hpp boost/unordered/concurrent_flat_map.hpp boost/unordered/concurrent_flat_set.hpp boost/unordered/concurrent_node_map.hpp boost/unordered/concurrent_node_set.hpp temp_boost
 
 cd temp_boost/boost
 rm version.hpp
@@ -13,7 +13,6 @@ rm predef.h
 rm limits.hpp
 rm cstdint.hpp
 rm config.hpp
-rm static_assert.hpp
 rm core/addressof.hpp
 rm core/allocator_access.hpp
 rm core/allocator_traits.hpp
@@ -131,6 +130,9 @@ done
 
 # Insert a workaround for clang bug prior to version 19
 find . -name 'node_handle.hpp' -exec perl -0777 -0pi -e 's/  template <class TypePolicy, class Allocator>\n  using element_type = typename node_type<TypePolicy, Allocator>::element_type;/#if BOOST_CLANG_VERSION < 190000\n  template <class TypePolicy, class Allocator>\n  struct element_type_impl\n  {\n    using type = typename node_type<TypePolicy, Allocator>::element_type;\n  };\n  template <class TypePolicy, class Allocator>\n  using element_type = typename element_type_impl<TypePolicy, Allocator>::type;\n#else\n  template <class TypePolicy, class Allocator>\n  using element_type = typename node_type<TypePolicy, Allocator>::element_type;\n#endif/gs' {} \;
+
+# sp_win32_sleep.hpp header isn't standalone, need to add ifdefs for the single-header to work
+find . -name 'sp_win32_sleep.hpp' -exec perl -0777 -0pi -e 's/#if !defined\( BOOST_USE_WINDOWS_H \)/#if !defined(BOOST_USE_WINDOWS_H) && (defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__))/gs' {} \;
 
 cd ../..
 rm -rf include/boost

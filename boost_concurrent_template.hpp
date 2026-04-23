@@ -31,6 +31,7 @@
 
 // {{includes}}
 
+#include <atomic>
 #include <bit>
 #include <climits>
 #include <cmath>
